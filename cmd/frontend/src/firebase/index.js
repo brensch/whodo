@@ -1,8 +1,7 @@
 import firebase from "firebase";
 import "firebase/firestore";
 import "firebase/auth";
-
-const firebaseConfig = {};
+import firebaseConfig from "./firestore_secrets.json";
 
 firebase.initializeApp(firebaseConfig);
 
