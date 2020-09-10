@@ -79,6 +79,7 @@ const Create = () => {
         name: name,
         participants_locked: false,
         story: null,
+        current_round: 0,
         participants: [
           {
             id: auth.currentUser.uid,
@@ -144,19 +145,14 @@ const Join = () => {
     };
   }, []);
 
-  if (game == null) {
+  if (game === null) {
     return <div>loading</div>;
   }
 
-  // console.log(
-  //   game.participants.find(
-  //     (participant) => participant.id === auth.currentUser.uid
-  //   )
-  // );
   if (
     game.participants.find(
       (participant) => participant.id === auth.currentUser.uid
-    ) !== null
+    ) !== undefined
   ) {
     history.push(`/game/${id}`);
   }
@@ -197,6 +193,21 @@ const Game = () => {
     });
   };
 
+  const nextRound = () => {
+    const current_round = game.current_round;
+    db.collection("games")
+      .doc(id)
+      .update({
+        current_round: current_round + 1,
+      });
+  };
+
+  const unlockParticipants = () => {
+    db.collection("games").doc(id).update({
+      participants_locked: true,
+    });
+  };
+
   // on load
   if (game == null) {
     return <div>loading</div>;
@@ -221,7 +232,7 @@ const Game = () => {
           color="primary"
           onClick={() => lockParticipants()}
         >
-          ready to send
+          everybody's joined, let's choose a story
         </Button>
       </div>
     );
@@ -233,6 +244,12 @@ const Game = () => {
       <div>
         time to pick the story
         <StoryPick gameID={id} />
+        <div>
+          people can still join:{" "}
+          <a
+            href={`${window.location.origin}/join/${id}`}
+          >{`${window.location.origin}/join/${id}`}</a>
+        </div>
       </div>
     );
   }
@@ -263,10 +280,44 @@ const Game = () => {
 
   console.log([participantsStillDeciding]);
   if (participantsStillDeciding.length > 0) {
-    return <CharacterPick game={game} />;
+    return <CharacterList game={game} />;
   }
 
-  return <div>alright time to send</div>;
+  return (
+    <div>
+      {game.current_round < game.story.rounds.length - 1 ? (
+        <Button variant="contained" color="primary" onClick={() => nextRound()}>
+          next round plz
+        </Button>
+      ) : null}
+      <RoundView game={game} />
+    </div>
+  );
+};
+
+const RoundView = ({ game }) => {
+  const participant = game.participants.find(
+    (participant) => participant.id === auth.currentUser.uid
+  );
+  const character = participant.character;
+  console.log(character.info);
+  return (
+    <div>
+      <div>{game.story.rounds[game.current_round]}</div>
+      <div>public:</div>
+      <div>
+        {character.info[game.current_round].public.map((info) => (
+          <div>{info}</div>
+        ))}
+      </div>
+      <div>private:</div>
+      <div>
+        {character.info[game.current_round].private.map((info) => (
+          <div>{info}</div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const StoryPick = ({ gameID }) => {
@@ -293,15 +344,18 @@ const StoryPick = ({ gameID }) => {
 
   return (
     <div>
-      {stories.map((story) => (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => pickStory(story)}
-        >
-          {story.name}
-        </Button>
-      ))}{" "}
+      {stories.map((story) => {
+        console.log(story);
+        return (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => pickStory(story)}
+          >
+            {story.name} ({story.characters.length} players)
+          </Button>
+        );
+      })}
     </div>
   );
 };
@@ -329,15 +383,46 @@ const CharacterPick = ({ game }) => {
 
   return (
     <div>
-      {game.story.characters.map((character) => (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => pickCharacter(character)}
-        >
-          {character.name}
-        </Button>
-      ))}{" "}
+      {game.story.characters.map((character) => {
+        const choosingParticipant = game.participants.find(
+          (participant) =>
+            participant.character !== null &&
+            participant.character.name === character.name
+        );
+        return (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={choosingParticipant !== undefined}
+            onClick={() => pickCharacter(character)}
+          >
+            {character.name}{" "}
+            {choosingParticipant !== undefined &&
+              "- " + choosingParticipant.name}
+          </Button>
+        );
+      })}{" "}
+    </div>
+  );
+};
+
+const CharacterList = ({ game }) => {
+  return (
+    <div>
+      {game.story.characters.map((character) => {
+        const choosingParticipant = game.participants.find(
+          (participant) =>
+            participant.character !== null &&
+            participant.character.name === character.name
+        );
+        return (
+          <div>
+            {character.name}{" "}
+            {choosingParticipant !== undefined &&
+              "- " + choosingParticipant.name}
+          </div>
+        );
+      })}{" "}
     </div>
   );
 };
