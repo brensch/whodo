@@ -7,7 +7,22 @@ import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
 import TextField from "@material-ui/core/TextField";
-
+import AppBar from "@material-ui/core/AppBar";
+import Toolbar from "@material-ui/core/Toolbar";
+import Container from "@material-ui/core/Container";
+import Typography from "@material-ui/core/Typography";
+import IconButton from "@material-ui/core/IconButton";
+import MenuIcon from "@material-ui/icons/Menu";
+import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import Snackbar from "@material-ui/core/Snackbar";
+import Alert from "@material-ui/lab/Alert";
+import ListItemAvatar from "@material-ui/core/ListItemAvatar";
+import Avatar from "@material-ui/core/Avatar";
+import ImageIcon from "@material-ui/icons/Image";
+import WorkIcon from "@material-ui/icons/Work";
+import BeachAccessIcon from "@material-ui/icons/BeachAccess";
 import {
   BrowserRouter as Router,
   Switch,
@@ -19,13 +34,29 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    width: "100%",
-    maxWidth: 360,
-    backgroundColor: theme.palette.background.paper,
+    flexGrow: 1,
+  },
+  menuButton: {
+    marginRight: theme.spacing(0),
+  },
+  title: {
+    flexGrow: 1,
+  },
+  button: {
+    width: "300px",
+  },
+  optionsButtons: {
+    minHeight: "70vh",
+  },
+  avatar: {
+    width: theme.spacing(3),
+    height: theme.spacing(3),
   },
 }));
 
 export default () => {
+  const classes = useStyles();
+
   const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
@@ -40,16 +71,16 @@ export default () => {
 
   if (authUser == null) {
     return (
-      <div>
+      <div className={classes.root}>
         <SignInButton />
       </div>
     );
   }
 
   return (
-    <div>
-      <SignOutButton />
+    <div className={classes.root}>
       <Router>
+        <Banner />
         <Switch>
           <Route path="/create">
             <Create />
@@ -69,7 +100,35 @@ export default () => {
   );
 };
 
+const Banner = () => {
+  const classes = useStyles();
+  let history = useHistory();
+
+  return (
+    <div className={classes.root}>
+      <AppBar
+        position="static"
+        color="transparent"
+        onClick={() => history.push("/")}
+      >
+        <Toolbar>
+          <Typography variant="h6" className={classes.title}>
+            who-do
+          </Typography>
+          <Avatar
+            alt={auth.currentUser.displayName}
+            src={auth.currentUser.photoURL}
+            className={classes.avatar}
+          />
+        </Toolbar>
+      </AppBar>
+    </div>
+  );
+};
+
 const Create = () => {
+  const classes = useStyles();
+
   const [name, setName] = useState("");
   let history = useHistory();
 
@@ -93,25 +152,45 @@ const Create = () => {
   };
 
   return (
-    <div>
-      name your game
-      <TextField
-        value={name}
-        id="game-name"
-        label="Outlined"
-        variant="outlined"
-        onChange={(e) => {
-          setName(e.currentTarget.value);
-        }}
-      />
-      <Button variant="contained" color="primary" onClick={() => createGame()}>
-        create game
-      </Button>
-    </div>
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <TextField
+            value={name}
+            id="game-name"
+            label="name your game"
+            variant="outlined"
+            className={classes.button}
+            onChange={(e) => {
+              setName(e.currentTarget.value);
+            }}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="outlined"
+            color="primary"
+            className={classes.button}
+            onClick={() => createGame()}
+          >
+            create game
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 
 const Join = () => {
+  const classes = useStyles();
+
   let history = useHistory();
   let { id } = useParams();
   const [game, setGame] = useState(null);
@@ -157,12 +236,45 @@ const Join = () => {
     history.push(`/game/${id}`);
   }
   return (
-    <div>
-      you've been invited to join {game.name}.{" "}
-      <Button variant="contained" color="primary" onClick={() => joinGame()}>
-        join, yo.
-      </Button>
-    </div>
+    <React.Fragment>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>you've been invited to join</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h3">{game.name}</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+              <Button
+                variant="outlined"
+                color="primary"
+                className={classes.button}
+                onClick={() => joinGame()}
+              >
+                alright then.
+              </Button>
+            </CopyToClipboard>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography>current crew:</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            {game.participants.map((participant) => (
+              <Typography align="center">{participant.name}</Typography>
+            ))}
+          </Grid>
+        </Grid>
+      </Container>
+    </React.Fragment>
   );
 };
 
@@ -170,6 +282,8 @@ const Game = () => {
   let history = useHistory();
   let { id } = useParams();
   const [game, setGame] = useState(null);
+  const classes = useStyles();
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const unsub = db
@@ -193,15 +307,6 @@ const Game = () => {
     });
   };
 
-  const nextRound = () => {
-    const current_round = game.current_round;
-    db.collection("games")
-      .doc(id)
-      .update({
-        current_round: current_round + 1,
-      });
-  };
-
   const unlockParticipants = () => {
     db.collection("games").doc(id).update({
       participants_locked: true,
@@ -216,42 +321,70 @@ const Game = () => {
   // if users can still join
   if (!game.participants_locked) {
     return (
-      <div>
-        <div>
-          you're in game {game.name} with{" "}
-          {game.participants.map((participant) => `${participant.name}, `)}
-        </div>
-        <div>
-          give this link to others to join:{" "}
-          <a
-            href={`${window.location.origin}/join/${id}`}
-          >{`${window.location.origin}/join/${id}`}</a>
-        </div>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => lockParticipants()}
+      <React.Fragment>
+        <Snackbar
+          open={open}
+          autoHideDuration={6000}
+          onClose={() => setOpen(false)}
         >
-          everybody's joined, let's choose a story
-        </Button>
-      </div>
+          <Alert onClose={() => setOpen(false)} severity="success">
+            Link copied to clipboard
+          </Alert>
+        </Snackbar>
+        <Container>
+          <Grid
+            container
+            spacing={3}
+            justify="center"
+            alignItems="center"
+            direction="column"
+            className={classes.optionsButtons}
+          >
+            <Grid item xs={12}>
+              <Typography>assemble a crew for</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h3">{game.name}</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  className={classes.button}
+                  onClick={() => setOpen(true)}
+                >
+                  invite
+                </Button>
+              </CopyToClipboard>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                variant="outlined"
+                color="primary"
+                className={classes.button}
+                onClick={() => lockParticipants()}
+              >
+                ready to go
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography>current crew:</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              {game.participants.map((participant) => (
+                <Typography align="center">{participant.name}</Typography>
+              ))}
+            </Grid>
+          </Grid>
+        </Container>
+      </React.Fragment>
     );
   }
 
   // if the story needs to be picked
   if (game.story == null) {
-    return (
-      <div>
-        time to pick the story
-        <StoryPick gameID={id} />
-        <div>
-          people can still join:{" "}
-          <a
-            href={`${window.location.origin}/join/${id}`}
-          >{`${window.location.origin}/join/${id}`}</a>
-        </div>
-      </div>
-    );
+    return <StoryPick gameID={id} />;
   }
 
   // if this participant needs to pick a character
@@ -260,14 +393,7 @@ const Game = () => {
       (participant) => participant.id === auth.currentUser.uid
     ).character === null
   ) {
-    return (
-      <div>
-        <div>pick a character plz</div>
-        <div>
-          <CharacterPick game={game} />
-        </div>
-      </div>
-    );
+    return <CharacterPick game={game} />;
   }
 
   // if people still need to pick characters
@@ -285,42 +411,80 @@ const Game = () => {
 
   return (
     <div>
-      {game.current_round < game.story.rounds.length - 1 ? (
-        <Button variant="contained" color="primary" onClick={() => nextRound()}>
-          next round plz
-        </Button>
-      ) : null}
       <RoundView game={game} />
     </div>
   );
 };
 
 const RoundView = ({ game }) => {
+  const classes = useStyles();
+
+  const nextRound = () => {
+    const current_round = game.current_round;
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        current_round: current_round + 1,
+      });
+  };
+
   const participant = game.participants.find(
     (participant) => participant.id === auth.currentUser.uid
   );
   const character = participant.character;
-  console.log(character.info);
   return (
-    <div>
-      <div>{game.story.rounds[game.current_round]}</div>
-      <div>public:</div>
-      <div>
-        {character.info[game.current_round].public.map((info) => (
-          <div>{info}</div>
-        ))}
-      </div>
-      <div>private:</div>
-      <div>
-        {character.info[game.current_round].private.map((info) => (
-          <div>{info}</div>
-        ))}
-      </div>
-    </div>
+    <React.Fragment>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography variant="h4">
+              {game.story.rounds[game.current_round]}
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6">tell people:</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            {character.info[game.current_round].public.map((info) => (
+              <Typography align="center">{info}</Typography>
+            ))}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6">keep secret:</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            {character.info[game.current_round].private.map((info) => (
+              <Typography align="center">{info}</Typography>
+            ))}
+          </Grid>
+          <Grid item xs={12}>
+            {game.current_round < game.story.rounds.length - 1 ? (
+              <Button
+                variant="outlined"
+                color="primary"
+                className={classes.button}
+                onClick={() => nextRound()}
+              >
+                done with this round
+              </Button>
+            ) : null}
+          </Grid>
+        </Grid>
+      </Container>
+    </React.Fragment>
   );
 };
 
 const StoryPick = ({ gameID }) => {
+  const classes = useStyles();
+  const [open, setOpen] = useState(false);
   const [stories, setStories] = useState([]);
 
   useEffect(() => {
@@ -343,24 +507,67 @@ const StoryPick = ({ gameID }) => {
   };
 
   return (
-    <div>
-      {stories.map((story) => {
-        console.log(story);
-        return (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => pickStory(story)}
-          >
-            {story.name} ({story.characters.length} players)
-          </Button>
-        );
-      })}
-    </div>
+    <React.Fragment>
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={() => setOpen(false)}
+      >
+        <Alert onClose={() => setOpen(false)} severity="success">
+          Link copied to clipboard
+        </Alert>
+      </Snackbar>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>choose your story</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <List className={classes.root}>
+              {stories.map((story) => (
+                <ListItem onClick={() => pickStory(story)}>
+                  <ListItemAvatar>
+                    <Avatar>
+                      <ImageIcon />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={story.name}
+                    secondary={`${story.characters.length} players`}
+                    players
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Grid>
+          <Grid item xs={12}>
+            <CopyToClipboard text={`${window.location.origin}/join/${gameID}`}>
+              <Button
+                variant="outlined"
+                color="primary"
+                className={classes.button}
+                onClick={() => setOpen(true)}
+              >
+                need more players still?
+              </Button>
+            </CopyToClipboard>
+          </Grid>
+        </Grid>
+      </Container>
+    </React.Fragment>
   );
 };
 
 const CharacterPick = ({ game }) => {
+  const classes = useStyles();
+
   const pickCharacter = (character) => {
     console.log(character);
     const newParticipants = game.participants.map((participant) => {
@@ -382,65 +589,134 @@ const CharacterPick = ({ game }) => {
   };
 
   return (
-    <div>
-      {game.story.characters.map((character) => {
-        const choosingParticipant = game.participants.find(
-          (participant) =>
-            participant.character !== null &&
-            participant.character.name === character.name
-        );
-        return (
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={choosingParticipant !== undefined}
-            onClick={() => pickCharacter(character)}
-          >
-            {character.name}{" "}
-            {choosingParticipant !== undefined &&
-              "- " + choosingParticipant.name}
-          </Button>
-        );
-      })}{" "}
-    </div>
+    <React.Fragment>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>pick a character plz</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <List className={classes.root}>
+              {game.story.characters.map((character) => {
+                const choosingParticipant = game.participants.find(
+                  (participant) =>
+                    participant.character !== null &&
+                    participant.character.name === character.name
+                );
+                return (
+                  <ListItem
+                    button
+                    disabled={choosingParticipant !== undefined}
+                    onClick={() => {
+                      pickCharacter(character);
+                    }}
+                  >
+                    <ListItemText
+                      primary={character.name}
+                      secondary={
+                        choosingParticipant !== undefined &&
+                        choosingParticipant.name
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Grid>
+        </Grid>
+      </Container>
+    </React.Fragment>
   );
 };
 
 const CharacterList = ({ game }) => {
+  const classes = useStyles();
+
   return (
-    <div>
-      {game.story.characters.map((character) => {
-        const choosingParticipant = game.participants.find(
-          (participant) =>
-            participant.character !== null &&
-            participant.character.name === character.name
-        );
-        return (
-          <div>
-            {character.name}{" "}
-            {choosingParticipant !== undefined &&
-              "- " + choosingParticipant.name}
-          </div>
-        );
-      })}{" "}
-    </div>
+    <React.Fragment>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>great work. wait for your 'friends' now.</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <List className={classes.root}>
+              {game.story.characters.map((character) => {
+                const choosingParticipant = game.participants.find(
+                  (participant) =>
+                    participant.character !== null &&
+                    participant.character.name === character.name
+                );
+                return (
+                  <ListItem>
+                    <ListItemText
+                      primary={character.name}
+                      secondary={
+                        choosingParticipant !== undefined &&
+                        choosingParticipant.name
+                      }
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Grid>
+        </Grid>
+      </Container>
+    </React.Fragment>
   );
 };
 
 const Home = () => {
   let history = useHistory();
+  const classes = useStyles();
 
   return (
-    <div>
-      home
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => history.push("/create")}
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
       >
-        create game
-      </Button>
-    </div>
+        <Grid item xs={12}>
+          <Button
+            variant="outlined"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/create")}
+          >
+            create game
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="outlined"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/create")}
+          >
+            my games
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 
@@ -449,11 +725,7 @@ const SignInButton = () => {
 
   return (
     <div>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => auth.signInWithPopup(provider)}
-      >
+      <Button color="inherited" onClick={() => auth.signInWithPopup(provider)}>
         sign in
       </Button>
     </div>
@@ -463,57 +735,9 @@ const SignInButton = () => {
 const SignOutButton = () => {
   return (
     <div>
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={() => auth.signOut()}
-      >
+      <Button color="inherited" onClick={() => auth.signOut()}>
         sign out
       </Button>
     </div>
   );
 };
-
-// const ThingButton = () => {
-//   const addBook = () => {
-//     console.log("doing thing");
-//     db.collection("things").add({ yo: "lo" }); // update
-//   };
-
-//   return (
-//     <Button variant="contained" color="primary" onClick={() => addBook()}>
-//       Hello World
-//     </Button>
-//   );
-// };
-
-// const ThingList = () => {
-//   const [things, setThings] = useState([]);
-
-//   useEffect(() => {
-//     const unsub = db.collection("things").onSnapshot((snapshot) => {
-//       const allThings = snapshot.docs.map((doc) => ({
-//         id: doc.id,
-//         ...doc.data(),
-//       }));
-//       setThings(allThings);
-//     });
-//     return () => {
-//       unsub();
-//     };
-//   }, []);
-
-//   const classes = useStyles();
-
-//   return (
-//     <div className={classes.root}>
-//       <List component="nav" aria-label="secondary mailbox folders">
-//         {things.map((thing) => (
-//           <ListItem button>
-//             <ListItemText primary={thing.yo} />
-//           </ListItem>
-//         ))}
-//       </List>
-//     </div>
-//   );
-// };
