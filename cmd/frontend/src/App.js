@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"; // update
+import React, { useState, useEffect, useContext } from "react"; // update
 import { firebase, db, auth } from "./firebase";
 import Button from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
@@ -23,6 +23,7 @@ import Avatar from "@material-ui/core/Avatar";
 import ImageIcon from "@material-ui/icons/Image";
 import WorkIcon from "@material-ui/icons/Work";
 import BeachAccessIcon from "@material-ui/icons/BeachAccess";
+import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
 import {
   BrowserRouter as Router,
   Switch,
@@ -30,6 +31,7 @@ import {
   Link,
   useParams,
   useHistory,
+  useLocation,
 } from "react-router-dom";
 
 const useStyles = makeStyles((theme) => ({
@@ -43,21 +45,40 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   button: {
-    width: "300px",
+    width: "100%",
+    textTransform: "none",
   },
   optionsButtons: {
     minHeight: "70vh",
+    width: "100%",
   },
   avatar: {
     width: theme.spacing(3),
     height: theme.spacing(3),
   },
+  clues: {
+    padding: 10,
+  },
+  cluesGrid: {
+    display: "flex",
+  },
 }));
+
+const useQuery = () => {
+  return new URLSearchParams(useLocation().search);
+};
+
+const UserContext = React.createContext();
 
 export default () => {
   const classes = useStyles();
 
-  const [authUser, setAuthUser] = useState(null);
+  let history = useHistory();
+  let location = useLocation();
+  const [authUser, setAuthUser] = useState("loading");
+  const [loading, setLoading] = useState(true);
+  const [userDetails, setUserDetails] = useState(null);
+  let target = useQuery().get("target");
 
   useEffect(() => {
     const unlisten = auth.onAuthStateChanged((authUser) => {
@@ -69,17 +90,52 @@ export default () => {
     };
   });
 
-  if (authUser == null) {
-    return (
-      <div className={classes.root}>
-        <SignInButton />
-      </div>
-    );
+  useEffect(() => {
+    if (authUser !== null && authUser !== "loading") {
+      setLoading(true);
+      console.log(authUser);
+      db.collection("user_details")
+        .doc(authUser.uid)
+        .get()
+        .then((results) => {
+          if (results.exists) {
+            setUserDetails(results.data());
+          }
+        })
+        .then(() => setLoading(false))
+        .catch(console.log);
+    }
+  }, [authUser]);
+
+  // if not authed, direct to signin
+  if (
+    location.pathname !== "/signin" &&
+    location.pathname !== "/signup" &&
+    authUser === null
+  ) {
+    history.push(`/signin?target=${location.pathname}`);
+  }
+
+  // if authed while on auth page, redirect to original target
+  if (
+    (location.pathname === "/signin" || location.pathname === "/signup") &&
+    authUser !== null
+  ) {
+    history.push(`${target}`);
+  }
+
+  if (loading) {
+    return <div>loading user</div>;
+  }
+  // if authed but no userDetails, show name select page
+  if (authUser !== null && userDetails === null && !loading) {
+    console.log(authUser, userDetails, loading);
+    return <ChooseName setUserDetails={setUserDetails} />;
   }
 
   return (
     <div className={classes.root}>
-      <Router>
+      <UserContext.Provider value={userDetails}>
         <Banner />
         <Switch>
           <Route path="/create">
@@ -91,12 +147,87 @@ export default () => {
           <Route path="/game/:id">
             <Game />
           </Route>
+          <Route path="/signin">
+            <SignIn />
+          </Route>
+          <Route path="/signup">
+            <SignUp />
+          </Route>
           <Route path="/">
             <Home />
           </Route>
         </Switch>
-      </Router>
+      </UserContext.Provider>
     </div>
+  );
+};
+
+const ChooseName = ({ setUserDetails }) => {
+  const classes = useStyles();
+  const [name, setName] = useState("");
+  const [err, setErr] = useState(null);
+  let history = useHistory();
+  let query = useQuery();
+
+  let target = query.get("target");
+
+  const SelectName = () => {
+    const userDetails = {
+      id: auth.currentUser.uid,
+      name: name,
+      email: auth.currentUser.email,
+    };
+    db.collection("user_details")
+      .doc(auth.currentUser.uid)
+      .set(userDetails)
+      .then(() => setUserDetails(userDetails))
+      .catch((err) => setErr(err.toString()));
+  };
+
+  return (
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Snackbar
+        open={err !== null}
+        autoHideDuration={6000}
+        onClose={() => setErr(null)}
+      >
+        <Alert onClose={() => setErr(null)} severity="error">
+          {err}
+        </Alert>
+      </Snackbar>
+      <Grid item xs={12}>
+        <Typography>pick a hilarious yet identifiable name</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={name}
+          id="name"
+          label="name"
+          variant="outlined"
+          className={classes.button}
+          onChange={(e) => {
+            setName(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.button}
+          onClick={() => SelectName()}
+        >
+          choose this cool name
+        </Button>
+      </Grid>
+    </Grid>
   );
 };
 
@@ -115,11 +246,14 @@ const Banner = () => {
           <Typography variant="h6" className={classes.title}>
             who-do
           </Typography>
-          <Avatar
-            alt={auth.currentUser.displayName}
-            src={auth.currentUser.photoURL}
-            className={classes.avatar}
-          />
+          {auth.currentUser !== null ? (
+            <Avatar
+              alt={auth.currentUser.displayName}
+              src={auth.currentUser.photoURL}
+              className={classes.avatar}
+              onClick={() => auth.signOut()}
+            />
+          ) : null}
         </Toolbar>
       </AppBar>
     </div>
@@ -131,6 +265,7 @@ const Create = () => {
 
   const [name, setName] = useState("");
   let history = useHistory();
+  const user = useContext(UserContext);
 
   const createGame = () => {
     db.collection("games")
@@ -139,14 +274,14 @@ const Create = () => {
         participants_locked: false,
         story: null,
         current_round: 0,
-        participants: [
-          {
-            id: auth.currentUser.uid,
-            name: auth.currentUser.displayName,
-            email: auth.currentUser.email,
+        participants: {
+          [auth.currentUser.uid]: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
             character: null,
           },
-        ],
+        },
       })
       .then((game) => history.push(`/game/${game.id}`));
   };
@@ -175,7 +310,7 @@ const Create = () => {
         </Grid>
         <Grid item xs={12}>
           <Button
-            variant="outlined"
+            variant="contained"
             color="primary"
             className={classes.button}
             onClick={() => createGame()}
@@ -194,19 +329,19 @@ const Join = () => {
   let history = useHistory();
   let { id } = useParams();
   const [game, setGame] = useState(null);
+  const user = useContext(UserContext);
 
   const joinGame = () => {
-    const newParticipants = game.participants;
-    newParticipants.push({
-      id: auth.currentUser.uid,
-      name: auth.currentUser.displayName,
-      email: auth.currentUser.email,
-      character: null,
-    });
+    console.log(user);
     db.collection("games")
       .doc(id)
       .update({
-        participants: newParticipants,
+        [`participants.${user.id}`]: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          character: null,
+        },
       })
       .then(() => history.push(`/game/${id}`));
   };
@@ -228,11 +363,7 @@ const Join = () => {
     return <div>loading</div>;
   }
 
-  if (
-    game.participants.find(
-      (participant) => participant.id === auth.currentUser.uid
-    ) !== undefined
-  ) {
+  if (game.participants[auth.currentUser.uid] !== undefined) {
     history.push(`/game/${id}`);
   }
   return (
@@ -253,23 +384,23 @@ const Join = () => {
             <Typography variant="h3">{game.name}</Typography>
           </Grid>
           <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-              <Button
-                variant="outlined"
-                color="primary"
-                className={classes.button}
-                onClick={() => joinGame()}
-              >
-                alright then.
-              </Button>
-            </CopyToClipboard>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.button}
+              onClick={() => joinGame()}
+            >
+              alright then.
+            </Button>
           </Grid>
           <Grid item xs={12}>
             <Typography>current crew:</Typography>
           </Grid>
           <Grid item xs={12}>
-            {game.participants.map((participant) => (
-              <Typography align="center">{participant.name}</Typography>
+            {Object.keys(game.participants).map((participant) => (
+              <Typography align="center">
+                {game.participants[participant].name}
+              </Typography>
             ))}
           </Grid>
         </Grid>
@@ -284,6 +415,7 @@ const Game = () => {
   const [game, setGame] = useState(null);
   const classes = useStyles();
   const [open, setOpen] = useState(false);
+  const user = useContext(UserContext);
 
   useEffect(() => {
     const unsub = db
@@ -349,7 +481,7 @@ const Game = () => {
             <Grid item xs={12}>
               <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   color="primary"
                   className={classes.button}
                   onClick={() => setOpen(true)}
@@ -360,7 +492,7 @@ const Game = () => {
             </Grid>
             <Grid item xs={12}>
               <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 className={classes.button}
                 onClick={() => lockParticipants()}
@@ -372,8 +504,10 @@ const Game = () => {
               <Typography>current crew:</Typography>
             </Grid>
             <Grid item xs={12}>
-              {game.participants.map((participant) => (
-                <Typography align="center">{participant.name}</Typography>
+              {Object.keys(game.participants).map((participant) => (
+                <Typography align="center">
+                  {game.participants[participant].name}
+                </Typography>
               ))}
             </Grid>
           </Grid>
@@ -388,17 +522,13 @@ const Game = () => {
   }
 
   // if this participant needs to pick a character
-  if (
-    game.participants.find(
-      (participant) => participant.id === auth.currentUser.uid
-    ).character === null
-  ) {
+  if (game.participants[user.id].character === null) {
     return <CharacterPick game={game} />;
   }
 
   // if people still need to pick characters
   const participantsStillDeciding = [];
-  game.participants.forEach((participant) => {
+  Object.values(game.participants).forEach((participant) => {
     if (participant.character === null) {
       participantsStillDeciding.push(participant.name);
     }
@@ -418,7 +548,7 @@ const Game = () => {
 
 const RoundView = ({ game }) => {
   const classes = useStyles();
-
+  const user = useContext(UserContext);
   const nextRound = () => {
     const current_round = game.current_round;
     db.collection("games")
@@ -428,57 +558,74 @@ const RoundView = ({ game }) => {
       });
   };
 
-  const participant = game.participants.find(
-    (participant) => participant.id === auth.currentUser.uid
-  );
+  const participant = game.participants[user.id];
   const character = participant.character;
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography variant="h4">
-              {game.story.rounds[game.current_round]}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h6">tell people:</Typography>
-          </Grid>
-          <Grid item xs={12}>
+    <Grid
+      container
+      spacing={2}
+      // padding={3}
+      // justify="center"
+      // alignItems="center"
+      // direction="column"
+      className={classes.clues}
+    >
+      <Grid item xs={12}>
+        <Typography variant="h4">
+          {game.story.rounds[game.current_round]}
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Paper variant="outlined">
+          <Grid container>
+            <Grid item xs={12}>
+              <Typography variant="h6">tell people:</Typography>
+            </Grid>
             {character.info[game.current_round].public.map((info) => (
-              <Typography align="center">{info}</Typography>
+              <React.Fragment>
+                <Grid item xs={1}>
+                  <CheckBoxOutlineBlankIcon />
+                </Grid>
+                <Grid item xs={11}>
+                  <Typography align="left">{info}</Typography>
+                </Grid>
+              </React.Fragment>
             ))}
           </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h6">keep secret:</Typography>
-          </Grid>
-          <Grid item xs={12}>
+        </Paper>
+      </Grid>
+      <Grid item xs={12}>
+        <Paper variant="outlined">
+          <Grid container>
+            <Grid item xs={12}>
+              <Typography variant="h6">keep secret:</Typography>
+            </Grid>
             {character.info[game.current_round].private.map((info) => (
-              <Typography align="center">{info}</Typography>
+              <React.Fragment>
+                <Grid item xs={1}>
+                  <CheckBoxOutlineBlankIcon />
+                </Grid>
+                <Grid item xs={11}>
+                  <Typography align="left">{info}</Typography>
+                </Grid>
+              </React.Fragment>
             ))}
           </Grid>
-          <Grid item xs={12}>
-            {game.current_round < game.story.rounds.length - 1 ? (
-              <Button
-                variant="outlined"
-                color="primary"
-                className={classes.button}
-                onClick={() => nextRound()}
-              >
-                done with this round
-              </Button>
-            ) : null}
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
+        </Paper>
+      </Grid>
+      <Grid item xs={12}>
+        {game.current_round < game.story.rounds.length - 1 ? (
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => nextRound()}
+          >
+            done with this round
+          </Button>
+        ) : null}
+      </Grid>
+    </Grid>
   );
 };
 
@@ -504,6 +651,7 @@ const StoryPick = ({ gameID }) => {
     db.collection("games").doc(gameID).update({
       story: story,
     });
+    console.log(JSON.stringify(story));
   };
 
   return (
@@ -550,7 +698,7 @@ const StoryPick = ({ gameID }) => {
           <Grid item xs={12}>
             <CopyToClipboard text={`${window.location.origin}/join/${gameID}`}>
               <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 className={classes.button}
                 onClick={() => setOpen(true)}
@@ -567,25 +715,28 @@ const StoryPick = ({ gameID }) => {
 
 const CharacterPick = ({ game }) => {
   const classes = useStyles();
+  const user = useContext(UserContext);
 
   const pickCharacter = (character) => {
     console.log(character);
-    const newParticipants = game.participants.map((participant) => {
-      console.log(participant);
-      console.log(auth.currentUser.uid);
+    // const newParticipants = game.participants.map((participant) => {
+    //   console.log(participant);
+    //   console.log(auth.currentUser.uid);
 
-      if (participant.id === auth.currentUser.uid) {
-        return {
-          ...participant,
-          character: character,
-        };
-      }
-      return participant;
-    });
-    console.log(newParticipants);
-    db.collection("games").doc(game.id).update({
-      participants: newParticipants,
-    });
+    //   if (participant.id === auth.currentUser.uid) {
+    //     return {
+    //       ...participant,
+    //       character: character,
+    //     };
+    //   }
+    //   return participant;
+    // });
+    // console.log(newParticipants);
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        [`participants.${user.id}.character`]: character,
+      });
   };
 
   return (
@@ -605,10 +756,12 @@ const CharacterPick = ({ game }) => {
           <Grid item xs={12}>
             <List className={classes.root}>
               {game.story.characters.map((character) => {
-                const choosingParticipant = game.participants.find(
+                const choosingParticipant = Object.values(
+                  game.participants,
+                ).find(
                   (participant) =>
                     participant.character !== null &&
-                    participant.character.name === character.name
+                    participant.character.name === character.name,
                 );
                 return (
                   <ListItem
@@ -656,10 +809,12 @@ const CharacterList = ({ game }) => {
           <Grid item xs={12}>
             <List className={classes.root}>
               {game.story.characters.map((character) => {
-                const choosingParticipant = game.participants.find(
+                const choosingParticipant = Object.values(
+                  game.participants,
+                ).find(
                   (participant) =>
                     participant.character !== null &&
-                    participant.character.name === character.name
+                    participant.character.name === character.name,
                 );
                 return (
                   <ListItem>
@@ -697,7 +852,7 @@ const Home = () => {
       >
         <Grid item xs={12}>
           <Button
-            variant="outlined"
+            variant="contained"
             color="primary"
             className={classes.button}
             onClick={() => history.push("/create")}
@@ -707,7 +862,7 @@ const Home = () => {
         </Grid>
         <Grid item xs={12}>
           <Button
-            variant="outlined"
+            variant="contained"
             color="primary"
             className={classes.button}
             onClick={() => history.push("/create")}
@@ -720,13 +875,215 @@ const Home = () => {
   );
 };
 
-const SignInButton = () => {
+const SignIn = () => {
+  const classes = useStyles();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [err, setErr] = useState(null);
+  let history = useHistory();
+  let query = useQuery();
+
+  let target = query.get("target");
+
+  return (
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Snackbar
+        open={err !== null}
+        autoHideDuration={6000}
+        onClose={() => setErr(null)}
+      >
+        <Alert onClose={() => setErr(null)} severity="error">
+          {err}
+        </Alert>
+      </Snackbar>
+      <Grid item xs={12}>
+        <Typography>sign in please</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={email}
+          id="email"
+          label="email"
+          variant="outlined"
+          className={classes.button}
+          onChange={(e) => {
+            setEmail(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={password}
+          id="password"
+          label="password"
+          variant="outlined"
+          type="password"
+          className={classes.button}
+          onChange={(e) => {
+            setPassword(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.button}
+          onClick={() =>
+            auth
+              .signInWithEmailAndPassword(email, password)
+              .then(console.log)
+              .catch((err) => setErr(err.toString()))
+          }
+        >
+          sign in
+        </Button>
+      </Grid>
+      <Grid item xs={12}>
+        <GoogleSignInButton />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          color="primary"
+          className={classes.button}
+          onClick={() => history.push(`/signup?target=${target}`)}
+        >
+          new user?
+        </Button>
+      </Grid>
+    </Grid>
+  );
+};
+
+const SignUp = () => {
+  const classes = useStyles();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [err, setErr] = useState(null);
+  let history = useHistory();
+  let query = useQuery();
+
+  let target = query.get("target");
+
+  const CreateUser = () => {
+    if (password !== passwordConfirm) {
+      setErr("passwords don't match");
+      return;
+    }
+
+    auth
+      .createUserWithEmailAndPassword(email, password)
+      .then(console.log)
+      .catch((err) => setErr(err.toString()));
+  };
+
+  return (
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Snackbar
+        open={err !== null}
+        autoHideDuration={6000}
+        onClose={() => setErr(null)}
+      >
+        <Alert onClose={() => setErr(null)} severity="error">
+          {err}
+        </Alert>
+      </Snackbar>
+      <Grid item xs={12}>
+        <Typography>make an account then i guess</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={email}
+          id="email"
+          label="email"
+          variant="outlined"
+          className={classes.button}
+          onChange={(e) => {
+            setEmail(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={password}
+          id="password"
+          label="password"
+          variant="outlined"
+          type="password"
+          className={classes.button}
+          onChange={(e) => {
+            setPassword(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={passwordConfirm}
+          id="password_confirm"
+          label="again"
+          variant="outlined"
+          type="password"
+          className={classes.button}
+          onChange={(e) => {
+            setPasswordConfirm(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.button}
+          onClick={() => CreateUser()}
+        >
+          sign up
+        </Button>
+      </Grid>
+      <Grid item xs={12}>
+        <GoogleSignInButton />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          color="primary"
+          className={classes.button}
+          onClick={() => history.push(`/signin?target=${target}`)}
+        >
+          existing user?
+        </Button>
+      </Grid>
+    </Grid>
+  );
+};
+
+const GoogleSignInButton = () => {
+  const classes = useStyles();
+
   const provider = new firebase.auth.GoogleAuthProvider();
 
   return (
     <div>
-      <Button color="inherited" onClick={() => auth.signInWithPopup(provider)}>
-        sign in
+      <Button
+        color="primary"
+        variant="contained"
+        className={classes.button}
+        onClick={() => auth.signInWithPopup(provider)}
+      >
+        sign in with google
       </Button>
     </div>
   );
@@ -735,7 +1092,7 @@ const SignInButton = () => {
 const SignOutButton = () => {
   return (
     <div>
-      <Button color="inherited" onClick={() => auth.signOut()}>
+      <Button color="primary" onClick={() => auth.signOut()}>
         sign out
       </Button>
     </div>
