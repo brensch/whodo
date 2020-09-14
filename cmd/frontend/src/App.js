@@ -103,6 +103,7 @@ export default () => {
   const [authUser, setAuthUser] = useState("loading");
   const [loading, setLoading] = useState(true);
   const [userDetails, setUserDetails] = useState(null);
+  const [err, setErr] = useState(null);
   let target = useQuery().get("target");
 
   useEffect(() => {
@@ -116,6 +117,7 @@ export default () => {
   });
 
   useEffect(() => {
+    console.log("authuser", authUser);
     if (authUser !== null && authUser !== "loading") {
       setLoading(true);
       console.log(authUser);
@@ -123,14 +125,20 @@ export default () => {
         .doc(authUser.uid)
         .get()
         .then((results) => {
+          console.log(results);
           if (results.exists) {
             setUserDetails(results.data());
           }
         })
-        .then(() => setLoading(false))
-        .catch(console.log);
+        .catch((err) => setErr(err.toString()))
+        .finally(() => setLoading(false));
     }
   }, [authUser]);
+
+  if (authUser !== null && userDetails === null && !loading) {
+    console.log(authUser, userDetails, loading);
+    return <ChooseName setUserDetails={setUserDetails} />;
+  }
 
   // if not authed, direct to signin
   if (
@@ -149,14 +157,14 @@ export default () => {
     history.push(`${target}`);
   }
 
+  if (err !== null) {
+    return <div>error: {err}</div>;
+  }
+
   if (loading) {
     return <div>loading</div>;
   }
   // if authed but no userDetails, show name select page
-  if (authUser !== null && userDetails === null && !loading) {
-    console.log(authUser, userDetails, loading);
-    return <ChooseName setUserDetails={setUserDetails} />;
-  }
 
   return (
     <div className={classes.root}>
@@ -358,6 +366,7 @@ const Options = () => {
   const classes = useStyles();
 
   const user = useContext(UserContext);
+  let history = useHistory();
 
   return (
     <React.Fragment>
@@ -375,7 +384,7 @@ const Options = () => {
               variant="contained"
               color="primary"
               className={classes.button}
-              onClick={() => auth.signOut()}
+              onClick={() => auth.signOut().then(() => history.push("/"))}
             >
               sign out
             </Button>
