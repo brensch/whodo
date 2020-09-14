@@ -4,6 +4,10 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import CssBaseline from "@material-ui/core/CssBaseline";
 import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import { MuiPickersUtilsProvider } from "@material-ui/pickers";
+
+import MomentUtils from "@date-io/moment";
+
 // import white from "@material-ui/core/colors/white";
 // import green from "@material-ui/core/colors/green";
 import {
@@ -40,12 +44,14 @@ const theme = createMuiTheme({
 
 ReactDOM.render(
   <React.StrictMode>
-    <Router>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <App />
-      </ThemeProvider>
-    </Router>
+    <MuiPickersUtilsProvider utils={MomentUtils}>
+      <Router>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <App />
+        </ThemeProvider>
+      </Router>
+    </MuiPickersUtilsProvider>
   </React.StrictMode>,
   document.getElementById("root"),
 );

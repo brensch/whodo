@@ -12,7 +12,7 @@ import Toolbar from "@material-ui/core/Toolbar";
 import Container from "@material-ui/core/Container";
 import Typography from "@material-ui/core/Typography";
 import IconButton from "@material-ui/core/IconButton";
-import MenuIcon from "@material-ui/icons/Menu";
+import HomeIcon from "@material-ui/icons/Home";
 import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import { CopyToClipboard } from "react-copy-to-clipboard";
@@ -35,7 +35,9 @@ import FormControl from "@material-ui/core/FormControl";
 import MenuItem from "@material-ui/core/MenuItem";
 import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
-
+import { DateTimePicker } from "@material-ui/pickers";
+import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import moment from "moment";
 import {
   BrowserRouter as Router,
   Switch,
@@ -102,14 +104,15 @@ export default () => {
   let location = useLocation();
   const [authUser, setAuthUser] = useState("loading");
   const [loading, setLoading] = useState(true);
-  const [userDetails, setUserDetails] = useState(null);
+  const [newUser, setNewUser] = useState(false);
+  const [userDetails, setUserDetails] = useState("loading");
   const [err, setErr] = useState(null);
   let target = useQuery().get("target");
 
   useEffect(() => {
-    const unlisten = auth.onAuthStateChanged((authUser) => {
-      console.log(authUser);
-      authUser ? setAuthUser(authUser) : setAuthUser(null);
+    const unlisten = auth.onAuthStateChanged((authUserChange) => {
+      console.log(authUserChange);
+      authUserChange ? setAuthUser(authUserChange) : setAuthUser(null);
     });
     return () => {
       unlisten();
@@ -117,9 +120,15 @@ export default () => {
   });
 
   useEffect(() => {
+    if (userDetails !== null) {
+      setNewUser(false);
+    }
+  }, [userDetails]);
+
+  useEffect(() => {
     console.log("authuser", authUser);
-    if (authUser !== null && authUser !== "loading") {
-      setLoading(true);
+    if (authUser !== "loading" && authUser !== null) {
+      // setLoading(true);
       console.log(authUser);
       db.collection("user_details")
         .doc(authUser.uid)
@@ -128,15 +137,18 @@ export default () => {
           console.log(results);
           if (results.exists) {
             setUserDetails(results.data());
+          } else {
+            setNewUser(true);
           }
         })
-        .catch((err) => setErr(err.toString()))
-        .finally(() => setLoading(false));
+        .catch((err) => setErr(err.toString()));
+      // .finally(() => setLoading(false));
     }
+    // setLoading(false);
   }, [authUser]);
 
-  if (authUser !== null && userDetails === null && !loading) {
-    console.log(authUser, userDetails, loading);
+  if (newUser) {
+    // console.log(authUser, userDetails, loading);
     return <ChooseName setUserDetails={setUserDetails} />;
   }
 
@@ -146,6 +158,7 @@ export default () => {
     location.pathname !== "/signup" &&
     authUser === null
   ) {
+    console.log("signing in");
     history.push(`/signin?target=${location.pathname}`);
   }
 
@@ -161,7 +174,11 @@ export default () => {
     return <div>error: {err}</div>;
   }
 
-  if (loading) {
+  if (
+    location.pathname !== "/signin" &&
+    location.pathname !== "/signup" &&
+    userDetails === "loading"
+  ) {
     return <div>loading</div>;
   }
   // if authed but no userDetails, show name select page
@@ -179,6 +196,9 @@ export default () => {
           </Route>
           <Route path="/game/:id">
             <Game />
+          </Route>
+          <Route path="/mygames">
+            <MyGames />
           </Route>
           <Route path="/signin">
             <SignIn />
@@ -198,6 +218,52 @@ export default () => {
         </Switch>
       </UserContext.Provider>
     </div>
+  );
+};
+
+const MyGames = () => {
+  const user = useContext(UserContext);
+  const [games, setGames] = useState([]);
+  const classes = useStyles();
+  let history = useHistory();
+
+  console.log(user);
+
+  useEffect(() => {
+    // if
+    const unsub = db
+      .collection("games")
+      .where("participant_ids", "array-contains", user.id)
+      .onSnapshot((snapshot) => {
+        const allGames = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setGames(allGames);
+      });
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  return (
+    <React.Fragment>
+      <Typography align="center">your games</Typography>
+      <List
+        component="nav"
+        aria-labelledby="games-list"
+        className={classes.root}
+      >
+        {games.map((game) => (
+          <ListItem button onClick={() => history.push("/game/" + game.id)}>
+            <ListItemText
+              primary={`${game.name} - ${game.participant_ids.length} players`}
+              secondary={game.story !== null && game.story.name}
+            />
+          </ListItem>
+        ))}
+      </List>
+    </React.Fragment>
   );
 };
 
@@ -278,6 +344,15 @@ const Banner = () => {
     <div className={classes.root}>
       <AppBar position="static" color="transparent">
         <Toolbar>
+          <IconButton
+            edge="start"
+            className={classes.menuButton}
+            color="inherit"
+            aria-label="home-button"
+            onClick={() => history.push("/")}
+          >
+            <HomeIcon />
+          </IconButton>
           <Typography
             onClick={() => history.push("/")}
             variant="h6"
@@ -285,25 +360,50 @@ const Banner = () => {
           >
             who-do
           </Typography>
-          {auth.currentUser !== null ? (
-            <IconButton onClick={() => history.push("/options")}>
-              <SettingsIcon />
-            </IconButton>
-          ) : null}
         </Toolbar>
       </AppBar>
     </div>
   );
 };
 
+const datePickerTheme = createMuiTheme({
+  palette: {
+    type: "dark",
+    primary: {
+      light: "#ba8fa4",
+      main: "#ba8fa4",
+      dark: "#8fbaba",
+      contrastText: "#fff",
+    },
+    secondary: {
+      light: "#ff7961",
+      main: "#f44336",
+      dark: "#ba000d",
+      contrastText: "#ba8fa4",
+    },
+  },
+  typography: {
+    fontFamily: ["Lucida Console", "Monaco", "monospace"].join(","),
+    fontSize: 13,
+
+    // htmlFontSize: 6,
+
+    // fontFamily: ["Courier New", "Courier", "monospace"].join(","),
+    // fontFamily: ["Times New Roman", "Times", "serif"].join(","),
+  },
+});
+
 const Create = () => {
   const classes = useStyles();
 
   const [name, setName] = useState("");
+  const [selectedDate, handleDateChange] = useState(moment());
+
   let history = useHistory();
   const user = useContext(UserContext);
 
   const createGame = () => {
+    console.log(selectedDate);
     db.collection("games")
       .add({
         name: name,
@@ -311,8 +411,13 @@ const Create = () => {
         story: null,
         current_round: 0,
         current_answer: 0,
+        participant_ids: [user.id],
+        start_time: firebase.firestore.Timestamp.fromDate(
+          selectedDate.toDate(),
+        ),
+        start_now: false,
         participants: {
-          [auth.currentUser.uid]: {
+          [user.id]: {
             id: user.id,
             name: user.name,
             email: user.email,
@@ -346,6 +451,18 @@ const Create = () => {
               setName(e.currentTarget.value);
             }}
           />
+        </Grid>
+        <Grid item xs={12}>
+          <ThemeProvider theme={datePickerTheme}>
+            <DateTimePicker
+              fullWidth
+              label="when are you playing?"
+              inputVariant="outlined"
+              className={classes.button}
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
+          </ThemeProvider>
         </Grid>
         <Grid item xs={12}>
           <Button
@@ -416,6 +533,7 @@ const Join = () => {
           guess: null,
           ready_for_answer: false,
         },
+        participant_ids: firebase.firestore.FieldValue.arrayUnion(user.id),
       })
       .then(() => history.push(`/game/${id}`));
   };
@@ -490,6 +608,7 @@ const Game = () => {
   const classes = useStyles();
   const [open, setOpen] = useState(false);
   const user = useContext(UserContext);
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const unsub = db
@@ -505,6 +624,13 @@ const Game = () => {
     return () => {
       unsub();
     };
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const lockParticipants = () => {
@@ -553,6 +679,11 @@ const Game = () => {
               <Typography variant="h3">{game.name}</Typography>
             </Grid>
             <Grid item xs={12}>
+              <Typography variant="h5">
+                {game.start_time.toDate().toLocaleDateString("en-US")}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
               <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
                 <Button
                   variant="contained"
@@ -596,9 +727,8 @@ const Game = () => {
   }
 
   // if this participant needs to pick a character
-  if (game.participants[user.id].character === null) {
-    return <CharacterPick game={game} />;
-  }
+  // if (game.participants[user.id].character === null) {
+  // }
 
   // if people still need to pick characters
   const participantsStillDeciding = [];
@@ -610,7 +740,12 @@ const Game = () => {
 
   // if the current user is waiting for other players to decide
   if (participantsStillDeciding.length > 0) {
-    return <CharacterList game={game} />;
+    return <CharacterPick game={game} />;
+  }
+
+  // if we're waiting for go time
+  if (!game.start_now && game.start_time.toDate() > now) {
+    return <WaitingRoom game={game} />;
   }
 
   // if we're up to the final round and the user hasn't guessed
@@ -842,7 +977,6 @@ const RoundView = ({ game }) => {
       </Grid>
       <Grid item xs={12}>
         {Object.values(game.participants).filter((participant) => {
-          console.log(participant.notes[game.current_round].ready);
           return participant.notes[game.current_round].ready;
         }).length === Object.values(game.participants).length ? (
           <Button
@@ -863,6 +997,77 @@ const RoundView = ({ game }) => {
             <Typography align="left"> not everyone ready yet</Typography>
           </Button>
         )}
+      </Grid>
+    </Grid>
+  );
+};
+
+const WaitingRoom = ({ game }) => {
+  const classes = useStyles();
+  let user = useContext(UserContext);
+  const character = game.participants[user.id].character;
+  const [now, setNow] = useState(moment());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(moment());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const StartNow = () => {
+    db.collection("games").doc(game.id).update({
+      start_now: true,
+    });
+  };
+
+  return (
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Grid item xs={12}>
+        <Typography align="center">
+          alright time to get ready. go get a costume before the game starts.
+          <br />
+          you'll be playing:
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="h4" align="center">
+          {character.name}
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography align="center">{character.blurb}</Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="h6" align="center">
+          time until the fun begins:
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="h4" align="center">
+          {moment
+            .duration(moment(game.start_time.toDate()).diff(now))
+            .humanize()}
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.buttonFullWidth}
+          onClick={() => {
+            StartNow();
+          }}
+        >
+          actually i can't wait. let's start now.
+        </Button>
       </Grid>
     </Grid>
   );
@@ -1265,6 +1470,25 @@ const CharacterPick = ({ game }) => {
       });
   };
 
+  const resetStory = () => {
+    Object.values(game.participants).forEach((participant) => {
+      participant.character = null;
+      participant.notes = null;
+    });
+
+    console.log(game.participants);
+
+    db.collection("games").doc(game.id).update({
+      story: null,
+      participants: game.participants,
+    });
+  };
+
+  console.log(game.participants);
+  console.log(user);
+
+  let participantHasPicked = game.participants[user.id].character !== null;
+
   return (
     <React.Fragment>
       <Container>
@@ -1277,7 +1501,11 @@ const CharacterPick = ({ game }) => {
           className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography>pick a character </Typography>
+            <Typography>
+              {participantHasPicked
+                ? "wait for your crew to pick"
+                : "pick a character"}
+            </Typography>
           </Grid>
           <Grid item xs={12}>
             <List className={classes.root}>
@@ -1292,7 +1520,9 @@ const CharacterPick = ({ game }) => {
                 return (
                   <ListItem
                     button
-                    disabled={choosingParticipant !== undefined}
+                    disabled={
+                      participantHasPicked || choosingParticipant !== undefined
+                    }
                     onClick={() => {
                       pickCharacter(character);
                     }}
@@ -1309,58 +1539,68 @@ const CharacterPick = ({ game }) => {
               })}
             </List>
           </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
-  );
-};
-
-const CharacterList = ({ game }) => {
-  const classes = useStyles();
-
-  return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
           <Grid item xs={12}>
-            <Typography>great work. wait for your 'friends' now.</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {game.story.characters.map((character) => {
-                const choosingParticipant = Object.values(
-                  game.participants,
-                ).find(
-                  (participant) =>
-                    participant.character !== null &&
-                    participant.character.name === character.name,
-                );
-                return (
-                  <ListItem>
-                    <ListItemText
-                      primary={character.name}
-                      secondary={
-                        choosingParticipant !== undefined &&
-                        choosingParticipant.name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.button}
+              onClick={() => resetStory()}
+            >
+              start over
+            </Button>
           </Grid>
         </Grid>
       </Container>
     </React.Fragment>
   );
 };
+
+// const CharacterList = ({ game }) => {
+//   const classes = useStyles();
+
+//   return (
+//     <React.Fragment>
+//       <Container>
+//         <Grid
+//           container
+//           spacing={3}
+//           justify="center"
+//           alignItems="center"
+//           direction="column"
+//           className={classes.optionsButtons}
+//         >
+//           <Grid item xs={12}>
+//             <Typography>great work. wait for your 'friends' now.</Typography>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <List className={classes.root}>
+//               {game.story.characters.map((character) => {
+//                 const choosingParticipant = Object.values(
+//                   game.participants,
+//                 ).find(
+//                   (participant) =>
+//                     participant.character !== null &&
+//                     participant.character.name === character.name,
+//                 );
+//                 return (
+//                   <ListItem>
+//                     <ListItemText
+//                       primary={character.name}
+//                       secondary={
+//                         choosingParticipant !== undefined &&
+//                         choosingParticipant.name
+//                       }
+//                     />
+//                   </ListItem>
+//                 );
+//               })}
+//             </List>
+//           </Grid>
+//         </Grid>
+//       </Container>
+//     </React.Fragment>
+//   );
+// };
 
 const Home = () => {
   let history = useHistory();
@@ -1391,7 +1631,7 @@ const Home = () => {
             variant="contained"
             color="primary"
             className={classes.button}
-            onClick={() => history.push("/create")}
+            onClick={() => history.push("/mygames")}
           >
             my games
           </Button>
@@ -1404,6 +1644,16 @@ const Home = () => {
             onClick={() => history.push("/instructions")}
           >
             instructions
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            // variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/options")}
+          >
+            options
           </Button>
         </Grid>
       </Grid>
