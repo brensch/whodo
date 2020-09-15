@@ -75,7 +75,14 @@ const useStyles = makeStyles((theme) => ({
   },
   clues: {
     padding: 10,
+    maxWidth: 1000,
+    alignContent: "center",
   },
+  cluesContainer: {
+    padding: 10,
+    maxWidth: 1000,
+  },
+  notesPopup: {},
   cluesGrid: {
     display: "flex",
   },
@@ -88,6 +95,8 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
     padding: theme.spacing(2, 4, 3),
+    maxHeight: "80vh",
+    overflow: "scroll",
   },
 }));
 
@@ -818,7 +827,7 @@ const ReadAnswers = ({ game }) => {
     game.participants[user.id].character.name
   ) {
     return (
-      <Grid container spacing={2} className={classes.clues}>
+      <Grid container justify="center" spacing={2} className={classes.clues}>
         <Grid item xs={12}>
           <Typography variant="h4">
             read to the group. they're all listening.
@@ -853,6 +862,14 @@ const ReadAnswers = ({ game }) => {
 const RoundView = ({ game }) => {
   const classes = useStyles();
   const user = useContext(UserContext);
+  const [cluesModal, setCluesModal] = useState(false);
+  const [timelineModal, setTimelineModal] = useState(false);
+  const [notesModal, setNotesModal] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [submittingNewNote, setSubmittingNewNote] = useState(false);
+  const [previousRound, setPreviousRound] = useState(null);
+
+  let roundToView = previousRound === null ? game.current_round : previousRound;
 
   const nextRound = () => {
     const current_round = game.current_round;
@@ -875,130 +892,337 @@ const RoundView = ({ game }) => {
       });
   };
 
+  const submitNewNote = () => {
+    setSubmittingNewNote(true);
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        [`participants.${user.id}.generic_notes`]: firebase.firestore.FieldValue.arrayUnion(
+          {
+            message: newNote,
+            time: firebase.firestore.Timestamp.fromDate(new Date()),
+          },
+        ),
+      })
+      .then(() => {
+        setNewNote("");
+        setSubmittingNewNote(false);
+      });
+  };
+
   return (
-    <Grid container spacing={2} className={classes.clues}>
-      <Grid item xs={12}>
-        <Typography variant="h4">
-          {game.story.rounds[game.current_round].name}
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography>{game.story.rounds[game.current_round].info}</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Paper variant="outlined">
-          <Grid container>
-            <Grid item xs={12}>
-              <Typography variant="h6">tell people:</Typography>
-            </Grid>
-            {character.info[game.current_round].public.map((info, i) => {
-              const newNotes = JSON.parse(JSON.stringify(participant.notes));
-              newNotes[game.current_round].public[i] = !participant.notes[
-                game.current_round
-              ].public[i];
-              return (
-                <React.Fragment>
-                  <Grid item xs={1} onClick={() => updateNotes(newNotes)}>
-                    {participant.notes[game.current_round].public[i] ? (
-                      <CheckBoxIcon />
-                    ) : (
-                      <CheckBoxOutlineBlankIcon />
-                    )}
-                  </Grid>
-                  <Grid item xs={11} onClick={() => updateNotes(newNotes)}>
-                    <Typography align="left">{info}</Typography>
-                  </Grid>
-                </React.Fragment>
-              );
-            })}
-          </Grid>
-        </Paper>
-      </Grid>
-      <Grid item xs={12}>
-        <Paper variant="outlined">
-          <Grid container>
-            <Grid item xs={12}>
-              <Typography variant="h6">keep secret:</Typography>
-            </Grid>
-            {character.info[game.current_round].private.map((info, i) => {
-              const newNotes = JSON.parse(JSON.stringify(participant.notes));
-              newNotes[game.current_round].private[i] = !participant.notes[
-                game.current_round
-              ].private[i];
-              return (
-                <React.Fragment>
-                  <Grid item xs={1} onClick={() => updateNotes(newNotes)}>
-                    {participant.notes[game.current_round].private[i] ? (
-                      <CheckBoxIcon />
-                    ) : (
-                      <CheckBoxOutlineBlankIcon />
-                    )}{" "}
-                  </Grid>
-                  <Grid item xs={11} onClick={() => updateNotes(newNotes)}>
-                    <Typography align="left">{info}</Typography>
-                  </Grid>
-                </React.Fragment>
-              );
-            })}
-          </Grid>
-        </Paper>
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          className={classes.buttonFullWidth}
-          onClick={() => {
-            const newNotes = JSON.parse(JSON.stringify(participant.notes));
-            newNotes[game.current_round].ready = !participant.notes[
-              game.current_round
-            ].ready;
-            return updateNotes(newNotes);
-          }}
-        >
+    <React.Fragment>
+      <Modal
+        open={cluesModal}
+        onClose={() => setCluesModal(false)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={cluesModal}>
+          <div className={classes.modalPaper}>
+            <h2 id="clues-modal-title">clues</h2>
+            <p id="clues-modal-description">clues yo</p>
+          </div>
+        </Fade>
+      </Modal>
+      <Modal
+        open={timelineModal}
+        onClose={() => setTimelineModal(false)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={timelineModal}>
+          <div className={classes.modalPaper}>
+            <h2 id="timeline-modal-title">timeline</h2>
+            <p id="timeline-modal-description">timeline yo</p>
+          </div>
+        </Fade>
+      </Modal>
+      <Modal
+        open={notesModal}
+        onClose={() => setNotesModal(false)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={notesModal}>
+          <div className={classes.modalPaper}>
+            <List className={classes.root}>
+              <Grid container className={classes.root} spacing={2}>
+                <Grid item xs={12}>
+                  <Typography variant="h5">notes </Typography>
+                </Grid>
+                <Grid item xs={12}>
+                  {participant.generic_notes.map((note) => (
+                    <ListItem>
+                      <ListItemText
+                        primary={note.message}
+                        secondary={note.time
+                          .toDate()
+                          .toLocaleTimeString("en-US")}
+                      />
+                    </ListItem>
+                  ))}
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    value={newNote}
+                    id="new-note"
+                    label="new note"
+                    variant="outlined"
+                    className={classes.buttonFullWidth}
+                    onChange={(e) => {
+                      setNewNote(e.currentTarget.value);
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled={submittingNewNote}
+                    className={classes.buttonFullWidth}
+                    onClick={() => submitNewNote()}
+                  >
+                    <Typography align="center">clues</Typography>
+                  </Button>
+                </Grid>
+              </Grid>
+            </List>
+          </div>
+        </Fade>
+      </Modal>
+      <Grid container className={classes.root}>
+        <Grid container justify="center">
           <Grid
             container
-            justify="center"
+            className={classes.cluesContainer}
             alignItems="center"
-            style={{ width: "100%" }}
+            justify="center"
+            spacing={2}
           >
-            <Grid item xs={3}>
-              {participant.notes[game.current_round].ready ? (
-                <CheckBoxIcon />
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.buttonFullWidth}
+                onClick={() => setCluesModal(true)}
+              >
+                <Typography align="center">clues</Typography>
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.buttonFullWidth}
+                onClick={() => setTimelineModal(true)}
+              >
+                <Typography align="center">timeline</Typography>
+              </Button>
+            </Grid>
+            <Grid item xs={4}>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.buttonFullWidth}
+                onClick={() => setNotesModal(true)}
+              >
+                <Typography align="center">notes</Typography>
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="h4">
+                {game.story.rounds[roundToView].name}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography>{game.story.rounds[roundToView].info}</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Paper variant="outlined">
+                <Grid container>
+                  <Grid item xs={12}>
+                    <Typography variant="h6">tell people:</Typography>
+                  </Grid>
+                  {character.info[roundToView].public.map((info, i) => {
+                    const newNotes = JSON.parse(
+                      JSON.stringify(participant.notes),
+                    );
+                    newNotes[roundToView].public[i] = !participant.notes[
+                      roundToView
+                    ].public[i];
+                    return (
+                      <React.Fragment>
+                        <Grid item xs={1} onClick={() => updateNotes(newNotes)}>
+                          {participant.notes[roundToView].public[i] ? (
+                            <CheckBoxIcon />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon />
+                          )}
+                        </Grid>
+                        <Grid
+                          item
+                          xs={11}
+                          onClick={() => updateNotes(newNotes)}
+                        >
+                          <Typography align="left">{info}</Typography>
+                        </Grid>
+                      </React.Fragment>
+                    );
+                  })}
+                </Grid>
+              </Paper>
+            </Grid>
+            <Grid item xs={12}>
+              <Paper variant="outlined">
+                <Grid container>
+                  <Grid item xs={12}>
+                    <Typography variant="h6">keep secret:</Typography>
+                  </Grid>
+                  {character.info[roundToView].private.map((info, i) => {
+                    const newNotes = JSON.parse(
+                      JSON.stringify(participant.notes),
+                    );
+                    newNotes[roundToView].private[i] = !participant.notes[
+                      roundToView
+                    ].private[i];
+                    return (
+                      <React.Fragment>
+                        <Grid item xs={1} onClick={() => updateNotes(newNotes)}>
+                          {participant.notes[roundToView].private[i] ? (
+                            <CheckBoxIcon />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon />
+                          )}{" "}
+                        </Grid>
+                        <Grid
+                          item
+                          xs={11}
+                          onClick={() => updateNotes(newNotes)}
+                        >
+                          <Typography align="left">{info}</Typography>
+                        </Grid>
+                      </React.Fragment>
+                    );
+                  })}
+                </Grid>
+              </Paper>
+            </Grid>
+            <Grid item xs={12}>
+              {previousRound === null ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.buttonFullWidth}
+                  onClick={() => {
+                    const newNotes = JSON.parse(
+                      JSON.stringify(participant.notes),
+                    );
+                    newNotes[roundToView].ready = !participant.notes[
+                      roundToView
+                    ].ready;
+                    return updateNotes(newNotes);
+                  }}
+                >
+                  <Grid
+                    container
+                    justify="center"
+                    alignItems="center"
+                    style={{ width: "100%" }}
+                  >
+                    <Grid item xs={3}>
+                      {participant.notes[roundToView].ready ? (
+                        <CheckBoxIcon />
+                      ) : (
+                        <CheckBoxOutlineBlankIcon />
+                      )}
+                    </Grid>
+                    <Grid item xs={9}>
+                      <Typography align="left">done with this round</Typography>
+                    </Grid>
+                  </Grid>
+                </Button>
               ) : (
-                <CheckBoxOutlineBlankIcon />
-              )}{" "}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.buttonFullWidth}
+                  onClick={() => setPreviousRound(null)}
+                >
+                  return to current round clues
+                </Button>
+              )}
             </Grid>
-            <Grid item xs={9}>
-              <Typography align="left"> done with this round</Typography>
+            <Grid item xs={12}>
+              {previousRound === null ? (
+                Object.values(game.participants).filter((participant) => {
+                  return participant.notes[roundToView].ready;
+                }).length === Object.values(game.participants).length ? (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    className={classes.buttonFullWidth}
+                    onClick={() => nextRound()}
+                  >
+                    <Typography align="left"> next round</Typography>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled
+                    className={classes.buttonFullWidth}
+                  >
+                    <Typography align="left">
+                      {" "}
+                      not everyone ready yet
+                    </Typography>
+                  </Button>
+                )
+              ) : null}
             </Grid>
+            {game.current_round > 0 ? (
+              <Grid item xs={12}>
+                <FormControl
+                  variant="outlined"
+                  className={classes.buttonFullWidth}
+                >
+                  <InputLabel id="previous-round-label">
+                    check previous round clues
+                  </InputLabel>
+                  <Select
+                    labelId="previous-round-label"
+                    id="previous-round-select"
+                    value={previousRound}
+                    className={classes.buttonFullWidth}
+                    onChange={(e) => setPreviousRound(e.target.value)}
+                    label="previous round"
+                  >
+                    {game.story.rounds
+                      .filter((round, i) => i < game.current_round)
+                      .map((round, i) => (
+                        <MenuItem value={i}>{round.name}</MenuItem>
+                      ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+            ) : null}
           </Grid>
-        </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        {Object.values(game.participants).filter((participant) => {
-          return participant.notes[game.current_round].ready;
-        }).length === Object.values(game.participants).length ? (
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.buttonFullWidth}
-            onClick={() => nextRound()}
-          >
-            <Typography align="left"> next round</Typography>
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            color="primary"
-            disabled
-            className={classes.buttonFullWidth}
-          >
-            <Typography align="left"> not everyone ready yet</Typography>
-          </Button>
-        )}
-      </Grid>
-    </Grid>
+    </React.Fragment>
   );
 };
 
@@ -1454,6 +1678,7 @@ const CharacterPick = ({ game }) => {
 
   const pickCharacter = (character) => {
     console.log(character);
+    // create a blank object corresponding to each round and clue
     const notes = character.info.map((round) => {
       return {
         private: round.private.map(() => false),
@@ -1467,6 +1692,7 @@ const CharacterPick = ({ game }) => {
       .update({
         [`participants.${user.id}.character`]: character,
         [`participants.${user.id}.notes`]: notes,
+        [`participants.${user.id}.generic_notes`]: [],
       });
   };
 
