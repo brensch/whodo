@@ -6,7 +6,12 @@ import CssBaseline from "@material-ui/core/CssBaseline";
 import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
 
-import MomentUtils from "@date-io/moment";
+// import MomentUtils from "@date-io/moment";
+// import dayjs from "dayjs";
+// import DayjsUtils from "dayjs";
+// import "dayjs/locale/en-au";
+import DateFnsUtils from "@date-io/date-fns";
+import { enAU } from "date-fns/locale";
 
 // import white from "@material-ui/core/colors/white";
 // import green from "@material-ui/core/colors/green";
@@ -19,6 +24,7 @@ import {
   useHistory,
 } from "react-router-dom";
 
+// dayjs.locale("en-au");
 const theme = createMuiTheme({
   palette: {
     type: "dark",
@@ -44,7 +50,7 @@ const theme = createMuiTheme({
 
 ReactDOM.render(
   <React.StrictMode>
-    <MuiPickersUtilsProvider utils={MomentUtils}>
+    <MuiPickersUtilsProvider locale={enAU} utils={DateFnsUtils}>
       <Router>
         <ThemeProvider theme={theme}>
           <CssBaseline />
@@ -53,7 +59,7 @@ ReactDOM.render(
       </Router>
     </MuiPickersUtilsProvider>
   </React.StrictMode>,
-  document.getElementById("root"),
+  document.getElementById("root")
 );
 
 // If you want your app to work offline and load faster, you can change

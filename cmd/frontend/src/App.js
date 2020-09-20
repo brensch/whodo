@@ -37,7 +37,15 @@ import InputLabel from "@material-ui/core/InputLabel";
 import Select from "@material-ui/core/Select";
 import { DateTimePicker } from "@material-ui/pickers";
 import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import moment from "moment";
+import { formatDistance } from "date-fns";
+import Table from "@material-ui/core/Table";
+import TableBody from "@material-ui/core/TableBody";
+import TableCell from "@material-ui/core/TableCell";
+import TableContainer from "@material-ui/core/TableContainer";
+import TableHead from "@material-ui/core/TableHead";
+import TableRow from "@material-ui/core/TableRow";
+import Divider from "@material-ui/core/Divider";
+import CloseIcon from "@material-ui/icons/Close";
 import {
   BrowserRouter as Router,
   Switch,
@@ -406,7 +414,7 @@ const Create = () => {
   const classes = useStyles();
 
   const [name, setName] = useState("");
-  const [selectedDate, handleDateChange] = useState(moment());
+  const [selectedDate, handleDateChange] = useState(new Date());
 
   let history = useHistory();
   const user = useContext(UserContext);
@@ -417,14 +425,12 @@ const Create = () => {
       .add({
         name: name,
         participants_locked: false,
+        discovered_clues: [],
         story: null,
         current_round: 0,
         current_answer: 0,
         participant_ids: [user.id],
-        start_time: firebase.firestore.Timestamp.fromDate(
-          selectedDate.toDate(),
-        ),
-        start_now: false,
+        start_time: firebase.firestore.Timestamp.fromDate(selectedDate),
         participants: {
           [user.id]: {
             id: user.id,
@@ -433,6 +439,8 @@ const Create = () => {
             character: null,
             guess: null,
             ready_for_answer: false,
+            ready_to_start: false,
+            has_read_rules: false,
           },
         },
       })
@@ -477,6 +485,7 @@ const Create = () => {
           <Button
             variant="contained"
             color="primary"
+            disabled={name === ""}
             className={classes.button}
             onClick={() => createGame()}
           >
@@ -541,6 +550,8 @@ const Join = () => {
           character: null,
           guess: null,
           ready_for_answer: false,
+          ready_to_start: false,
+          has_read_rules: false,
         },
         participant_ids: firebase.firestore.FieldValue.arrayUnion(user.id),
       })
@@ -562,6 +573,10 @@ const Join = () => {
 
   if (game === null) {
     return <div>loading</div>;
+  }
+
+  if (game === undefined) {
+    return <div>invalid game, check url</div>;
   }
 
   if (game.participants[auth.currentUser.uid] !== undefined) {
@@ -659,6 +674,10 @@ const Game = () => {
     return <div>loading</div>;
   }
 
+  if (game.name === undefined) {
+    return <div>invalid game, check url or go home to start over</div>;
+  }
+
   // if users can still join
   if (!game.participants_locked) {
     return (
@@ -689,7 +708,7 @@ const Game = () => {
             </Grid>
             <Grid item xs={12}>
               <Typography variant="h5">
-                {game.start_time.toDate().toLocaleDateString("en-US")}
+                {game.start_time.toDate().toLocaleDateString("en-AU")}
               </Typography>
             </Grid>
             <Grid item xs={12}>
@@ -735,10 +754,6 @@ const Game = () => {
     return <StoryPick game={game} />;
   }
 
-  // if this participant needs to pick a character
-  // if (game.participants[user.id].character === null) {
-  // }
-
   // if people still need to pick characters
   const participantsStillDeciding = [];
   Object.values(game.participants).forEach((participant) => {
@@ -753,8 +768,31 @@ const Game = () => {
   }
 
   // if we're waiting for go time
-  if (!game.start_now && game.start_time.toDate() > now) {
-    return <WaitingRoom game={game} />;
+  // ready_to_start: false,
+  // has_read_rules: false,
+  const participantsReadyToStart = [];
+  Object.values(game.participants).forEach((participant) => {
+    console.log(participant);
+    if (participant.ready_to_start === true) {
+      participantsReadyToStart.push(participant.name);
+    }
+  });
+
+  if (
+    participantsReadyToStart.length < game.participant_ids.length &&
+    game.start_time.toDate() > now
+  ) {
+    return (
+      <WaitingRoom
+        game={game}
+        participantsReadyToStart={participantsReadyToStart}
+      />
+    );
+  }
+
+  // if user needs to read the rules
+  if (!game.participants[user.id].has_read_rules) {
+    return <GameRules game={game} />;
   }
 
   // if we're up to the final round and the user hasn't guessed
@@ -769,7 +807,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.guess !== null,
+      (participant) => participant.guess !== null
     ).length !== Object.values(game.participants).length
   ) {
     return (
@@ -795,7 +833,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.ready_for_answer === true,
+      (participant) => participant.ready_for_answer === true
     ).length === Object.values(game.participants).length
   ) {
     return <ReadAnswers game={game} />;
@@ -859,6 +897,115 @@ const ReadAnswers = ({ game }) => {
   );
 };
 
+const GameRules = ({ game }) => {
+  let history = useHistory();
+  const classes = useStyles();
+  let user = useContext(UserContext);
+
+  const acceptRules = () => {
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        [`participants.${user.id}.has_read_rules`]: true,
+      });
+  };
+
+  return (
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Typography variant="h5" align="center">
+            rules
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <List className={classes.root}>
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="talk"
+                secondary={
+                  <React.Fragment>
+                    start conversations using your public info, but only reveal
+                    your private info when asked about it by another character.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="don't lie"
+                secondary={
+                  <React.Fragment>
+                    it gets weird if you lie about your secrets. gotta come
+                    clean when asked.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="complete rounds"
+                secondary={
+                  <React.Fragment>
+                    once you've revealed all your information for a round,
+                    there's a button down the buttom to show you're ready for
+                    the next round.{" "}
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="guess the killer"
+                secondary={
+                  <React.Fragment>
+                    once all rounds are finished, make a guess about who did it
+                    and why. once everyone has guessed, the true story is
+                    revealed.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="have fun/win"
+                secondary={
+                  <React.Fragment>
+                    the winner is whoever has the most fun (or all people who
+                    guessed the killer correctly){" "}
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+          </List>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.buttonFullWidth}
+            onClick={() => acceptRules()}
+          >
+            <Typography align="center">let's go</Typography>
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
+  );
+};
+
 const RoundView = ({ game }) => {
   const classes = useStyles();
   const user = useContext(UserContext);
@@ -866,6 +1013,7 @@ const RoundView = ({ game }) => {
   const [timelineModal, setTimelineModal] = useState(false);
   const [notesModal, setNotesModal] = useState(false);
   const [newNote, setNewNote] = useState("");
+  const [noteSubject, setNoteSubject] = useState("misc");
   const [submittingNewNote, setSubmittingNewNote] = useState(false);
   const [previousRound, setPreviousRound] = useState(null);
 
@@ -901,7 +1049,9 @@ const RoundView = ({ game }) => {
           {
             message: newNote,
             time: firebase.firestore.Timestamp.fromDate(new Date()),
-          },
+            subject: noteSubject,
+            round: game.current_round,
+          }
         ),
       })
       .then(() => {
@@ -909,6 +1059,16 @@ const RoundView = ({ game }) => {
         setSubmittingNewNote(false);
       });
   };
+
+  const cluesDiscoveredByPlayer = [];
+  game.story.clues.forEach((clue) => {
+    if (
+      clue.character === character.name &&
+      clue.round === game.current_round
+    ) {
+      cluesDiscoveredByPlayer.push(clue);
+    }
+  });
 
   return (
     <React.Fragment>
@@ -924,8 +1084,40 @@ const RoundView = ({ game }) => {
       >
         <Fade in={cluesModal}>
           <div className={classes.modalPaper}>
-            <h2 id="clues-modal-title">clues</h2>
-            <p id="clues-modal-description">clues yo</p>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={8}>
+                <Typography variant="h4">clues</Typography>
+              </Grid>
+              <Grid container item xs={4} justify="flex-end">
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setCluesModal(false)}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Grid>
+              <Grid item xs={12}>
+                <List component="nav" aria-label="clues list">
+                  {game.discovered_clues.map((clueNumber) => (
+                    <ListItem button>
+                      <ListItemText
+                        primary={game.story.clues[clueNumber].name}
+                      />
+                    </ListItem>
+                  ))}
+                  {game.discovered_clues.length === 0 ? (
+                    <ListItem button>
+                      <ListItemText primary="no clues discovered yet" />
+                    </ListItem>
+                  ) : null}
+                </List>
+              </Grid>
+            </Grid>
           </div>
         </Fade>
       </Modal>
@@ -941,8 +1133,48 @@ const RoundView = ({ game }) => {
       >
         <Fade in={timelineModal}>
           <div className={classes.modalPaper}>
-            <h2 id="timeline-modal-title">timeline</h2>
-            <p id="timeline-modal-description">timeline yo</p>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={8}>
+                <Typography variant="h4">timeline</Typography>
+              </Grid>
+              <Grid container item xs={4} justify="flex-end">
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setTimelineModal(false)}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Grid>
+              <Grid item xs={12}>
+                <TableContainer component={Paper}>
+                  <Table
+                    className={classes.table}
+                    size="small"
+                    aria-label="timeline-table"
+                  >
+                    <TableBody>
+                      {Object.keys(character.timeline)
+                        .sort()
+                        .map((time) => (
+                          <TableRow key={`timeline-${time}`}>
+                            <TableCell component="th" scope="row">
+                              {time}
+                            </TableCell>
+                            <TableCell align="right">
+                              {character.timeline[time]}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </Grid>
           </div>
         </Fade>
       </Modal>
@@ -958,48 +1190,91 @@ const RoundView = ({ game }) => {
       >
         <Fade in={notesModal}>
           <div className={classes.modalPaper}>
-            <List className={classes.root}>
-              <Grid container className={classes.root} spacing={2}>
-                <Grid item xs={12}>
-                  <Typography variant="h5">notes </Typography>
-                </Grid>
-                <Grid item xs={12}>
-                  {participant.generic_notes.map((note) => (
-                    <ListItem>
-                      <ListItemText
-                        primary={note.message}
-                        secondary={note.time
-                          .toDate()
-                          .toLocaleTimeString("en-US")}
-                      />
-                    </ListItem>
-                  ))}
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    value={newNote}
-                    id="new-note"
-                    label="new note"
-                    variant="outlined"
-                    className={classes.buttonFullWidth}
-                    onChange={(e) => {
-                      setNewNote(e.currentTarget.value);
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    disabled={submittingNewNote}
-                    className={classes.buttonFullWidth}
-                    onClick={() => submitNewNote()}
-                  >
-                    <Typography align="center">clues</Typography>
-                  </Button>
-                </Grid>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={8}>
+                <Typography variant="h4">notes</Typography>
               </Grid>
-            </List>
+              <Grid container item xs={4} justify="flex-end">
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setNotesModal(false)}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  value={newNote}
+                  id="new-note"
+                  label="new note"
+                  variant="outlined"
+                  className={classes.buttonFullWidth}
+                  onChange={(e) => {
+                    setNewNote(e.currentTarget.value);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl
+                  variant="outlined"
+                  className={classes.buttonFullWidth}
+                >
+                  <InputLabel id="note-subject-label">
+                    who's it about
+                  </InputLabel>
+                  <Select
+                    labelId="note-subject-label"
+                    id="note-subject-select"
+                    value={noteSubject}
+                    className={classes.buttonFullWidth}
+                    onChange={(e) => setNoteSubject(e.target.value)}
+                    label="who's it about "
+                  >
+                    {Object.values(game.participants).map((participant) => (
+                      <MenuItem value={participant.character.name}>
+                        {participant.character.name} ({participant.name})
+                      </MenuItem>
+                    ))}
+                    <MenuItem value="misc">misc</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={newNote === "" || submittingNewNote}
+                  className={classes.buttonFullWidth}
+                  onClick={() => submitNewNote()}
+                >
+                  <Typography align="center">save note</Typography>
+                </Button>
+              </Grid>
+              <Grid item xs={12}>
+                <List className={classes.root}>
+                  {participant.generic_notes
+                    .sort((a, b) => {
+                      return b.time - a.time;
+                    })
+                    .map((note) => (
+                      <ListItem>
+                        <ListItemText
+                          primary={`${note.subject}: ${note.message}`}
+                          secondary={`${
+                            game.story.rounds[note.round].name
+                          }, ${note.time.toDate().toLocaleTimeString("en-AU")}`}
+                        />
+                      </ListItem>
+                    ))}
+                </List>
+              </Grid>
+            </Grid>
           </div>
         </Fade>
       </Modal>
@@ -1042,6 +1317,19 @@ const RoundView = ({ game }) => {
                 <Typography align="center">notes</Typography>
               </Button>
             </Grid>
+            {previousRound !== null ? (
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.buttonFullWidth}
+                  onClick={() => setPreviousRound(null)}
+                >
+                  return to current round info
+                </Button>
+              </Grid>
+            ) : null}
+
             <Grid item xs={12}>
               <Typography variant="h4">
                 {game.story.rounds[roundToView].name}
@@ -1058,7 +1346,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].public.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].public[i] = !participant.notes[
                       roundToView
@@ -1093,7 +1381,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].private.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].private[i] = !participant.notes[
                       roundToView
@@ -1120,6 +1408,28 @@ const RoundView = ({ game }) => {
                 </Grid>
               </Paper>
             </Grid>
+            {cluesDiscoveredByPlayer.length > 0 ? (
+              <Grid item xs={12}>
+                <Paper variant="outlined">
+                  <Grid container>
+                    <Grid item xs={12}>
+                      <Typography variant="h6">discovered a clue:</Typography>
+                    </Grid>
+                    {cluesDiscoveredByPlayer.map((clue, i) => (
+                      <React.Fragment>
+                        <Grid item xs={12}>
+                          {clue.name}
+                        </Grid>
+                        <Grid item xs={12}>
+                          {clue.description}
+                        </Grid>
+                      </React.Fragment>
+                    ))}
+                  </Grid>
+                </Paper>
+              </Grid>
+            ) : null}
+
             <Grid item xs={12}>
               {previousRound === null ? (
                 <Button
@@ -1128,7 +1438,7 @@ const RoundView = ({ game }) => {
                   className={classes.buttonFullWidth}
                   onClick={() => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].ready = !participant.notes[
                       roundToView
@@ -1154,16 +1464,7 @@ const RoundView = ({ game }) => {
                     </Grid>
                   </Grid>
                 </Button>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className={classes.buttonFullWidth}
-                  onClick={() => setPreviousRound(null)}
-                >
-                  return to current round clues
-                </Button>
-              )}
+              ) : null}
             </Grid>
             <Grid item xs={12}>
               {previousRound === null ? (
@@ -1208,7 +1509,7 @@ const RoundView = ({ game }) => {
                     value={previousRound}
                     className={classes.buttonFullWidth}
                     onChange={(e) => setPreviousRound(e.target.value)}
-                    label="previous round"
+                    label="check previous round info"
                   >
                     {game.story.rounds
                       .filter((round, i) => i < game.current_round)
@@ -1226,23 +1527,25 @@ const RoundView = ({ game }) => {
   );
 };
 
-const WaitingRoom = ({ game }) => {
+const WaitingRoom = ({ game, participantsReadyToStart }) => {
   const classes = useStyles();
   let user = useContext(UserContext);
   const character = game.participants[user.id].character;
-  const [now, setNow] = useState(moment());
+  const [now, setNow] = useState(new Date());
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setNow(moment());
+      setNow(new Date());
     }, 1000);
     return () => clearInterval(interval);
   }, []);
 
   const StartNow = () => {
-    db.collection("games").doc(game.id).update({
-      start_now: true,
-    });
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        [`participants.${user.id}.ready_to_start`]: true,
+      });
   };
 
   return (
@@ -1276,9 +1579,9 @@ const WaitingRoom = ({ game }) => {
       </Grid>
       <Grid item xs={12}>
         <Typography variant="h4" align="center">
-          {moment
-            .duration(moment(game.start_time.toDate()).diff(now))
-            .humanize()}
+          {formatDistance(game.start_time.toDate(), now)}
+          {/* {dayjs.duration(dayjs(game.start_time.toDate()).diff(now)).humanize()} */}
+          {/* {dayjs(game.start_time.toDate()).diff(now).humanize()} */}
         </Typography>
       </Grid>
       <Grid item xs={12}>
@@ -1290,9 +1593,17 @@ const WaitingRoom = ({ game }) => {
             StartNow();
           }}
         >
-          actually i can't wait. let's start now.
+          i want to start now
         </Button>
       </Grid>
+      {participantsReadyToStart.length > 0 ? (
+        <Grid item xs={12}>
+          <Typography align="center">
+            There are some users already ready to start:{" "}
+            {participantsReadyToStart.map((readyGuy) => `${readyGuy},`)}
+          </Typography>
+        </Grid>
+      ) : null}
     </Grid>
   );
 };
@@ -1560,7 +1871,7 @@ const StoryPick = ({ game }) => {
       setAlert(
         `story needs ${story.characters.length} players, have ${
           Object.keys(game.participants).length
-        } `,
+        } `
       );
       setOpen(true);
     }
@@ -1737,11 +2048,11 @@ const CharacterPick = ({ game }) => {
             <List className={classes.root}>
               {game.story.characters.map((character) => {
                 const choosingParticipant = Object.values(
-                  game.participants,
+                  game.participants
                 ).find(
                   (participant) =>
                     participant.character !== null &&
-                    participant.character.name === character.name,
+                    participant.character.name === character.name
                 );
                 return (
                   <ListItem
