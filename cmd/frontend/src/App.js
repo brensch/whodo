@@ -74,6 +74,10 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     textTransform: "none",
   },
+  padded: {
+    padding: "10px",
+  },
+
   optionsButtons: {
     minHeight: "70vh",
   },
@@ -441,6 +445,7 @@ const Create = () => {
             ready_for_answer: false,
             ready_to_start: false,
             has_read_rules: false,
+            seen_clues: [],
           },
         },
       })
@@ -552,6 +557,7 @@ const Join = () => {
           ready_for_answer: false,
           ready_to_start: false,
           has_read_rules: false,
+          seen_clues: [],
         },
         participant_ids: firebase.firestore.FieldValue.arrayUnion(user.id),
       })
@@ -807,7 +813,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.guess !== null
+      (participant) => participant.guess !== null,
     ).length !== Object.values(game.participants).length
   ) {
     return (
@@ -833,7 +839,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.ready_for_answer === true
+      (participant) => participant.ready_for_answer === true,
     ).length === Object.values(game.participants).length
   ) {
     return <ReadAnswers game={game} />;
@@ -1016,6 +1022,7 @@ const RoundView = ({ game }) => {
   const [noteSubject, setNoteSubject] = useState("misc");
   const [submittingNewNote, setSubmittingNewNote] = useState(false);
   const [previousRound, setPreviousRound] = useState(null);
+  const [submittingClueDiscovery, setSubmittingClueDiscovery] = useState(false);
 
   let roundToView = previousRound === null ? game.current_round : previousRound;
 
@@ -1051,7 +1058,7 @@ const RoundView = ({ game }) => {
             time: firebase.firestore.Timestamp.fromDate(new Date()),
             subject: noteSubject,
             round: game.current_round,
-          }
+          },
         ),
       })
       .then(() => {
@@ -1060,18 +1067,97 @@ const RoundView = ({ game }) => {
       });
   };
 
+  const discoverClue = (clueNumber) => {
+    setSubmittingClueDiscovery(true);
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        discovered_clues: firebase.firestore.FieldValue.arrayUnion(clueNumber),
+      })
+      .then(() => {
+        setSubmittingClueDiscovery(false);
+      });
+  };
+
+  const clueSeen = (clueNumber) => {
+    db.collection("games")
+      .doc(game.id)
+      .update({
+        [`participants.${user.id}.seen_clues`]: firebase.firestore.FieldValue.arrayUnion(
+          clueNumber,
+        ),
+      });
+  };
+
   const cluesDiscoveredByPlayer = [];
-  game.story.clues.forEach((clue) => {
+  game.story.clues.forEach((clue, i) => {
     if (
       clue.character === character.name &&
-      clue.round === game.current_round
+      clue.round === game.current_round &&
+      !game.discovered_clues.includes(i)
     ) {
-      cluesDiscoveredByPlayer.push(clue);
+      cluesDiscoveredByPlayer.push({
+        id: i,
+        ...clue,
+      });
+    }
+  });
+
+  const unseenCluesArray = [];
+  game.discovered_clues.forEach((i) => {
+    if (!participant.seen_clues.includes(i)) {
+      unseenCluesArray.push(i);
     }
   });
 
   return (
     <React.Fragment>
+      <Modal
+        open={unseenCluesArray.length > 0}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={unseenCluesArray.length > 0}>
+          <div className={classes.modalPaper}>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={12}>
+                <Typography variant="h4">new clue!</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <List component="nav" aria-label="clues list">
+                  {unseenCluesArray.map((clueNumber) => (
+                    <ListItem
+                      button
+                      onClick={() =>
+                        window.open(game.story.clues[clueNumber].url, "_blank")
+                      }
+                    >
+                      <ListItemText
+                        primary={game.story.clues[clueNumber].name}
+                        secondary="tap to view"
+                      />
+                      <ListItemSecondaryAction
+                        onClick={() => clueSeen(clueNumber)}
+                      >
+                        done
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            </Grid>
+          </div>
+        </Fade>
+      </Modal>
       <Modal
         open={cluesModal}
         onClose={() => setCluesModal(false)}
@@ -1104,7 +1190,12 @@ const RoundView = ({ game }) => {
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
                   {game.discovered_clues.map((clueNumber) => (
-                    <ListItem button>
+                    <ListItem
+                      button
+                      onClick={() =>
+                        window.open(game.story.clues[clueNumber].url, "_blank")
+                      }
+                    >
                       <ListItemText
                         primary={game.story.clues[clueNumber].name}
                       />
@@ -1346,7 +1437,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].public.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes)
+                      JSON.stringify(participant.notes),
                     );
                     newNotes[roundToView].public[i] = !participant.notes[
                       roundToView
@@ -1381,7 +1472,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].private.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes)
+                      JSON.stringify(participant.notes),
                     );
                     newNotes[roundToView].private[i] = !participant.notes[
                       roundToView
@@ -1418,10 +1509,18 @@ const RoundView = ({ game }) => {
                     {cluesDiscoveredByPlayer.map((clue, i) => (
                       <React.Fragment>
                         <Grid item xs={12}>
-                          {clue.name}
-                        </Grid>
-                        <Grid item xs={12}>
                           {clue.description}
+                        </Grid>
+                        <Grid item xs={12} className={classes.padded}>
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            padding="3"
+                            className={classes.buttonFullWidth}
+                            onClick={() => discoverClue(clue.id)}
+                          >
+                            reveal {clue.name} to group
+                          </Button>
                         </Grid>
                       </React.Fragment>
                     ))}
@@ -1438,7 +1537,7 @@ const RoundView = ({ game }) => {
                   className={classes.buttonFullWidth}
                   onClick={() => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes)
+                      JSON.stringify(participant.notes),
                     );
                     newNotes[roundToView].ready = !participant.notes[
                       roundToView
@@ -1871,7 +1970,7 @@ const StoryPick = ({ game }) => {
       setAlert(
         `story needs ${story.characters.length} players, have ${
           Object.keys(game.participants).length
-        } `
+        } `,
       );
       setOpen(true);
     }
@@ -2048,11 +2147,11 @@ const CharacterPick = ({ game }) => {
             <List className={classes.root}>
               {game.story.characters.map((character) => {
                 const choosingParticipant = Object.values(
-                  game.participants
+                  game.participants,
                 ).find(
                   (participant) =>
                     participant.character !== null &&
-                    participant.character.name === character.name
+                    participant.character.name === character.name,
                 );
                 return (
                   <ListItem
