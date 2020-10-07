@@ -1,60 +1,54 @@
-import React, { useState, useEffect, useContext } from "react"; // update
-import { firebase, db, auth } from "./firebase";
+import AppBar from "@material-ui/core/AppBar";
+import Backdrop from "@material-ui/core/Backdrop";
 import Button from "@material-ui/core/Button";
-import { makeStyles } from "@material-ui/core/styles";
+import Container from "@material-ui/core/Container";
+import Divider from "@material-ui/core/Divider";
+import Fade from "@material-ui/core/Fade";
+import FormControl from "@material-ui/core/FormControl";
+import Grid from "@material-ui/core/Grid";
+import IconButton from "@material-ui/core/IconButton";
+import InputLabel from "@material-ui/core/InputLabel";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import TextField from "@material-ui/core/TextField";
-import AppBar from "@material-ui/core/AppBar";
-import Toolbar from "@material-ui/core/Toolbar";
-import Container from "@material-ui/core/Container";
-import Typography from "@material-ui/core/Typography";
-import IconButton from "@material-ui/core/IconButton";
-import HomeIcon from "@material-ui/icons/Home";
-import Paper from "@material-ui/core/Paper";
-import Grid from "@material-ui/core/Grid";
-import { CopyToClipboard } from "react-copy-to-clipboard";
-import Snackbar from "@material-ui/core/Snackbar";
-import Alert from "@material-ui/lab/Alert";
-import ListItemAvatar from "@material-ui/core/ListItemAvatar";
-import Avatar from "@material-ui/core/Avatar";
-import ImageIcon from "@material-ui/icons/Image";
-import SettingsIcon from "@material-ui/icons/Settings";
-import WorkIcon from "@material-ui/icons/Work";
-import BeachAccessIcon from "@material-ui/icons/BeachAccess";
-import InfoIcon from "@material-ui/icons/Info";
 import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
-import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
-import Modal from "@material-ui/core/Modal";
-import Fade from "@material-ui/core/Fade";
-import Backdrop from "@material-ui/core/Backdrop";
-import CheckBoxIcon from "@material-ui/icons/CheckBox";
-import FormControl from "@material-ui/core/FormControl";
+import ListItemText from "@material-ui/core/ListItemText";
 import MenuItem from "@material-ui/core/MenuItem";
-import InputLabel from "@material-ui/core/InputLabel";
+import Modal from "@material-ui/core/Modal";
+import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
-import { DateTimePicker } from "@material-ui/pickers";
-import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import { formatDistance } from "date-fns";
+import Snackbar from "@material-ui/core/Snackbar";
+import {
+  createMuiTheme,
+  makeStyles,
+  ThemeProvider,
+} from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
 import TableContainer from "@material-ui/core/TableContainer";
-import TableHead from "@material-ui/core/TableHead";
 import TableRow from "@material-ui/core/TableRow";
-import Divider from "@material-ui/core/Divider";
+import TextField from "@material-ui/core/TextField";
+import Toolbar from "@material-ui/core/Toolbar";
+import Typography from "@material-ui/core/Typography";
+import CheckBoxIcon from "@material-ui/icons/CheckBox";
+import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
 import CloseIcon from "@material-ui/icons/Close";
+import HomeIcon from "@material-ui/icons/Home";
+import InfoIcon from "@material-ui/icons/Info";
+import Alert from "@material-ui/lab/Alert";
+import { DateTimePicker } from "@material-ui/pickers";
+import { formatDistance } from "date-fns";
+import React, { useContext, useEffect, useState } from "react";
+import { CopyToClipboard } from "react-copy-to-clipboard";
 import {
-  BrowserRouter as Router,
-  Switch,
   Route,
-  Link,
-  useParams,
+  Switch,
   useHistory,
   useLocation,
+  useParams,
 } from "react-router-dom";
+import SignIn from "./Components/Auth/SignIn";
+import { auth, db, firebase } from "./firebase";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -780,7 +774,7 @@ const Game = () => {
   Object.values(game.participants).forEach((participant) => {
     console.log(participant);
     if (participant.ready_to_start === true) {
-      participantsReadyToStart.push(participant.name);
+      participantsReadyToStart.push(participant.id);
     }
   });
 
@@ -813,7 +807,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.guess !== null,
+      (participant) => participant.guess !== null
     ).length !== Object.values(game.participants).length
   ) {
     return (
@@ -839,7 +833,7 @@ const Game = () => {
   if (
     game.current_round == game.story.rounds.length &&
     Object.values(game.participants).filter(
-      (participant) => participant.ready_for_answer === true,
+      (participant) => participant.ready_for_answer === true
     ).length === Object.values(game.participants).length
   ) {
     return <ReadAnswers game={game} />;
@@ -1058,7 +1052,7 @@ const RoundView = ({ game }) => {
             time: firebase.firestore.Timestamp.fromDate(new Date()),
             subject: noteSubject,
             round: game.current_round,
-          },
+          }
         ),
       })
       .then(() => {
@@ -1084,7 +1078,7 @@ const RoundView = ({ game }) => {
       .doc(game.id)
       .update({
         [`participants.${user.id}.seen_clues`]: firebase.firestore.FieldValue.arrayUnion(
-          clueNumber,
+          clueNumber
         ),
       });
   };
@@ -1437,7 +1431,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].public.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].public[i] = !participant.notes[
                       roundToView
@@ -1472,7 +1466,7 @@ const RoundView = ({ game }) => {
                   </Grid>
                   {character.info[roundToView].private.map((info, i) => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].private[i] = !participant.notes[
                       roundToView
@@ -1537,7 +1531,7 @@ const RoundView = ({ game }) => {
                   className={classes.buttonFullWidth}
                   onClick={() => {
                     const newNotes = JSON.parse(
-                      JSON.stringify(participant.notes),
+                      JSON.stringify(participant.notes)
                     );
                     newNotes[roundToView].ready = !participant.notes[
                       roundToView
@@ -1679,27 +1673,29 @@ const WaitingRoom = ({ game, participantsReadyToStart }) => {
       <Grid item xs={12}>
         <Typography variant="h4" align="center">
           {formatDistance(game.start_time.toDate(), now)}
-          {/* {dayjs.duration(dayjs(game.start_time.toDate()).diff(now)).humanize()} */}
-          {/* {dayjs(game.start_time.toDate()).diff(now).humanize()} */}
         </Typography>
       </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          className={classes.buttonFullWidth}
-          onClick={() => {
-            StartNow();
-          }}
-        >
-          i want to start now
-        </Button>
-      </Grid>
+      {!participantsReadyToStart.includes(user.id) && (
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.buttonFullWidth}
+            onClick={() => {
+              StartNow();
+            }}
+          >
+            i want to start now
+          </Button>
+        </Grid>
+      )}
       {participantsReadyToStart.length > 0 ? (
         <Grid item xs={12}>
           <Typography align="center">
             There are some users already ready to start:{" "}
-            {participantsReadyToStart.map((readyGuy) => `${readyGuy},`)}
+            {participantsReadyToStart.map(
+              (readyGuy) => `${game.participants[readyGuy].name},`
+            )}
           </Typography>
         </Grid>
       ) : null}
@@ -1970,7 +1966,7 @@ const StoryPick = ({ game }) => {
       setAlert(
         `story needs ${story.characters.length} players, have ${
           Object.keys(game.participants).length
-        } `,
+        } `
       );
       setOpen(true);
     }
@@ -2147,11 +2143,11 @@ const CharacterPick = ({ game }) => {
             <List className={classes.root}>
               {game.story.characters.map((character) => {
                 const choosingParticipant = Object.values(
-                  game.participants,
+                  game.participants
                 ).find(
                   (participant) =>
                     participant.character !== null &&
-                    participant.character.name === character.name,
+                    participant.character.name === character.name
                 );
                 return (
                   <ListItem
@@ -2363,92 +2359,92 @@ const Instructions = () => {
   );
 };
 
-const SignIn = () => {
-  const classes = useStyles();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [err, setErr] = useState(null);
-  let history = useHistory();
-  let query = useQuery();
+// const SignIn = () => {
+//   const classes = useStyles();
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [err, setErr] = useState(null);
+//   let history = useHistory();
+//   let query = useQuery();
 
-  let target = query.get("target");
+//   let target = query.get("target");
 
-  return (
-    <Grid
-      container
-      spacing={3}
-      justify="center"
-      alignItems="center"
-      direction="column"
-      className={classes.optionsButtons}
-    >
-      <Snackbar
-        open={err !== null}
-        autoHideDuration={6000}
-        onClose={() => setErr(null)}
-      >
-        <Alert onClose={() => setErr(null)} severity="error">
-          {err}
-        </Alert>
-      </Snackbar>
-      <Grid item xs={12}>
-        <Typography>sign in please</Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={email}
-          id="email"
-          label="email"
-          variant="outlined"
-          className={classes.button}
-          onChange={(e) => {
-            setEmail(e.currentTarget.value);
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={password}
-          id="password"
-          label="password"
-          variant="outlined"
-          type="password"
-          className={classes.button}
-          onChange={(e) => {
-            setPassword(e.currentTarget.value);
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          className={classes.button}
-          onClick={() =>
-            auth
-              .signInWithEmailAndPassword(email, password)
-              .then(console.log)
-              .catch((err) => setErr(err.toString()))
-          }
-        >
-          sign in
-        </Button>
-      </Grid>
-      <Grid item xs={12}>
-        <GoogleSignInButton />
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          color="primary"
-          className={classes.button}
-          onClick={() => history.push(`/signup?target=${target}`)}
-        >
-          new user?
-        </Button>
-      </Grid>
-    </Grid>
-  );
-};
+//   return (
+//     <Grid
+//       container
+//       spacing={3}
+//       justify="center"
+//       alignItems="center"
+//       direction="column"
+//       className={classes.optionsButtons}
+//     >
+//       <Snackbar
+//         open={err !== null}
+//         autoHideDuration={6000}
+//         onClose={() => setErr(null)}
+//       >
+//         <Alert onClose={() => setErr(null)} severity="error">
+//           {err}
+//         </Alert>
+//       </Snackbar>
+//       <Grid item xs={12}>
+//         <Typography>sign in please</Typography>
+//       </Grid>
+//       <Grid item xs={12}>
+//         <TextField
+//           value={email}
+//           id="email"
+//           label="email"
+//           variant="outlined"
+//           className={classes.button}
+//           onChange={(e) => {
+//             setEmail(e.currentTarget.value);
+//           }}
+//         />
+//       </Grid>
+//       <Grid item xs={12}>
+//         <TextField
+//           value={password}
+//           id="password"
+//           label="password"
+//           variant="outlined"
+//           type="password"
+//           className={classes.button}
+//           onChange={(e) => {
+//             setPassword(e.currentTarget.value);
+//           }}
+//         />
+//       </Grid>
+//       <Grid item xs={12}>
+//         <Button
+//           variant="contained"
+//           color="primary"
+//           className={classes.button}
+//           onClick={() =>
+//             auth
+//               .signInWithEmailAndPassword(email, password)
+//               .then(console.log)
+//               .catch((err) => setErr(err.toString()))
+//           }
+//         >
+//           sign in
+//         </Button>
+//       </Grid>
+//       <Grid item xs={12}>
+//         <GoogleSignInButton />
+//       </Grid>
+//       <Grid item xs={12}>
+//         <Button
+//           color="primary"
+//           className={classes.button}
+//           onClick={() => history.push(`/signup?target=${target}`)}
+//         >
+//           new user?
+//         </Button>
+//       </Grid>
+//     </Grid>
+//   );
+// };
 
 const SignUp = () => {
   const classes = useStyles();
@@ -2572,16 +2568,6 @@ const GoogleSignInButton = () => {
         onClick={() => auth.signInWithPopup(provider)}
       >
         sign in with google
-      </Button>
-    </div>
-  );
-};
-
-const SignOutButton = () => {
-  return (
-    <div>
-      <Button color="primary" onClick={() => auth.signOut()}>
-        sign out
       </Button>
     </div>
   );
