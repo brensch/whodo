@@ -76,7 +76,7 @@ const JoinGame = () => {
   let { id } = useParams<ParamTypes>();
   const [game, setGame] = useState<Game | null>(null);
   // const authState = useAuth();
-  let userDetails = useContext(UserContext);
+  let { userDetails, initialising } = useContext(UserContext);
 
   useEffect(() => {
     const gameConnector = new Game();

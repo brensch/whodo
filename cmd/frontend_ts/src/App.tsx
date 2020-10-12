@@ -23,7 +23,7 @@ import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 import Auth, { SignOut } from "./Pages/Auth";
 import Start from "./Pages/Start";
 import JoinGame from "./Pages/JoinGame";
-import { UserDetails } from "./Schema/User";
+import { UserDetails, UserDetailsState } from "./Schema/User";
 import { UserContext } from "./Context";
 import { ChooseName } from "./Pages/Auth";
 
@@ -50,13 +50,16 @@ const theme = createMuiTheme({
 
 const App = () => {
   let authState = useAuth();
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetailsState>({
+    initialising: true,
+    userDetails: null,
+  });
 
   useEffect(() => {
     if (authState.user !== null) {
       const userDetailConnector = new UserDetails(
         authState.user.uid,
-        authState.user.email
+        authState.user.email,
       );
       userDetailConnector.connect(setUserDetails);
     }
@@ -110,13 +113,13 @@ const PrivateRoute: React.ComponentType<any> = ({
   ...rest
 }) => {
   let authState = useAuth();
-  let userDetails = useContext(UserContext);
+  let { userDetails, initialising } = useContext(UserContext);
 
   if (authState.initializing) {
     return <div>authorising</div>;
   }
 
-  if (userDetails == null) {
+  if (userDetails == null && !initialising) {
     return <ChooseName />;
   }
 

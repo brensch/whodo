@@ -1,4 +1,7 @@
 import React, { createContext } from "react";
-import { UserDetails } from "../Schema/User";
+import { UserDetails, UserDetailsState } from "../Schema/User";
 
-export const UserContext = createContext<UserDetails | null>(null);
+export const UserContext = createContext<UserDetailsState>({
+  initialising: true,
+  userDetails: null,
+});
