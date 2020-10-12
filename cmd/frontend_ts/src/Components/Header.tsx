@@ -54,79 +54,42 @@ const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
-  button: {
-    width: "300px",
-    textTransform: "none",
+  title: {
+    flexGrow: 1,
   },
 }));
 
-const Start = () => {
-  let history = useHistory();
+export const Header = () => {
   const classes = useStyles();
-  let { setSnackState } = useContext(StateStoreContext);
+  let history = useHistory();
+  let { user } = useAuth();
+
+  if (user === null) {
+    return null;
+  }
 
   return (
-    <Container>
-      <Grid
-        container
-        spacing={3}
-        justify="center"
-        alignItems="center"
-        direction="column"
-        className={classes.optionsButtons}
-      >
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            onClick={() => history.push("/create")}
+    <div className={classes.root}>
+      <AppBar position="static" color="transparent">
+        <Toolbar>
+          <IconButton
+            edge="start"
+            // className={classes.menuButton}
+            color="inherit"
+            aria-label="home-button"
+            onClick={() => history.push("/")}
           >
-            create game
-          </Button>
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            onClick={() => history.push("/mygames")}
+            <HomeIcon />
+          </IconButton>
+          <Typography
+            onClick={() => history.push("/")}
+            variant="h6"
+            className={classes.title}
           >
-            my games
-          </Button>
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.button}
-            onClick={() => history.push("/instructions")}
-          >
-            instructions
-          </Button>
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            // variant="contained"
-            color="primary"
-            className={classes.button}
-            onClick={() => {
-              setSnackState({
-                message: "optional as",
-                severity: "info",
-              });
-              return history.push("/options");
-            }}
-          >
-            options
-          </Button>
-        </Grid>
-      </Grid>
-    </Container>
+            who-do
+          </Typography>
+        </Toolbar>
+      </AppBar>
+    </div>
   );
 };
-
-export default Start;

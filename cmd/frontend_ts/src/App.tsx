@@ -22,10 +22,13 @@ import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 
 import Auth, { SignOut } from "./Pages/Auth";
 import Start from "./Pages/Start";
-import JoinGame from "./Pages/JoinGame";
+import Create from "./Pages/Create";
+import Join from "./Pages/Join";
 import { UserDetails, UserDetailsState } from "./Schema/User";
-import { UserContext } from "./Context";
+import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/Auth";
+import { Header } from "./Components/Header";
+import { Snack } from "./Components/Snack";
 
 const theme = createMuiTheme({
   palette: {
@@ -49,31 +52,17 @@ const theme = createMuiTheme({
 });
 
 const App = () => {
-  let authState = useAuth();
-  const [userDetails, setUserDetails] = useState<UserDetailsState>({
-    initialising: true,
-    userDetails: null,
-  });
-
-  useEffect(() => {
-    if (authState.user !== null) {
-      const userDetailConnector = new UserDetails(
-        authState.user.uid,
-        authState.user.email,
-      );
-      userDetailConnector.connect(setUserDetails);
-    }
-  }, [authState]);
-
   return (
     <MuiPickersUtilsProvider locale={enAU} utils={DateFnsUtils}>
       <ThemeProvider theme={theme}>
-        <UserContext.Provider value={userDetails}>
+        <StateProvider>
           <CssBaseline />
           <Router>
+            <Header />
             <Routes />
           </Router>
-        </UserContext.Provider>
+          <Snack />
+        </StateProvider>
       </ThemeProvider>
     </MuiPickersUtilsProvider>
   );
@@ -88,7 +77,7 @@ const Routes = () => {
       <Route exact path="/" component={Splash} />
 
       {/* game related routes */}
-      <PrivateRoute path="/join/:id" component={JoinGame} />
+      <PrivateRoute path="/join/:id" component={Join} />
       <PrivateRoute path="/game/:id" component={Game} />
       <PrivateRoute path="/start" component={Start} />
       <PrivateRoute path="/create" component={Create} />
@@ -102,7 +91,6 @@ const Routes = () => {
 };
 
 const Splash = () => <p>Splash</p>;
-const Create = () => <p>Create</p>;
 const Game = () => <p>Game</p>;
 const MyGames = () => <p>MyGames</p>;
 const Options = () => <p>Options</p>;
@@ -113,7 +101,7 @@ const PrivateRoute: React.ComponentType<any> = ({
   ...rest
 }) => {
   let authState = useAuth();
-  let { userDetails, initialising } = useContext(UserContext);
+  let { userDetails, initialising } = useContext(StateStoreContext);
 
   if (authState.initializing) {
     return <div>authorising</div>;

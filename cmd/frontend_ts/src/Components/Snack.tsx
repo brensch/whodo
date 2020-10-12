@@ -47,96 +47,51 @@ import {
   useLocation,
   useParams,
 } from "react-router-dom";
-import { useAuth, db, firebase } from "../Firebase";
+import { useAuth, db, firebase, auth } from "../Firebase";
 // import * as api from "../Firebase/Api";
 import { Game } from "../Schema/Game";
-import { UserContext } from "../Context";
+import { StateStoreContext } from "../Context";
+import { UserDetails } from "../Schema/User";
 
-const useStyles = makeStyles((theme) => ({
-  root: {
-    flexGrow: 1,
-  },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
-  button: {
-    width: "300px",
-    textTransform: "none",
-  },
-}));
-
-interface ParamTypes {
-  id: string;
+export interface SnackState {
+  severity: "info" | "success" | "warning" | "error" | undefined;
+  message: string;
 }
 
-const JoinGame = () => {
-  const classes = useStyles();
-
-  let history = useHistory();
-  let { id } = useParams<ParamTypes>();
-  const [game, setGame] = useState<Game | null>(null);
-  // const authState = useAuth();
-  let { userDetails, initialising } = useContext(UserContext);
+export const Snack = () => {
+  const [open, setOpen] = useState(false);
+  const { snackState, setSnackState } = useContext(StateStoreContext);
+  const { message, severity } = snackState;
 
   useEffect(() => {
-    const gameConnector = new Game();
-    gameConnector.connect(id, setGame);
-  }, []);
+    if (message !== "" && severity !== undefined) {
+      setOpen(true);
+    }
+  }, [message, severity]);
 
-  if (game === null) {
-    return <div>loading</div>;
-  }
+  // only remove text once snack is closed to avoid flickering out
+  useEffect(() => {
+    if (!open) {
+      setTimeout(
+        () =>
+          setSnackState({
+            message: "",
+            severity: undefined,
+          }),
+        500
+      );
+    }
+  }, [open]);
 
-  if (userDetails === null || userDetails === undefined) {
-    return <div>you're new</div>;
-  }
-
-  if (game.Name === undefined) {
-    return <div>invalid game, check url</div>;
-  }
-
-  if (game.ParticipantIDs.includes(userDetails.ID) !== undefined) {
-    history.push(`/game/${id}`);
-  }
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>you've been invited to join</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">{game.Name}</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              // onClick={() => api.joinGame(game)}
-            >
-              alright then.
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>current crew:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
-            ))}
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
+    <Snackbar
+      open={open}
+      autoHideDuration={4000}
+      onClose={() => setOpen(false)}
+    >
+      <Alert onClose={() => setOpen(false)} severity={severity}>
+        {message}
+      </Alert>
+    </Snackbar>
   );
 };
-
-export default JoinGame;

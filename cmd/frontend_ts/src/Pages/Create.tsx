@@ -72,107 +72,45 @@ interface LocationState {
   };
 }
 
-// don't use separate urls to allow redirect to work
-const Auth = () => {
-  const [showSignUp, setShowSignUp] = useState(false);
-  console.log("auth");
+const datePickerTheme = createMuiTheme({
+  palette: {
+    type: "dark",
+    primary: {
+      light: "#ba8fa4",
+      main: "#ba8fa4",
+      dark: "#8fbaba",
+      contrastText: "#fff",
+    },
+    secondary: {
+      light: "#ff7961",
+      main: "#f44336",
+      dark: "#ba000d",
+      contrastText: "#ba8fa4",
+    },
+  },
+  typography: {
+    fontFamily: ["Lucida Console", "Monaco", "monospace"].join(","),
+    fontSize: 13,
+  },
+});
 
-  return (
-    <div>
-      <Button
-        color="primary"
-        variant="contained"
-        onClick={() => setShowSignUp(!showSignUp)}
-      >
-        sign in with google
-      </Button>
-      {showSignUp ? <SignUp /> : <SignIn />}
-    </div>
-  );
-};
-
-export default Auth;
-
-const SignIn = () => (
-  <div>
-    sign in
-    <GoogleSignInButton />
-  </div>
-);
-
-const SignUp = () => (
-  <div>
-    sign up
-    <GoogleSignInButton />
-  </div>
-);
-
-export const SignOut = () => {
+const Create = () => {
   const classes = useStyles();
 
-  return (
-    <div>
-      <Button
-        color="primary"
-        variant="contained"
-        className={classes.button}
-        onClick={() => auth.signOut()}
-      >
-        sign out
-      </Button>
-    </div>
-  );
-};
-
-const GoogleSignInButton = () => {
-  const classes = useStyles();
-  const provider = new firebase.auth.GoogleAuthProvider();
-  let startingLocation = useLocation<LocationState>();
-  console.log(startingLocation.state);
+  const [name, setName] = useState("");
+  const [selectedDate, handleDateChange] = useState<Date>(new Date());
 
   let history = useHistory();
+  const { userDetails } = useContext(StateStoreContext);
 
-  // take the location this page came from, and redirect to there
-  const DoSignIn = () => {
-    auth
-      .signInWithPopup(provider)
-      .then(() => history.push(startingLocation.state.from))
-      .catch((err) => console.log(err));
-  };
-
-  return (
-    <div>
-      <Button
-        color="primary"
-        variant="contained"
-        className={classes.button}
-        onClick={DoSignIn}
-      >
-        sign in with google
-      </Button>
-    </div>
-  );
-};
-
-export const ChooseName = () => {
-  const classes = useStyles();
-  const [name, setName] = useState("");
-  let authState = useAuth();
-
-  const SelectName = () => {
-    if (authState.user === null) {
-      return;
+  const createGame = () => {
+    if (!!userDetails) {
+      const newGame = new Game(userDetails);
+      newGame
+        .addToFirestore(name, selectedDate)
+        .then((game) => history.push(`/game/${game.id}`));
     }
-    const newUserDetails = new UserDetails(
-      authState.user.uid,
-      authState.user.email
-    );
-    newUserDetails.addToFirestore(name);
   };
-
-  if (authState.user === null) {
-    return <div>loading</div>;
-  }
 
   return (
     <Container>
@@ -185,13 +123,10 @@ export const ChooseName = () => {
         className={classes.optionsButtons}
       >
         <Grid item xs={12}>
-          <Typography>pick a hilarious yet identifiable name</Typography>
-        </Grid>
-        <Grid item xs={12}>
           <TextField
             value={name}
-            id="name"
-            label="name"
+            id="game-name"
+            label="name your game"
             variant="outlined"
             className={classes.button}
             onChange={(e) => {
@@ -200,16 +135,32 @@ export const ChooseName = () => {
           />
         </Grid>
         <Grid item xs={12}>
+          <ThemeProvider theme={datePickerTheme}>
+            <DateTimePicker
+              fullWidth
+              label="when are you playing?"
+              inputVariant="outlined"
+              className={classes.button}
+              value={selectedDate}
+              //   onChange={console.log}
+              onChange={(event) => handleDateChange(event as Date)}
+            />
+          </ThemeProvider>
+        </Grid>
+        <Grid item xs={12}>
           <Button
             variant="contained"
             color="primary"
+            disabled={name === ""}
             className={classes.button}
-            onClick={() => SelectName()}
+            onClick={() => createGame()}
           >
-            choose this cool name
+            create game
           </Button>
         </Grid>
       </Grid>
     </Container>
   );
 };
+
+export default Create;

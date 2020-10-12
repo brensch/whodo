@@ -1,27 +1,59 @@
 import { UserDetails } from "./User";
 import { Character, CharacterName, Story } from "./Story";
 import { db } from "../Firebase";
+import * as firebase from "firebase/app";
 
 const GAME_COLLECTION = "games";
 
 export class Game {
   ID?: string;
   Name?: string;
-  CurrentAnswer: number = 0;
-  CurrentRound: number = 0;
-  DiscoveredClues: Array<number> = [];
+  OwnerID: string;
   ParticipantIDs: Array<string> = [];
   Participants: Array<Participant> = [];
 
-  addToFirestore(name: string) {
+  CurrentAnswer = 0;
+  CurrentRound = 0;
+  ParticipantsLocked = false;
+  DiscoveredClues: Array<number> = [];
+
+  Story: Story | null = null;
+
+  StartTime: firebase.firestore.Timestamp = firebase.firestore.Timestamp.fromDate(
+    new Date()
+  );
+
+  constructor(user: UserDetails) {
+    this.ParticipantIDs = [user.ID];
+    this.OwnerID = user.ID;
+    const participant = new Participant(user);
+    this.Participants = [participant];
+  }
+
+  addToFirestore(name: string, startTime: Date) {
     this.Name = name;
-    console.log(`adding ${name}`);
+    this.StartTime = firebase.firestore.Timestamp.fromDate(startTime);
+
+    // this feels dirty, but not as dirty as the fact that the firestore arbitrarily blocks
+    // custom objects just because they can't guarantee they'll stay typesafe
+    return db.collection(GAME_COLLECTION).add(JSON.parse(JSON.stringify(this)));
   }
 
   addParticipant(user: UserDetails) {
+    if (user.ID in this.ParticipantIDs) {
+      throw "user already in game";
+    }
     const newParticipant = new Participant(user);
-    this.Participants.push(newParticipant);
+    // this.Participants.push(newParticipant);
     console.log(`adding participant ${newParticipant.User.ID}`);
+    return db
+      .collection(GAME_COLLECTION)
+      .doc(this.ID)
+      .update({
+        ParticipantIDs: firebase.firestore.FieldValue.arrayUnion(
+          JSON.parse(JSON.stringify(newParticipant))
+        ),
+      });
   }
 
   connect(id: string, set: React.Dispatch<React.SetStateAction<Game | null>>) {
@@ -35,20 +67,6 @@ export class Game {
       });
   }
 }
-
-// const unsub = db
-//   .collection("games")
-//   .doc(id)
-//   .onSnapshot((snapshot) => {
-//     const receivedGame = snapshot.data() as Game;
-//     console.log(receivedGame);
-//     console.log(receivedGame.CurrentRound);
-
-//     setGame(receivedGame);
-//   });
-// return () => {
-//   unsub();
-// };
 
 export class Participant {
   User: UserDetails;
