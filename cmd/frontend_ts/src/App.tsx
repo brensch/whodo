@@ -22,6 +22,7 @@ import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 
 import Auth, { SignOut } from "./Pages/Auth";
 import Start from "./Pages/Start";
+import Options from "./Pages/Options";
 import Create from "./Pages/Create";
 import Join from "./Pages/Join";
 import { UserDetails, UserDetailsState } from "./Schema/User";
@@ -93,7 +94,6 @@ const Routes = () => {
 const Splash = () => <p>Splash</p>;
 const Game = () => <p>Game</p>;
 const MyGames = () => <p>MyGames</p>;
-const Options = () => <p>Options</p>;
 const Instructions = () => <p>Instructions</p>;
 
 const PrivateRoute: React.ComponentType<any> = ({

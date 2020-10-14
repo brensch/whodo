@@ -38,8 +38,10 @@ import InfoIcon from "@material-ui/icons/Info";
 import Alert from "@material-ui/lab/Alert";
 import { DateTimePicker } from "@material-ui/pickers";
 import { formatDistance } from "date-fns";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, createContext } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
+import { useFormik, FormikErrors, FormikHelpers } from "formik";
+
 import {
   Route,
   Switch,
@@ -72,40 +74,279 @@ interface LocationState {
   };
 }
 
+// context for retrieving auth page state
+interface AuthPageStore {
+  setShowSignUp: React.Dispatch<React.SetStateAction<boolean>>;
+  doRedirect: Function;
+}
+const AuthPageContext = createContext<AuthPageStore>(undefined!);
+
 // don't use separate urls to allow redirect to work
 const Auth = () => {
   const [showSignUp, setShowSignUp] = useState(false);
-  console.log("auth");
+  let startingLocation = useLocation<LocationState>();
+  let history = useHistory();
+
+  const doRedirect = () => {
+    history.push(startingLocation.state.from);
+  };
 
   return (
     <div>
-      <Button
-        color="primary"
-        variant="contained"
-        onClick={() => setShowSignUp(!showSignUp)}
+      <AuthPageContext.Provider
+        value={{
+          setShowSignUp,
+          doRedirect,
+        }}
       >
-        sign in with google
-      </Button>
-      {showSignUp ? <SignUp /> : <SignIn />}
+        {showSignUp ? <SignUp /> : <SignIn />}
+      </AuthPageContext.Provider>
     </div>
   );
 };
 
 export default Auth;
 
-const SignIn = () => (
-  <div>
-    sign in
-    <GoogleSignInButton />
-  </div>
-);
+interface SignInValues {
+  email: string;
+  password: string;
+}
 
-const SignUp = () => (
-  <div>
-    sign up
-    <GoogleSignInButton />
-  </div>
-);
+const SignIn = () => {
+  const classes = useStyles();
+  let { setSnackState } = useContext(StateStoreContext);
+  let { setShowSignUp, doRedirect } = useContext(AuthPageContext);
+
+  // const [err, setErr] = useState(null);
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+    },
+    validateOnChange: false,
+    validate: (values: SignInValues) => {
+      const errors: FormikErrors<SignInValues> = {};
+      if (!values.email) {
+        errors.email = "who are you dawg";
+      }
+      if (!values.password) {
+        errors.password = "what's your password plz";
+      }
+      return errors;
+    },
+    onSubmit: (
+      { email, password },
+      { setSubmitting }: FormikHelpers<SignInValues>,
+    ) => {
+      auth
+        .signInWithEmailAndPassword(email, password)
+        .then(() => doRedirect())
+        .catch((err) =>
+          setSnackState({
+            severity: "error",
+            message: err.toString(),
+          }),
+        )
+        .finally(() => setSubmitting(false));
+    },
+  });
+
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Typography>sign in please</Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            id="email"
+            label="email"
+            variant="outlined"
+            className={classes.button}
+            onChange={formik.handleChange}
+            value={formik.values.email}
+            error={!!formik.errors.email}
+            helperText={formik.errors.email}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            id="password"
+            label="password"
+            variant="outlined"
+            type="password"
+            className={classes.button}
+            onChange={formik.handleChange}
+            value={formik.values.password}
+            error={!!formik.errors.password}
+            helperText={formik.errors.password}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            disabled={formik.isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            className={classes.button}
+          >
+            sign in
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <GoogleSignInButton />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            color="primary"
+            className={classes.button}
+            onClick={() => setShowSignUp(true)}
+          >
+            new user?
+          </Button>
+        </Grid>
+      </Grid>
+    </form>
+  );
+};
+
+interface SignUpValues {
+  email: string;
+  password: string;
+  passwordConfirm: string;
+}
+
+const SignUp = () => {
+  const classes = useStyles();
+  let { setSnackState } = useContext(StateStoreContext);
+  let { setShowSignUp, doRedirect } = useContext(AuthPageContext);
+
+  // const [err, setErr] = useState(null);
+  const formik = useFormik({
+    initialValues: {
+      email: "",
+      password: "",
+      passwordConfirm: "",
+    },
+    validateOnChange: false,
+    validate: (values: SignUpValues) => {
+      const errors: FormikErrors<SignUpValues> = {};
+      if (!values.email) {
+        errors.email = "who are you dawg";
+      }
+      if (!values.password) {
+        errors.password = "what's your password plz";
+      }
+      if (!values.passwordConfirm) {
+        errors.passwordConfirm = "gotta test you know your password";
+      }
+      if (values.password !== values.passwordConfirm) {
+        errors.passwordConfirm = "passwords don't match";
+      }
+      return errors;
+    },
+    onSubmit: (
+      { email, password },
+      { setSubmitting }: FormikHelpers<SignUpValues>,
+    ) => {
+      auth
+        .createUserWithEmailAndPassword(email, password)
+        .then(() => doRedirect())
+        .catch((err) =>
+          setSnackState({
+            severity: "error",
+            message: err.toString(),
+          }),
+        )
+        .finally(() => setSubmitting(false));
+    },
+  });
+
+  return (
+    <form onSubmit={formik.handleSubmit}>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Typography>sign in please</Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            id="email"
+            label="email"
+            variant="outlined"
+            className={classes.button}
+            onChange={formik.handleChange}
+            value={formik.values.email}
+            error={!!formik.errors.email}
+            helperText={formik.errors.email}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            id="password"
+            label="password"
+            variant="outlined"
+            type="password"
+            className={classes.button}
+            onChange={formik.handleChange}
+            value={formik.values.password}
+            error={!!formik.errors.password}
+            helperText={formik.errors.password}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <TextField
+            id="passwordConfirm"
+            label="password again"
+            variant="outlined"
+            type="password"
+            className={classes.button}
+            onChange={formik.handleChange}
+            value={formik.values.passwordConfirm}
+            error={!!formik.errors.passwordConfirm}
+            helperText={formik.errors.passwordConfirm}
+          />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            disabled={formik.isSubmitting}
+            type="submit"
+            variant="contained"
+            color="primary"
+            className={classes.button}
+          >
+            sign up
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <GoogleSignInButton />
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            color="primary"
+            className={classes.button}
+            onClick={() => setShowSignUp(false)}
+          >
+            existing user?
+          </Button>
+        </Grid>
+      </Grid>
+    </form>
+  );
+};
 
 export const SignOut = () => {
   const classes = useStyles();
@@ -127,16 +368,16 @@ export const SignOut = () => {
 const GoogleSignInButton = () => {
   const classes = useStyles();
   const provider = new firebase.auth.GoogleAuthProvider();
-  let startingLocation = useLocation<LocationState>();
-  console.log(startingLocation.state);
+  let { doRedirect } = useContext(AuthPageContext);
 
-  let history = useHistory();
+  // let startingLocation = useLocation<LocationState>();
+  // console.log(startingLocation.state);
 
   // take the location this page came from, and redirect to there
   const DoSignIn = () => {
     auth
       .signInWithPopup(provider)
-      .then(() => history.push(startingLocation.state.from))
+      .then(() => doRedirect())
       .catch((err) => console.log(err));
   };
 
@@ -165,7 +406,7 @@ export const ChooseName = () => {
     }
     const newUserDetails = new UserDetails(
       authState.user.uid,
-      authState.user.email
+      authState.user.email,
     );
     newUserDetails.addToFirestore(name);
   };
