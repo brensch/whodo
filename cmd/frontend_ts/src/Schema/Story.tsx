@@ -1,10 +1,11 @@
 export class Story {
-  constructor(
-    public Name: string,
-    public Conclusion: string,
-    public Rounds: Array<Round>,
-    public Clues: Array<Clue>
-  ) {}
+  ID: string = "new_instance";
+  Name: string = "";
+  Conclusion: string = "";
+  Rounds: Array<Round> = [];
+  Clues: Array<Clue> = [];
+  Characters: Array<Character> = [];
+  Blurb: string = "";
 }
 
 export class Clue {
@@ -13,7 +14,7 @@ export class Clue {
     public Description: string,
     public ClueName: string,
     public RoundNumber: number,
-    public Url: URL
+    public Url: URL,
   ) {}
 }
 
@@ -27,7 +28,7 @@ export class Character {
   constructor(
     public Blurb: string,
     public Info: Array<RoundInfo>,
-    public Name: CharacterName
+    public Name: CharacterName,
   ) {}
 }
 

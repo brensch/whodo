@@ -82,7 +82,7 @@ interface AuthPageStore {
 const AuthPageContext = createContext<AuthPageStore>(undefined!);
 
 // don't use separate urls to allow redirect to work
-const Auth = () => {
+const AuthPage = () => {
   const [showSignUp, setShowSignUp] = useState(false);
   let startingLocation = useLocation<LocationState>();
   let history = useHistory();
@@ -105,7 +105,7 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default AuthPage;
 
 interface SignInValues {
   email: string;

@@ -20,14 +20,15 @@ import { useAuth, db, firebase } from "./Firebase";
 
 import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
 
-import Auth, { SignOut } from "./Pages/Auth";
-import Start from "./Pages/Start";
-import Options from "./Pages/Options";
-import Create from "./Pages/Create";
-import Join from "./Pages/Join";
+import AuthPage, { SignOut } from "./Pages/AuthPage";
+import StartPage from "./Pages/StartPage";
+import OptionsPage from "./Pages/OptionsPage";
+import CreatePage from "./Pages/CreateGamePage";
+import JoinPage from "./Pages/JoinGamePage";
+import GamePage from "./Pages/GamePage";
 import { UserDetails, UserDetailsState } from "./Schema/User";
 import { StateProvider, StateStoreContext } from "./Context";
-import { ChooseName } from "./Pages/Auth";
+import { ChooseName } from "./Pages/AuthPage";
 import { Header } from "./Components/Header";
 import { Snack } from "./Components/Snack";
 
@@ -74,27 +75,26 @@ export default App;
 const Routes = () => {
   return (
     <Switch>
-      <Route path="/auth" component={Auth} />
-      <Route exact path="/" component={Splash} />
+      <Route path="/auth" component={AuthPage} />
+      <Route exact path="/" component={SplashPage} />
 
       {/* game related routes */}
-      <PrivateRoute path="/join/:id" component={Join} />
-      <PrivateRoute path="/game/:id" component={Game} />
-      <PrivateRoute path="/start" component={Start} />
-      <PrivateRoute path="/create" component={Create} />
+      <PrivateRoute path="/join/:id" component={JoinPage} />
+      <PrivateRoute path="/game/:id" component={GamePage} />
+      <PrivateRoute path="/start" component={StartPage} />
+      <PrivateRoute path="/create" component={CreatePage} />
 
       {/* additional pages */}
-      <PrivateRoute path="/mygames" component={MyGames} />
-      <PrivateRoute path="/options" component={Options} />
-      <PrivateRoute path="/instructions" component={Instructions} />
+      <PrivateRoute path="/mygames" component={MyGamesPage} />
+      <PrivateRoute path="/options" component={OptionsPage} />
+      <PrivateRoute path="/instructions" component={InstructionsPage} />
     </Switch>
   );
 };
 
-const Splash = () => <p>Splash</p>;
-const Game = () => <p>Game</p>;
-const MyGames = () => <p>MyGames</p>;
-const Instructions = () => <p>Instructions</p>;
+const SplashPage = () => <p>Splash</p>;
+const MyGamesPage = () => <p>MyGames</p>;
+const InstructionsPage = () => <p>Instructions</p>;
 
 const PrivateRoute: React.ComponentType<any> = ({
   component: Component,

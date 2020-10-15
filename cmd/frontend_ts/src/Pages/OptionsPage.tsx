@@ -63,7 +63,7 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-const Options = () => {
+const OptionsPage = () => {
   let history = useHistory();
   const classes = useStyles();
   let { setSnackState } = useContext(StateStoreContext);
@@ -95,4 +95,4 @@ const Options = () => {
   );
 };
 
-export default Options;
+export default OptionsPage;

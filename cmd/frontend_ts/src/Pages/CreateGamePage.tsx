@@ -94,7 +94,7 @@ const datePickerTheme = createMuiTheme({
   },
 });
 
-const Create = () => {
+const CreateGamePage = () => {
   const classes = useStyles();
 
   const [name, setName] = useState("");
@@ -163,4 +163,4 @@ const Create = () => {
   );
 };
 
-export default Create;
+export default CreateGamePage;

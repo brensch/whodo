@@ -41,7 +41,6 @@ import { formatDistance } from "date-fns";
 import React, { useContext, useEffect, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import {
-  Redirect,
   Route,
   Switch,
   useHistory,
@@ -49,10 +48,7 @@ import {
   useParams,
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
-// import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
-import { UserDetails } from "../Schema/User";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -67,87 +63,70 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface ParamTypes {
-  id: string;
-}
-
-const Join = () => {
-  const classes = useStyles();
-
+const StartPage = () => {
   let history = useHistory();
-  let { id } = useParams<ParamTypes>();
-  const [game, setGame] = useState<Game | null>(null);
-  // const authState = useAuth();
-  let { userDetails, initialising } = useContext(StateStoreContext);
-
-  useEffect(() => {
-    if (userDetails !== null) {
-      const gameConnector = new Game(userDetails);
-      gameConnector.connect(id, setGame);
-    }
-  }, [userDetails]);
-
-  if (game === null) {
-    return <div>loading</div>;
-  }
-
-  if (game.Name === undefined) {
-    return <div>invalid game, check url</div>;
-  }
-
-  // if user has already joined redirect to actual game
-  if (
-    userDetails !== null &&
-    game.ParticipantIDs.includes(userDetails.ID) !== undefined
-  ) {
-    return <Redirect to={`/game/${id}`} />;
-  }
+  const classes = useStyles();
+  let { setSnackState } = useContext(StateStoreContext);
 
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>you've been invited to join</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">{game.Name}</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() => {
-                if (userDetails !== null) {
-                  return game
-                    .addParticipant(userDetails)
-                    .then(() => history.push(`/game/${id}`));
-                }
-              }}
-            >
-              alright then.
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>current crew:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
-            ))}
-          </Grid>
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/create")}
+          >
+            create game
+          </Button>
         </Grid>
-      </Container>
-    </React.Fragment>
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/mygames")}
+          >
+            my games
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => history.push("/instructions")}
+          >
+            instructions
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            // variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={() => {
+              setSnackState({
+                message: "optional as",
+                severity: "info",
+              });
+              return history.push("/options");
+            }}
+          >
+            options
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };
 
-export default Join;
+export default StartPage;
