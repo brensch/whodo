@@ -1,9 +1,10 @@
 import { useAuth, db, firebase } from "../Firebase";
 // import { Game } from "./Game";
-const USER_DETAILS_COLLECTION = "user_details";
+
+export const USER_COLLECTION = "user_details";
 
 export interface UserDetailsState {
-  initialising: boolean;
+  userDetailsInitialising: boolean;
   userDetails: UserDetails | null;
 }
 
@@ -12,6 +13,7 @@ export class UserDetails {
     public ID: string,
     public Email: string | null,
     public Name?: string,
+    public Games: Array<string> = [],
   ) {}
 
   addToFirestore(name: string) {
@@ -23,18 +25,21 @@ export class UserDetails {
       .set(JSON.parse(JSON.stringify(this)));
   }
 
-  connect(set: React.Dispatch<React.SetStateAction<UserDetailsState>>) {
-    return db
-      .collection(USER_DETAILS_COLLECTION)
-      .doc(this.ID)
-      .onSnapshot((snapshot) => {
-        const receivedUserDetails = snapshot.data() as UserDetails;
-        console.log(receivedUserDetails);
-        if (receivedUserDetails === undefined) {
-          set({ initialising: false, userDetails: null });
-          return;
-        }
-        set({ initialising: false, userDetails: receivedUserDetails });
-      });
-  }
+  // connect(set: React.Dispatch<React.SetStateAction<UserDetailsState>>) {
+  //   return db
+  //     .collection(USER_DETAILS_COLLECTION)
+  //     .doc(this.ID)
+  //     .onSnapshot((snapshot) => {
+  //       const receivedUserDetails = snapshot.data() as UserDetails;
+  //       console.log(receivedUserDetails);
+  //       if (receivedUserDetails === undefined) {
+  //         set({ userDetailsInitialising: false, userDetails: null });
+  //         return;
+  //       }
+  //       set({
+  //         userDetailsInitialising: false,
+  //         userDetails: receivedUserDetails,
+  //       });
+  //     });
+  // }
 }

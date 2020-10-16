@@ -92,6 +92,7 @@ const GamePageContext = createContext<GameStore>(undefined!);
 
 type GameState =
   | "loading"
+  | "invalid"
   | "invite"
   | "chooseStory"
   | "pickCharacter"
@@ -109,7 +110,9 @@ const GamePage = () => {
   let { id } = useParams<ParamTypes>();
   const [game, setGame] = useState<Game | null>(null);
   const [gameState, setGameState] = useState<GameState>("loading");
-  let { userDetails, initialising } = useContext(StateStoreContext);
+  let { userDetails, userDetailsInitialising, setSnackState } = useContext(
+    StateStoreContext,
+  );
   const [now, setNow] = useState(new Date());
 
   // load the game
@@ -131,6 +134,9 @@ const GamePage = () => {
     if (game === null) {
       setGameState("loading");
       return;
+    } else if (game.ID === "invalid") {
+      setGameState("invalid");
+      return;
     }
 
     const thisParticipant = game.Participants.find(
@@ -145,6 +151,7 @@ const GamePage = () => {
       setGameState("pickCharacter");
     } else if (
       game.participantsReadyToStart.length < game.Participants.length &&
+      !!game.StartTime &&
       now < game.StartTime.toDate()
     ) {
       setGameState("waitingForGoTime");
@@ -166,7 +173,7 @@ const GamePage = () => {
       setGameState("correctGuesses");
     }
   }, [game]);
-  console.log(gameState);
+  // console.log(gameState);
 
   if (game === null) {
     return <div>loading</div>;
@@ -174,6 +181,14 @@ const GamePage = () => {
 
   if (game === undefined) {
     return <div>invalid game, check url</div>;
+  }
+
+  if (game.ID === "invalid") {
+    return <div>invalid game m8</div>;
+  }
+
+  if (userDetails !== null && !game.ParticipantIDs.includes(userDetails.ID)) {
+    return <Redirect to={`/join/${id}`} />;
   }
 
   return (
@@ -218,7 +233,8 @@ const InviteView = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h5">
-              {game.StartTime.toDate().toLocaleDateString("en-AU")}
+              {!!game.StartTime &&
+                game.StartTime.toDate().toLocaleDateString("en-AU")}
             </Typography>
           </Grid>
           <Grid item xs={12}>
@@ -271,12 +287,15 @@ const ChooseStory = () => {
 
   useEffect(() => {
     const unsub = db.collection("stories").onSnapshot((snapshot) => {
-      const allStories = snapshot.docs.map((doc) =>
-        Object.assign(new Story(), {
+      const allStories = snapshot.docs.map((doc) => {
+        const newStory = new Story();
+        Object.assign(newStory, {
           id: doc.id,
           ...doc.data(),
-        }),
-      );
+        });
+        console.log(newStory);
+        return newStory;
+      });
       setStories(allStories);
     });
     return () => {
@@ -342,7 +361,6 @@ const ChooseStory = () => {
                   <ListItemText
                     primary={story.Name}
                     secondary={`${story.Characters.length} players`}
-                    // players
                   />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" onClick={() => setModalStory(story)}>
@@ -359,15 +377,11 @@ const ChooseStory = () => {
                 variant="contained"
                 color="primary"
                 className={classes.button}
-                onClick={
-                  () =>
-                    setSnackState({
-                      severity: "info",
-                      message: "link copied to clipboard",
-                    })
-                  // setSeverity("success");
-                  // setAlert("copied link to clipboard");
-                  // setOpen(true);
+                onClick={() =>
+                  setSnackState({
+                    severity: "info",
+                    message: "link copied to clipboard",
+                  })
                 }
               >
                 need more players still?

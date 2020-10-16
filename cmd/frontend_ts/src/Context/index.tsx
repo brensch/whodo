@@ -6,10 +6,11 @@ import React, {
 } from "react";
 import { UserDetails, UserDetailsState } from "../Schema/User";
 import { SnackState } from "../Components/Snack";
-import { useAuth, db, firebase } from "../Firebase";
+import { useAuth, db, firebase, auth } from "../Firebase";
+const USER_DETAILS_COLLECTION = "user_details";
 
 export interface StateStore {
-  initialising: boolean;
+  userDetailsInitialising: boolean;
   userDetails: UserDetails | null;
   snackState: SnackState;
   setSnackState: React.Dispatch<React.SetStateAction<SnackState>>;
@@ -22,7 +23,7 @@ export const StateProvider: FunctionComponent<{}> = ({ children }) => {
 
   // user details define the custom user object
   const [userDetailsState, setUserDetailsState] = useState<UserDetailsState>({
-    initialising: true,
+    userDetailsInitialising: true,
     userDetails: null,
   });
   // snack is the snackbar, able to be called from anywhere in the app
@@ -31,20 +32,49 @@ export const StateProvider: FunctionComponent<{}> = ({ children }) => {
     message: "",
   });
 
+  // get user details from the
   useEffect(() => {
     if (authState.user !== null) {
-      const userDetailConnector = new UserDetails(
-        authState.user.uid,
-        authState.user.email
-      );
-      userDetailConnector.connect(setUserDetailsState);
+      // set initialising immediately since it's just finished auth
+      setUserDetailsState({
+        userDetailsInitialising: true,
+        userDetails: null,
+      });
+
+      // get value from db
+      return db
+        .collection(USER_DETAILS_COLLECTION)
+        .doc(authState.user.uid)
+        .onSnapshot((snapshot) => {
+          // dangerous cast with subsequent assign, but we only use UserDetails class to add to firestore
+          const receivedUserDetails = snapshot.data() as UserDetails;
+          if (receivedUserDetails === undefined) {
+            setUserDetailsState({
+              userDetailsInitialising: false,
+              userDetails: null,
+            });
+            return;
+          }
+          setUserDetailsState({
+            userDetailsInitialising: false,
+            userDetails: receivedUserDetails,
+          });
+        });
+    }
+
+    if (authState.user === null && !authState.initialising) {
+      console.log("should set userdetails init false");
+      setUserDetailsState({
+        userDetailsInitialising: false,
+        userDetails: null,
+      });
     }
   }, [authState]);
 
   return (
     <StateStoreContext.Provider
       value={{
-        initialising: userDetailsState.initialising,
+        userDetailsInitialising: userDetailsState.userDetailsInitialising,
         userDetails: userDetailsState.userDetails,
         snackState,
         setSnackState,

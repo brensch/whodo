@@ -38,7 +38,7 @@ import InfoIcon from "@material-ui/icons/Info";
 import Alert from "@material-ui/lab/Alert";
 import { DateTimePicker } from "@material-ui/pickers";
 import { formatDistance } from "date-fns";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, createContext } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import {
   Redirect,
@@ -50,110 +50,132 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
+import { Game, Participant } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
+import { Story } from "../Schema/Story";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  optionsButtons: {
-    minHeight: "70vh",
+  menuButton: {
+    marginRight: theme.spacing(0),
+  },
+  title: {
+    flexGrow: 1,
   },
   button: {
     width: "300px",
     textTransform: "none",
   },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
+  },
+  padded: {
+    padding: "10px",
+  },
+
+  optionsButtons: {
+    minHeight: "70vh",
+  },
+  avatar: {
+    width: theme.spacing(3),
+    height: theme.spacing(3),
+  },
+  clues: {
+    padding: 10,
+    maxWidth: 1000,
+    alignContent: "center",
+  },
+  cluesContainer: {
+    padding: 10,
+    maxWidth: 1000,
+  },
+  notesPopup: {},
+  cluesGrid: {
+    display: "flex",
+  },
+  modal: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalPaper: {
+    backgroundColor: theme.palette.background.paper,
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+    maxHeight: "80vh",
+    overflow: "scroll",
+  },
 }));
 
-interface ParamTypes {
-  id: string;
-}
-
-const JoinGamePage = () => {
+const MyGamesPage = () => {
   const classes = useStyles();
-
   let history = useHistory();
-  let { id } = useParams<ParamTypes>();
-  const [game, setGame] = useState<Game | null>(null);
-  // const authState = useAuth();
-  let { userDetails, userDetailsInitialising, setSnackState } = useContext(
+  const { userDetails, userDetailsInitialising } = useContext(
     StateStoreContext,
   );
 
-  useEffect(() => {
-    if (userDetails !== null) {
-      try {
-        new Game().connect(id, setGame);
-      } catch (err) {
-        setSnackState({
-          severity: "error",
-          message: err.toString(),
-        });
-      }
-    }
-  }, [userDetails]);
-
-  if (game === null) {
-    return <div>loading</div>;
-  }
-
-  if (game === undefined) {
-    return <div>invalid game, check url</div>;
-  }
-
-  // if user has already joined redirect to actual game
-  if (userDetails !== null && game.ParticipantIDs.includes(userDetails.ID)) {
-    return <Redirect to={`/game/${id}`} />;
-  }
-
   return (
     <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>you've been invited to join</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">{game.Name}</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() => {
-                if (userDetails !== null) {
-                  // console.log(typeOf(game));
-                  return game
-                    .addParticipant(userDetails)
-                    .then(() => history.push(`/game/${id}`));
-                }
-              }}
-            >
-              alright then.
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>current crew:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
-            ))}
-          </Grid>
-        </Grid>
-      </Container>
+      <Typography align="center">your games</Typography>
+      <List
+        component="nav"
+        aria-labelledby="games-list"
+        className={classes.root}
+      >
+        {userDetails?.Games.map((gameID) => (
+          <GameItem id={gameID} />
+        ))}
+      </List>
     </React.Fragment>
   );
 };
 
-export default JoinGamePage;
+export default MyGamesPage;
+
+interface GameItemProps {
+  id: string;
+}
+
+const GameItem = ({ id }: GameItemProps) => {
+  let history = useHistory();
+
+  const [game, setGame] = useState<Game | null>(null);
+
+  useEffect(() => {
+    const unsub = db
+      .collection("games")
+      .doc(id)
+      .onSnapshot((doc) => {
+        const wholeReceivedData = {
+          ID: doc.id,
+          ...doc.data(),
+        } as unknown;
+        setGame(new Game(wholeReceivedData as Game));
+      });
+    return () => {
+      unsub();
+    };
+  }, []);
+
+  if (game === null) {
+    return null;
+  }
+
+  if (game.ID === "invalid") {
+    return <div>something went wrong getting this game</div>;
+  }
+  console.log(game);
+
+  return (
+    <ListItem button onClick={() => history.push("/game/" + game.ID)}>
+      <ListItemText
+        primary={`${game.Name} - ${game.Participants.length} players`}
+        secondary={game.Story !== null && game.Story.Name}
+      />
+    </ListItem>
+  );
+};

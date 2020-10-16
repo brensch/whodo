@@ -1,9 +1,9 @@
-import { UserDetails } from "./User";
+import { UserDetails, USER_COLLECTION } from "./User";
 import { Character, CharacterName, Story } from "./Story";
 import { db } from "../Firebase";
 import * as firebase from "firebase/app";
 
-const GAME_COLLECTION = "games";
+export const GAME_COLLECTION = "games";
 
 export class Game {
   ID: string = "new_game_instance";
@@ -19,9 +19,7 @@ export class Game {
 
   Story: Story | null = null;
 
-  StartTime: firebase.firestore.Timestamp = firebase.firestore.Timestamp.fromDate(
-    new Date(),
-  );
+  StartTime: firebase.firestore.Timestamp | null = null;
 
   // internal fields, not to be synced to firestore
   participantsStillDeciding: Array<Participant> = [];
@@ -29,44 +27,45 @@ export class Game {
   participantsStillGuessing: Array<Participant> = [];
   participantsReadyForAnswer: Array<Participant> = [];
 
-  constructor(
-    user: UserDetails | null = null,
-    gameFromFirestore: Game | null = null,
-  ) {
-    if (user !== null) {
-      this.OwnerID = user.ID;
-      this.ParticipantIDs = [user.ID];
-      const participant = new Participant(user);
-      this.Participants = [participant];
-    } else if (gameFromFirestore !== null) {
-      this.ID = gameFromFirestore.ID;
-      this.Name = gameFromFirestore.Name;
-      this.OwnerID = gameFromFirestore.OwnerID;
-      this.ParticipantIDs = gameFromFirestore.ParticipantIDs;
-      this.Participants = gameFromFirestore.Participants;
-      this.CurrentAnswer = gameFromFirestore.CurrentAnswer;
-      this.CurrentRound = gameFromFirestore.CurrentRound;
-      this.ParticipantsLocked = gameFromFirestore.ParticipantsLocked;
-      this.DiscoveredClues = gameFromFirestore.DiscoveredClues;
-      this.Story = gameFromFirestore.Story;
-      const { nanoseconds, seconds } = gameFromFirestore.StartTime;
-      this.StartTime = new firebase.firestore.Timestamp(seconds, nanoseconds);
+  constructor(gameFromFirestore: Game | null | undefined = null) {
+    try {
+      if (gameFromFirestore !== null && gameFromFirestore !== undefined) {
+        this.ID = gameFromFirestore.ID;
+        this.Name = gameFromFirestore.Name;
+        this.OwnerID = gameFromFirestore.OwnerID;
+        this.ParticipantIDs = gameFromFirestore.ParticipantIDs;
+        this.Participants = gameFromFirestore.Participants;
+        this.CurrentAnswer = gameFromFirestore.CurrentAnswer;
+        this.CurrentRound = gameFromFirestore.CurrentRound;
+        this.ParticipantsLocked = gameFromFirestore.ParticipantsLocked;
+        this.DiscoveredClues = gameFromFirestore.DiscoveredClues;
+        this.Story = gameFromFirestore.Story;
+        if (gameFromFirestore.StartTime !== null) {
+          const { nanoseconds, seconds } = gameFromFirestore.StartTime;
+          this.StartTime = new firebase.firestore.Timestamp(
+            seconds,
+            nanoseconds,
+          );
+        }
 
-      // find participants still deciding
-      this.participantsStillDeciding = this.Participants.filter(
-        (participant) => participant.Character === null,
-      );
-      this.participantsReadyToStart = this.Participants.filter(
-        (participant) => participant.ReadyToStart,
-      );
-      this.participantsStillGuessing = this.Participants.filter(
-        (participant) => participant.Guess === null,
-      );
-      this.participantsReadyForAnswer = this.Participants.filter(
-        (participant) => participant.ReadyForAnswer,
-      );
+        // find participants still deciding
+        this.participantsStillDeciding = this.Participants.filter(
+          (participant) => participant.Character === null,
+        );
+        this.participantsReadyToStart = this.Participants.filter(
+          (participant) => participant.ReadyToStart,
+        );
+        this.participantsStillGuessing = this.Participants.filter(
+          (participant) => participant.Guess === null,
+        );
+        this.participantsReadyForAnswer = this.Participants.filter(
+          (participant) => participant.ReadyForAnswer,
+        );
+      }
+    } catch (error) {
+      console.log(this.ID, error);
+      this.ID = "invalid";
     }
-    console.log(this);
   }
 
   lockParticipants() {
@@ -90,12 +89,13 @@ export class Game {
     throw "not enough players for this game";
   }
 
-  addToFirestore(name: string, startTime: Date) {
+  addToFirestore(name: string, startTime: Date, owner: UserDetails) {
     this.Name = name;
     this.StartTime = firebase.firestore.Timestamp.fromDate(startTime);
-
+    this.OwnerID = owner.ID;
     // remove all props we don't want to sync to the cloud, but are computing locally instead
     const {
+      ID,
       participantsStillDeciding,
       participantsReadyToStart,
       participantsStillGuessing,
@@ -107,7 +107,11 @@ export class Game {
     // custom objects just because they can't guarantee they'll stay typesafe
     return db
       .collection(GAME_COLLECTION)
-      .add(JSON.parse(JSON.stringify(propsToCloudify)));
+      .add(JSON.parse(JSON.stringify(propsToCloudify)))
+      .then((doc) => {
+        this.ID = doc.id;
+        return this.addParticipant(owner);
+      });
   }
 
   addParticipant(user: UserDetails) {
@@ -116,31 +120,46 @@ export class Game {
     }
     const newParticipant = new Participant(user);
     console.log(`adding participant ${newParticipant.User.ID}`);
-    return db
-      .collection(GAME_COLLECTION)
-      .doc(this.ID)
-      .update({
-        Participants: firebase.firestore.FieldValue.arrayUnion(
-          JSON.parse(JSON.stringify(newParticipant)),
-        ),
-        ParticipantIDs: firebase.firestore.FieldValue.arrayUnion(
-          newParticipant.User.ID,
-        ),
-      });
+
+    // Uncomment to initialize the doc.
+    // sfDocRef.set({ population: 0 });
+
+    var batch = db.batch();
+
+    const gameDoc = db.collection(GAME_COLLECTION).doc(this.ID);
+    const userDoc = db.collection(USER_COLLECTION).doc(user.ID);
+    batch.update(gameDoc, {
+      Participants: firebase.firestore.FieldValue.arrayUnion(
+        JSON.parse(JSON.stringify(newParticipant)),
+      ),
+      ParticipantIDs: firebase.firestore.FieldValue.arrayUnion(
+        newParticipant.User.ID,
+      ),
+    });
+    batch.update(userDoc, {
+      Games: firebase.firestore.FieldValue.arrayUnion(this.ID),
+    });
+
+    return batch.commit();
   }
 
   connect(id: string, set: React.Dispatch<React.SetStateAction<Game | null>>) {
     this.ID = id;
-    return db
-      .collection(GAME_COLLECTION)
-      .doc(id)
-      .onSnapshot((snapshot) => {
-        const receivedGame = snapshot.data() as Game;
-        receivedGame.ID = snapshot.id;
-        const game = new Game(null, receivedGame);
+    try {
+      db.collection(GAME_COLLECTION)
+        .doc(id)
+        .onSnapshot((doc) => {
+          const wholeReceivedData = {
+            ID: doc.id,
+            ...doc.data(),
+          } as unknown;
+          const game = new Game(wholeReceivedData as Game);
 
-        set(game);
-      });
+          set(game);
+        });
+    } catch (err) {
+      throw err;
+    }
   }
 }
 

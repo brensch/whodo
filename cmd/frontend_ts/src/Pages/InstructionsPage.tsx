@@ -41,76 +41,35 @@ import { formatDistance } from "date-fns";
 import React, { useContext, useEffect, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import {
+  Redirect,
   Route,
   Switch,
   useHistory,
   useLocation,
   useParams,
 } from "react-router-dom";
-import { useAuth, db, firebase, auth } from "../Firebase";
+import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
 import { Game } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 
-const useStyles = makeStyles(() => ({
+const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
+  },
+  optionsButtons: {
+    minHeight: "70vh",
   },
   button: {
     width: "300px",
     textTransform: "none",
   },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
 }));
 
-interface LocationState {
-  from: {
-    pathname: string;
-  };
-}
-
-const datePickerTheme = createMuiTheme({
-  palette: {
-    type: "dark",
-    primary: {
-      light: "#ba8fa4",
-      main: "#ba8fa4",
-      dark: "#8fbaba",
-      contrastText: "#fff",
-    },
-    secondary: {
-      light: "#ff7961",
-      main: "#f44336",
-      dark: "#ba000d",
-      contrastText: "#ba8fa4",
-    },
-  },
-  typography: {
-    fontFamily: ["Lucida Console", "Monaco", "monospace"].join(","),
-    fontSize: 13,
-  },
-});
-
-const CreateGamePage = () => {
-  const classes = useStyles();
-
-  const [name, setName] = useState("");
-  const [selectedDate, handleDateChange] = useState<Date>(new Date());
-
+const Instructions = () => {
   let history = useHistory();
-  const { userDetails } = useContext(StateStoreContext);
-
-  const createGame = () => {
-    if (!!userDetails) {
-      const newGame = new Game();
-      newGame
-        .addToFirestore(name, selectedDate, userDetails)
-        .then(() => history.push(`/game/${newGame.ID}`));
-    }
-  };
+  const classes = useStyles();
 
   return (
     <Container>
@@ -123,44 +82,55 @@ const CreateGamePage = () => {
         className={classes.optionsButtons}
       >
         <Grid item xs={12}>
-          <TextField
-            value={name}
-            id="game-name"
-            label="name your game"
-            variant="outlined"
-            className={classes.button}
-            onChange={(e) => {
-              setName(e.currentTarget.value);
-            }}
-          />
+          <Typography variant="h5" align="center">
+            what's this all about?{" "}
+          </Typography>
         </Grid>
         <Grid item xs={12}>
-          <ThemeProvider theme={datePickerTheme}>
-            <DateTimePicker
-              fullWidth
-              label="when are you playing?"
-              inputVariant="outlined"
-              className={classes.button}
-              value={selectedDate}
-              //   onChange={console.log}
-              onChange={(event) => handleDateChange(event as Date)}
-            />
-          </ThemeProvider>
+          <Typography align="center">
+            who-do brings the power of the internet to murder mysteries so we
+            can all have something to do while locked in our bedrooms.
+          </Typography>
+        </Grid>
+
+        <Grid item xs={12}>
+          <Typography variant="h5" align="center">
+            you'll need:{" "}
+          </Typography>
         </Grid>
         <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={name === ""}
-            className={classes.button}
-            onClick={() => createGame()}
-          >
-            create game
-          </Button>
+          <ul>
+            <li>
+              <Typography>friends. 4-6 of them.</Typography>
+            </li>
+            <li>
+              <Typography>video chat.</Typography>
+            </li>
+            <li>
+              <Typography>sick costumes.</Typography>
+            </li>
+            <li>
+              <Typography>1-2 hours depending on how fast you talk.</Typography>
+            </li>
+          </ul>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h5" align="center">
+            how does it work?{" "}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center">
+            you are given all the information you need to embody a suspicious
+            character in a gruesome tale. follow the clues you have been given
+            to unravel the lies and deceipt. Expect the unexpected, and the
+            winner is the person who has the most fun, so don't be mad if you
+            accuse the wrong person of a heinous crime.
+          </Typography>
         </Grid>
       </Grid>
     </Container>
   );
 };
 
-export default CreateGamePage;
+export default Instructions;

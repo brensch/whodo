@@ -26,6 +26,9 @@ import OptionsPage from "./Pages/OptionsPage";
 import CreatePage from "./Pages/CreateGamePage";
 import JoinPage from "./Pages/JoinGamePage";
 import GamePage from "./Pages/GamePage";
+import SplashPage from "./Pages/SplashPage";
+import MyGamesPage from "./Pages/MyGamesPage";
+import InstructionsPage from "./Pages/InstructionsPage";
 import { UserDetails, UserDetailsState } from "./Schema/User";
 import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/AuthPage";
@@ -92,22 +95,26 @@ const Routes = () => {
   );
 };
 
-const SplashPage = () => <p>Splash</p>;
-const MyGamesPage = () => <p>MyGames</p>;
-const InstructionsPage = () => <p>Instructions</p>;
-
 const PrivateRoute: React.ComponentType<any> = ({
   component: Component,
   ...rest
 }) => {
   let authState = useAuth();
-  let { userDetails, initialising } = useContext(StateStoreContext);
+  let { userDetails, userDetailsInitialising } = useContext(StateStoreContext);
 
-  if (authState.initializing) {
+  if (authState.initialising) {
     return <div>authorising</div>;
   }
 
-  if (userDetails == null && !initialising) {
+  console.log(userDetails);
+
+  if (
+    authState.user !== null &&
+    !authState.initialising &&
+    userDetails === null &&
+    !userDetailsInitialising
+  ) {
+    console.log("displayed choosename");
     return <ChooseName />;
   }
 

@@ -411,7 +411,7 @@ export const ChooseName = () => {
     newUserDetails.addToFirestore(name);
   };
 
-  if (authState.user === null) {
+  if (authState.initialising) {
     return <div>loading</div>;
   }
 
