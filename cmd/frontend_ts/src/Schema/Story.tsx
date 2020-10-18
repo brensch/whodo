@@ -14,7 +14,7 @@ export class Clue {
     public Description: string,
     public ClueName: string,
     public RoundNumber: number,
-    public Url: URL,
+    public URL: URL,
   ) {}
 }
 
