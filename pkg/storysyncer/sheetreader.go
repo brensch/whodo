@@ -2,6 +2,7 @@ package storysyncer
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/url"
@@ -11,67 +12,93 @@ func (s *Server) SyncStory(story Story) {
 
 	rounds, err := s.readRounds(story.SheetID)
 	if err != nil {
-		log.Println("error reading rounds", err.Error())
+		log.Println(story.ID, "- error reading rounds", err.Error())
 		return
 	}
 
 	characters, err := s.readCharacters(story.SheetID)
 	if err != nil {
-		log.Println("error reading characters", err.Error())
+		log.Println(story.ID, "- error reading characters", err.Error())
 		return
 	}
 
 	info, err := s.readInfo(story.SheetID)
 	if err != nil {
-		log.Println("error reading info", err.Error())
+		log.Println(story.ID, "- error reading info", err.Error())
 		return
 	}
 
 	answers, err := s.readAnswers(story.SheetID)
 	if err != nil {
-		log.Println("error reading answers", err.Error())
+		log.Println(story.ID, "- error reading answers", err.Error())
 		return
 	}
 
 	clues, err := s.readClues(story.SheetID)
 	if err != nil {
-		log.Println("error reading clues", err.Error())
+		log.Println(story.ID, "- error reading clues", err.Error())
+		return
+	}
+
+	timelines, err := s.readTimeline(story.SheetID)
+	if err != nil {
+		log.Println(story.ID, "- error reading timelines", err.Error())
 		return
 	}
 
 	meta, err := s.readMetadata(story.SheetID)
 	if err != nil {
-		log.Println("error reading meta", err.Error())
+		log.Println(story.ID, "- error reading meta", err.Error())
 		return
 	}
 
 	storyUpdate := &Story{
-		ID:         story.ID,
-		SheetID:    story.SheetID,
-		Name:       meta.Name,
-		Blurb:      meta.Blurb,
-		Conclusion: meta.Conclusion,
-		Clues:      clues,
-		Characters: characters,
-		Answers:    answers,
-		Info:       info,
+		ID:             story.ID,
+		SheetID:        story.SheetID,
+		Name:           meta.Name,
+		Blurb:          meta.Blurb,
+		Conclusion:     meta.Conclusion,
+		Clues:          clues,
+		Characters:     characters,
+		Answers:        answers,
+		Info:           info,
+		Rounds:         rounds,
+		TimelineEvents: timelines,
 	}
+
+	err = storyUpdate.validate()
+	if err != nil {
+		log.Println(story.ID, "- validation error on story", err.Error())
+		return
+	}
+
+	existingJSON, err := json.Marshal(story)
+	if err != nil {
+		log.Println(story.ID, "- failed to marshal existing story", err.Error())
+		return
+	}
+
+	newJSON, err := json.Marshal(storyUpdate)
+	if err != nil {
+		log.Println(story.ID, "- failed to marshal new story", err.Error())
+		return
+	}
+
+	if string(existingJSON) == string(newJSON) {
+		log.Println(story.ID, "- no changes found, not updating firestore")
+		return
+	}
+
+	log.Println(story.ID, "- found differences, updating firestore")
 
 	_, err = s.firestoreClient.
 		Collection(StoriesCollection).
 		Doc(story.ID).
 		Set(context.Background(), storyUpdate)
 	if err != nil {
-		log.Println("got error trying to sync new story state", err.Error())
+		log.Println(story.ID, "- got error trying to sync new story state", err.Error())
 	}
 
-	fmt.Println(storyUpdate)
-
-	log.Println(rounds)
-	log.Println(characters)
-	log.Println(info)
-	log.Println(answers)
-	log.Println(clues)
 	return
 }
 
@@ -94,7 +121,7 @@ func (s *Story) validate() (err error) {
 			}
 		}
 		if !foundRound {
-			return fmt.Errorf("round %s not found in info number %d", info.Round, infoNumber)
+			return fmt.Errorf("%s - round %s not found in info number %d", s.ID, info.Round, infoNumber)
 		}
 
 		// check character is good
@@ -106,7 +133,7 @@ func (s *Story) validate() (err error) {
 			}
 		}
 		if !foundCharacter {
-			return fmt.Errorf("character %s not found in info number %d", info.Character, infoNumber)
+			return fmt.Errorf("%s - character %s not found in info number %d", s.ID, info.Character, infoNumber)
 		}
 	}
 
@@ -127,20 +154,71 @@ func (s *Server) readRounds(sheetID string) (rounds []Round, err error) {
 
 	for row, columns := range values.Values {
 		if len(columns) != 2 {
-			return nil, fmt.Errorf("incorrect number of columns in 'rounds', row %d", row+1)
+			return nil, fmt.Errorf("%s - incorrect number of columns in 'rounds', row %d", sheetID, row+1)
 		}
 
 		name, ok := columns[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("name is not a string in 'rounds', row %d", row+1)
+			return nil, fmt.Errorf("%s - name is not a string in 'rounds', row %d", sheetID, row+1)
 		}
 
 		intro, ok := columns[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("intro is not a string in 'rounds', row %d", row+1)
+			return nil, fmt.Errorf("%s - intro is not a string in 'rounds', row %d", sheetID, row+1)
 		}
 
 		rounds = append(rounds, Round{Name: name, Intro: intro})
+	}
+
+	return
+}
+
+func (s *Server) readTimeline(sheetID string) (events []TimelineEvent, err error) {
+
+	readRange := "timeline!A:Z"
+
+	values, err := s.sheetsClient.Spreadsheets.Values.
+		Get(sheetID, readRange).
+		Context(context.Background()).
+		Do()
+	if err != nil {
+		return
+	}
+
+	characterCount := len(values.Values[0]) - 1
+	var characters []string
+	for _, character := range values.Values[0][1:] {
+		characterString, ok := character.(string)
+		if !ok {
+			return nil, fmt.Errorf("%s - character is not a string in header of timeline", sheetID)
+		}
+		characters = append(characters, characterString)
+	}
+
+	for row, columns := range values.Values[1:] {
+		if len(columns) > characterCount+1 {
+			return nil, fmt.Errorf("%s - more columns in timeline than characters, row %d", sheetID, row+1)
+		}
+
+		for column, event := range columns[1:] {
+			eventString, ok := event.(string)
+			if !ok {
+				log.Printf("%s - event not string in row %d, column %d", sheetID, row+1, column+1)
+				continue
+			}
+
+			if eventString != "" {
+				time, ok := columns[0].(string)
+				if !ok {
+					return nil, fmt.Errorf("%s - time not string in row %d", sheetID, row+1)
+				}
+				events = append(events, TimelineEvent{
+					Character: characters[column],
+					Time:      time,
+					Event:     eventString,
+				})
+			}
+		}
 	}
 
 	return
@@ -159,23 +237,26 @@ func (s *Server) readMetadata(sheetID string) (meta *Metadata, err error) {
 	}
 
 	if len(values.Values) != 3 {
-		return nil, fmt.Errorf("incorrect number of metadata rows, expecting 2, got %d", len(values.Values))
+		return nil, fmt.Errorf("%s - incorrect number of metadata rows, expecting 3, got %d", sheetID, len(values.Values))
+	}
 
+	if len(values.Values[0]) != 1 || len(values.Values[1]) != 1 || len(values.Values[2]) != 1 {
+		return nil, fmt.Errorf("%s - not all metadata fields filled out", sheetID)
 	}
 
 	name, ok := values.Values[0][0].(string)
 	if !ok {
-		return nil, fmt.Errorf("name is not a string in 'metadata'")
+		return nil, fmt.Errorf("%s - name is not a string in 'metadata'", sheetID)
 	}
 
 	blurb, ok := values.Values[1][0].(string)
 	if !ok {
-		return nil, fmt.Errorf("blurb is not a string in 'metadata'")
+		return nil, fmt.Errorf("%s - blurb is not a string in 'metadata'", sheetID)
 	}
 
 	conclusion, ok := values.Values[2][0].(string)
 	if !ok {
-		return nil, fmt.Errorf("conclusion is not a string in 'metadata'")
+		return nil, fmt.Errorf("%s - conclusion is not a string in 'metadata'", sheetID)
 	}
 
 	meta = &Metadata{
@@ -201,27 +282,27 @@ func (s *Server) readCharacters(sheetID string) (characters []Character, err err
 
 	for row, columns := range values.Values {
 		if len(columns) != 4 {
-			return nil, fmt.Errorf("incorrect number of columns in 'characters', row %d", row+1)
+			return nil, fmt.Errorf("%s - incorrect number of columns in 'characters', row %d", sheetID, row+1)
 		}
 
 		name, ok := columns[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("name is not a string in 'characters', row %d", row+1)
+			return nil, fmt.Errorf("%s - name is not a string in 'characters', row %d", sheetID, row+1)
 		}
 
 		blurb, ok := columns[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("blurb is not a string in 'characters', row %d", row+1)
+			return nil, fmt.Errorf("%s - blurb is not a string in 'characters', row %d", sheetID, row+1)
 		}
 
 		costume, ok := columns[2].(string)
 		if !ok {
-			return nil, fmt.Errorf("costume is not a string in 'characters', row %d", row+1)
+			return nil, fmt.Errorf("%s - costume is not a string in 'characters', row %d", sheetID, row+1)
 		}
 
 		accessories, ok := columns[3].(string)
 		if !ok {
-			return nil, fmt.Errorf("accessories is not a string in 'characters', row %d", row+1)
+			return nil, fmt.Errorf("%s - accessories is not a string in 'characters', row %d", sheetID, row+1)
 		}
 
 		characters = append(characters, Character{
@@ -257,31 +338,31 @@ func (s *Server) readInfo(sheetID string) (infos []Info, err error) {
 		}
 
 		if len(columns) != 4 {
-			return nil, fmt.Errorf("incorrect number of columns in 'info', row %d. %+v", row+1, columns)
+			return nil, fmt.Errorf("%s - incorrect number of columns in 'info', row %d. %+v", sheetID, row+1, columns)
 		}
 
 		round, ok := columns[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("round is not a string in 'info', row %d", row+1)
+			return nil, fmt.Errorf("%s - round is not a string in 'info', row %d", sheetID, row+1)
 		}
 
 		character, ok := columns[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("character is not a string in 'info', row %d", row+1)
+			return nil, fmt.Errorf("%s - character is not a string in 'info', row %d", sheetID, row+1)
 		}
 
 		public, ok := columns[2].(string)
 		if !ok {
-			return nil, fmt.Errorf("public is not a string in 'info', row %d", row+1)
+			return nil, fmt.Errorf("%s - public is not a string in 'info', row %d", sheetID, row+1)
 		}
 		if public != "TRUE" && public != "FALSE" {
-			return nil, fmt.Errorf("public is not either TRUE or FALSE, row %d", row+1)
+			return nil, fmt.Errorf("%s - public is not either TRUE or FALSE, row %d", sheetID, row+1)
 		}
 		publicBool := public == "TRUE"
 
 		content, ok := columns[3].(string)
 		if !ok {
-			return nil, fmt.Errorf("content is not a string in 'info', row %d", row+1)
+			return nil, fmt.Errorf("%s - content is not a string in 'info', row %d", sheetID, row+1)
 		}
 
 		infos = append(infos, Info{
@@ -309,36 +390,36 @@ func (s *Server) readClues(sheetID string) (clues []Clue, err error) {
 
 	for row, columns := range values.Values {
 		if len(columns) != 5 {
-			return nil, fmt.Errorf("incorrect number of columns in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - incorrect number of columns in 'clues', row %d", sheetID, row+1)
 		}
 
 		character, ok := columns[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("character is not a string in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - character is not a string in 'clues', row %d", sheetID, row+1)
 		}
 
 		round, ok := columns[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("round is not a string in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - round is not a string in 'clues', row %d", sheetID, row+1)
 		}
 
 		urlString, ok := columns[2].(string)
 		if !ok {
-			return nil, fmt.Errorf("url is not a string in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - url is not a string in 'clues', row %d", sheetID, row+1)
 		}
 		urlParsed, err := url.Parse(urlString)
 		if !ok {
-			return nil, fmt.Errorf("url is not a valid url in 'clues', row %d: %s", row+1, err.Error())
+			return nil, fmt.Errorf("%s - url is not a valid url in 'clues', row %d: %s", sheetID, row+1, err.Error())
 		}
 
 		name, ok := columns[3].(string)
 		if !ok {
-			return nil, fmt.Errorf("name is not a string in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - name is not a string in 'clues', row %d", sheetID, row+1)
 		}
 
 		description, ok := columns[4].(string)
 		if !ok {
-			return nil, fmt.Errorf("description is not a string in 'clues', row %d", row+1)
+			return nil, fmt.Errorf("%s - description is not a string in 'clues', row %d", sheetID, row+1)
 		}
 
 		clues = append(clues, Clue{
@@ -367,17 +448,17 @@ func (s *Server) readAnswers(sheetID string) (answers []Answer, err error) {
 
 	for row, columns := range values.Values {
 		if len(columns) != 2 {
-			return nil, fmt.Errorf("incorrect number of columns in 'answers', row %d", row+1)
+			return nil, fmt.Errorf("%s - incorrect number of columns in 'answers', row %d", sheetID, row+1)
 		}
 
 		character, ok := columns[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("character is not a string in 'answers', row %d", row+1)
+			return nil, fmt.Errorf("%s - character is not a string in 'answers', row %d", sheetID, row+1)
 		}
 
 		details, ok := columns[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("details is not a string in 'answers', row %d", row+1)
+			return nil, fmt.Errorf("%s - details is not a string in 'answers', row %d", sheetID, row+1)
 		}
 
 		answers = append(answers, Answer{Character: character, Details: details})

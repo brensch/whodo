@@ -3,16 +3,17 @@ package storysyncer
 import "net/url"
 
 type Story struct {
-	SheetID    string
-	ID         string
-	Name       string
-	Conclusion string
-	Rounds     []Round
-	Clues      []Clue
-	Characters []Character
-	Blurb      string
-	Answers    []Answer
-	Info       []Info
+	SheetID        string
+	ID             string
+	Name           string
+	Conclusion     string
+	Rounds         []Round
+	Clues          []Clue
+	Characters     []Character
+	Blurb          string
+	Answers        []Answer
+	Info           []Info
+	TimelineEvents []TimelineEvent
 }
 
 type Metadata struct {
@@ -35,8 +36,7 @@ type Clue struct {
 }
 
 type Character struct {
-	Blurb string
-	// Info        []RoundInfo
+	Blurb       string
 	Name        string
 	Costume     string
 	Accessories string
@@ -52,4 +52,10 @@ type Info struct {
 type Answer struct {
 	Character string
 	Details   string
+}
+
+type TimelineEvent struct {
+	Character string
+	Time      string
+	Event     string
 }

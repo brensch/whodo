@@ -286,7 +286,7 @@ const ChooseStory = () => {
   const [modalStory, setModalStory] = useState<Story | null>(null);
 
   useEffect(() => {
-    const unsub = db.collection("stories").onSnapshot((snapshot) => {
+    const unsub = db.collection("stories2").onSnapshot((snapshot) => {
       const allStories = snapshot.docs.map((doc) => {
         const newStory = new Story();
         Object.assign(newStory, {
