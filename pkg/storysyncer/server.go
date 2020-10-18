@@ -93,6 +93,7 @@ func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshot
 				log.Print("error decoding", err.Error())
 				continue
 			}
+			newStory.ID = snapshot.Ref.ID
 
 			newStories = append(newStories, newStory)
 		}
