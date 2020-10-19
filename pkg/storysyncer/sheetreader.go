@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 )
 
@@ -12,43 +11,43 @@ func (s *Server) SyncStory(story Story) {
 
 	rounds, err := s.readRounds(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading rounds", err.Error())
+		fmt.Println(story.ID, "- error reading rounds", err.Error())
 		return
 	}
 
 	characters, err := s.readCharacters(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading characters", err.Error())
+		fmt.Println(story.ID, "- error reading characters", err.Error())
 		return
 	}
 
 	info, err := s.readInfo(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading info", err.Error())
+		fmt.Println(story.ID, "- error reading info", err.Error())
 		return
 	}
 
 	answers, err := s.readAnswers(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading answers", err.Error())
+		fmt.Println(story.ID, "- error reading answers", err.Error())
 		return
 	}
 
 	clues, err := s.readClues(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading clues", err.Error())
+		fmt.Println(story.ID, "- error reading clues", err.Error())
 		return
 	}
 
 	timelines, err := s.readTimeline(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading timelines", err.Error())
+		fmt.Println(story.ID, "- error reading timelines", err.Error())
 		return
 	}
 
 	meta, err := s.readMetadata(story.SheetID)
 	if err != nil {
-		log.Println(story.ID, "- error reading meta", err.Error())
+		fmt.Println(story.ID, "- error reading meta", err.Error())
 		return
 	}
 
@@ -68,35 +67,34 @@ func (s *Server) SyncStory(story Story) {
 
 	err = storyUpdate.validate()
 	if err != nil {
-		log.Println(story.ID, "- validation error on story", err.Error())
+		fmt.Println(story.ID, "- validation error on story", err.Error())
 		return
 	}
 
 	existingJSON, err := json.Marshal(story)
 	if err != nil {
-		log.Println(story.ID, "- failed to marshal existing story", err.Error())
+		fmt.Println(story.ID, "- failed to marshal existing story", err.Error())
 		return
 	}
 
 	newJSON, err := json.Marshal(storyUpdate)
 	if err != nil {
-		log.Println(story.ID, "- failed to marshal new story", err.Error())
+		fmt.Println(story.ID, "- failed to marshal new story", err.Error())
 		return
 	}
 
 	if string(existingJSON) == string(newJSON) {
-		log.Println(story.ID, "- no changes found, not updating firestore")
 		return
 	}
 
-	log.Println(story.ID, "- found differences, updating firestore")
+	fmt.Println(story.ID, "- found differences, updating firestore")
 
 	_, err = s.firestoreClient.
 		Collection(StoriesCollection).
 		Doc(story.ID).
 		Set(context.Background(), storyUpdate)
 	if err != nil {
-		log.Println(story.ID, "- got error trying to sync new story state", err.Error())
+		fmt.Println(story.ID, "- got error trying to sync new story state", err.Error())
 	}
 
 	return
@@ -203,7 +201,7 @@ func (s *Server) readTimeline(sheetID string) (events []TimelineEvent, err error
 		for column, event := range columns[1:] {
 			eventString, ok := event.(string)
 			if !ok {
-				log.Printf("%s - event not string in row %d, column %d", sheetID, row+1, column+1)
+				fmt.Printf("%s - event not string in row %d, column %d\n", sheetID, row+1, column+1)
 				continue
 			}
 

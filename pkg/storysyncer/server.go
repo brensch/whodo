@@ -2,6 +2,7 @@ package storysyncer
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -38,30 +39,9 @@ func InitServer(ctx context.Context) (s *Server) {
 	s = &Server{
 		sheetsClient:    GetSheetsService(ctx),
 		firestoreClient: GetFirestoreClient(ctx),
-		// sheetsMetadataCHAN: make(chan *SheetsMetadata),
 	}
 
 	snapshotQueryItr := s.firestoreClient.Collection(StoriesCollection).Snapshots(ctx)
-
-	// check we got at least one object, create if not
-	// _, err := snapshotQueryItr.Next()
-	// if err != nil {
-	// 	log.Print("error getting first snapshot, trying to create doc", err.Error())
-	// }
-
-	// querySnapshot.
-
-	// if !snapshot.Exists() {
-	// 	_, err := s.firestoreClient.Collection(StoriesCollection).Doc(StoriesCollection).Set(ctx, SheetsMetadata{})
-	// 	if err != nil {
-	// 		log.Fatal("could not create doc")
-	// 	}
-	// }
-
-	// err = snapshot.DataTo(&s.sheetsMetadata)
-	// if err != nil {
-	// 	log.Print("error decoding snapshot", err.Error())
-	// }
 
 	go s.listenForStoryChanges(snapshotQueryItr)
 
@@ -75,13 +55,13 @@ func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshot
 
 		querySnapshot, err := querySnapshotItr.Next()
 		if err != nil {
-			log.Print("error getting next querySnapshot", err.Error())
+			fmt.Println("error getting next querySnapshot", err.Error())
 			continue
 		}
 
 		snapshots, err := querySnapshot.Documents.GetAll()
 		if err != nil {
-			log.Print("error decoding querySnapshot", err.Error())
+			fmt.Println("error decoding querySnapshot", err.Error())
 			continue
 		}
 
@@ -90,7 +70,7 @@ func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshot
 			var newStory Story
 			err = snapshot.DataTo(&newStory)
 			if err != nil {
-				log.Print("error decoding", err.Error())
+				fmt.Println("error decoding", err.Error())
 				continue
 			}
 			newStory.ID = snapshot.Ref.ID
@@ -103,7 +83,7 @@ func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshot
 		s.stories = newStories
 		s.sheetsLock.Unlock()
 
-		log.Print("story changes received from firestore: ", s.stories)
+		fmt.Println("story changes received from firestore")
 
 	}
 }
