@@ -1,9 +1,0 @@
-.gcloudignore
-
-cmd/frontend/
-
-.git
-.gitignore
-
-
-#!include:.gitignore
