@@ -1,6 +1,6 @@
 .gcloudignore
 
-cmd/frontend
+cmd/frontend/
 
 .git
 .gitignore
