@@ -3,10 +3,9 @@ package stories
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"log"
 	"strings"
 
-	"github.com/brensch/whodo/pkg/cloudfunctions"
 	"github.com/brensch/whodo/pkg/storysyncer"
 )
 
@@ -19,7 +18,7 @@ func init() {
 	storyServer = storysyncer.InitServer(context.Background())
 }
 
-func HelloCool(ctx context.Context, e cloudfunctions.FirestoreEvent) (err error) {
+func HelloCool(ctx context.Context, e FirestoreEvent) (err error) {
 	fullPath := strings.Split(e.Value.Name, "/documents/")[1]
 	pathParts := strings.Split(fullPath, "/")
 	collection := pathParts[0]
@@ -30,9 +29,9 @@ func HelloCool(ctx context.Context, e cloudfunctions.FirestoreEvent) (err error)
 		return
 	}
 
-	fmt.Println("doc:", doc)
-	fmt.Println("collection:", collection)
-	fmt.Println("event:", string(eventJSON))
+	log.Println("doc:", doc)
+	log.Println("collection:", collection)
+	log.Println("event:", string(eventJSON))
 	return
 
 	// curValue := e.Value.Fields.Original.StringValue
