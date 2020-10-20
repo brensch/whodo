@@ -3,8 +3,9 @@ module github.com/brensch/whodo
 go 1.15
 
 require (
+	cloud.google.com/go v0.70.0 // indirect
 	cloud.google.com/go/firestore v1.3.0
-	github.com/gin-gonic/gin v1.6.3
+	github.com/gin-gonic/gin v1.6.3 // indirect
 	github.com/go-playground/validator/v10 v10.4.0 // indirect
 	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect

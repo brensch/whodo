@@ -1,6 +1,8 @@
 package storysyncer
 
-import "net/url"
+import (
+	"net/url"
+)
 
 type Story struct {
 	SheetID        string

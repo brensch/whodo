@@ -89,7 +89,7 @@ func (s *Server) SyncStory(story Story) {
 
 	fmt.Println(story.ID, "- found differences, updating firestore")
 
-	_, err = s.firestoreClient.
+	_, err = s.FirestoreClient.
 		Collection(StoriesCollection).
 		Doc(story.ID).
 		Set(context.Background(), storyUpdate)
@@ -100,13 +100,13 @@ func (s *Server) SyncStory(story Story) {
 	return
 }
 
-func (s *Server) SyncAllStories() {
-	s.sheetsLock.Lock()
-	defer s.sheetsLock.Unlock()
-	for _, story := range s.stories {
-		s.SyncStory(story)
-	}
-}
+// func (s *Server) SyncAllStories() {
+// 	s.sheetsLock.Lock()
+// 	defer s.sheetsLock.Unlock()
+// 	for _, story := range s.stories {
+// 		s.SyncStory(story)
+// 	}
+// }
 
 func (s *Story) validate() (err error) {
 	for infoNumber, info := range s.Info {
@@ -142,7 +142,7 @@ func (s *Server) readRounds(sheetID string) (rounds []Round, err error) {
 
 	readRange := "rounds!A2:B"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -175,7 +175,7 @@ func (s *Server) readTimeline(sheetID string) (events []TimelineEvent, err error
 
 	readRange := "timeline!A:Z"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -226,7 +226,7 @@ func (s *Server) readMetadata(sheetID string) (meta *Metadata, err error) {
 
 	readRange := "metadata!B:B"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -270,7 +270,7 @@ func (s *Server) readCharacters(sheetID string) (characters []Character, err err
 
 	readRange := "characters!A2:D"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -318,7 +318,7 @@ func (s *Server) readInfo(sheetID string) (infos []Info, err error) {
 
 	readRange := "info!A2:D"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -378,7 +378,7 @@ func (s *Server) readClues(sheetID string) (clues []Clue, err error) {
 
 	readRange := "clues!A2:E"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()
@@ -436,7 +436,7 @@ func (s *Server) readAnswers(sheetID string) (answers []Answer, err error) {
 
 	readRange := "answers!A2:B"
 
-	values, err := s.sheetsClient.Spreadsheets.Values.
+	values, err := s.SheetsClient.Spreadsheets.Values.
 		Get(sheetID, readRange).
 		Context(context.Background()).
 		Do()

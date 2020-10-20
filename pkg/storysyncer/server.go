@@ -2,13 +2,10 @@ package storysyncer
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
-	"sync"
 
 	"cloud.google.com/go/firestore"
-	"github.com/gin-gonic/gin"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/sheets/v4"
 )
@@ -17,15 +14,34 @@ const (
 	StoriesCollection = "stories2"
 )
 
+// HelloFirestore is triggered by a change to a Firestore document.
+// func HelloFirestore(ctx context.Context, e FirestoreEvent) error {
+// 	meta, err := metadata.FromContext(ctx)
+// 	if err != nil {
+// 		return fmt.Errorf("metadata.FromContext: %v", err)
+// 	}
+// 	log.Printf("Function triggered by change to: %v", meta.Resource)
+// 	log.Printf("Old value: %+v", e.OldValue)
+// 	log.Printf("New value: %+v", e.Value)
+// 	return nil
+// }
+
+// func init() {
+// 	ctx = context.Background()
+// 	SheetsClient = GetSheetsService()
+// 	FirestoreClient = GetFirestoreClient()
+
+// }
+
 type Server struct {
-	sheetsClient    *sheets.Service
-	firestoreClient *firestore.Client
-	stories         []Story
+	SheetsClient    *sheets.Service
+	FirestoreClient *firestore.Client
+	// stories         []Story
 	// sheetsMetadataCHAN chan *SheetsMetadata
 
-	sheetsLock sync.Mutex
+	// sheetsLock sync.Mutex
 
-	engine *gin.Engine
+	// engine *gin.Engine
 }
 
 type SheetsMetadata struct {
@@ -36,57 +52,63 @@ type SheetsMetadata struct {
 // panics on fail for certain initialisation
 func InitServer(ctx context.Context) (s *Server) {
 
-	s = &Server{
-		sheetsClient:    GetSheetsService(ctx),
-		firestoreClient: GetFirestoreClient(ctx),
+	return &Server{
+		SheetsClient:    GetSheetsService(ctx),
+		FirestoreClient: GetFirestoreClient(ctx),
 	}
 
-	snapshotQueryItr := s.firestoreClient.Collection(StoriesCollection).Snapshots(ctx)
+	// snapshotQueryItr := s.FirestoreClient.Collection(StoriesCollection).Snapshots(ctx)
 
-	go s.listenForStoryChanges(snapshotQueryItr)
+	// go s.listenForStoryChanges(snapshotQueryItr)
 
-	return
+	// return
 
 }
 
-// listenForStoryChanges monitors snapshot and updates server state when it happens
-func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshotIterator) {
-	for {
+// func (s *Server) SyncAllHandler(w http.ResponseWriter, r *http.Request) {
+// 	s.SyncAllStories()
+// 	fmt.Fprintf(w, "stories synced")
 
-		querySnapshot, err := querySnapshotItr.Next()
-		if err != nil {
-			fmt.Println("error getting next querySnapshot", err.Error())
-			continue
-		}
+// }
 
-		snapshots, err := querySnapshot.Documents.GetAll()
-		if err != nil {
-			fmt.Println("error decoding querySnapshot", err.Error())
-			continue
-		}
+// // listenForStoryChanges monitors snapshot and updates server state when it happens
+// func (s *Server) listenForStoryChanges(querySnapshotItr *firestore.QuerySnapshotIterator) {
+// 	for {
 
-		var newStories []Story
-		for _, snapshot := range snapshots {
-			var newStory Story
-			err = snapshot.DataTo(&newStory)
-			if err != nil {
-				fmt.Println("error decoding", err.Error())
-				continue
-			}
-			newStory.ID = snapshot.Ref.ID
+// 		querySnapshot, err := querySnapshotItr.Next()
+// 		if err != nil {
+// 			fmt.Println("error getting next querySnapshot", err.Error())
+// 			continue
+// 		}
 
-			newStories = append(newStories, newStory)
-		}
+// 		snapshots, err := querySnapshot.Documents.GetAll()
+// 		if err != nil {
+// 			fmt.Println("error decoding querySnapshot", err.Error())
+// 			continue
+// 		}
 
-		// if successful, update the server state
-		s.sheetsLock.Lock()
-		s.stories = newStories
-		s.sheetsLock.Unlock()
+// 		var newStories []Story
+// 		for _, snapshot := range snapshots {
+// 			var newStory Story
+// 			err = snapshot.DataTo(&newStory)
+// 			if err != nil {
+// 				fmt.Println("error decoding", err.Error())
+// 				continue
+// 			}
+// 			newStory.ID = snapshot.Ref.ID
 
-		fmt.Println("story changes received from firestore")
+// 			newStories = append(newStories, newStory)
+// 		}
 
-	}
-}
+// 		// if successful, update the server state
+// 		s.sheetsLock.Lock()
+// 		s.stories = newStories
+// 		s.sheetsLock.Unlock()
+
+// 		fmt.Println("story changes received from firestore")
+
+// 	}
+// }
 
 // GetSheetsService authenticates to sheets api. panic on failure
 func GetSheetsService(ctx context.Context) *sheets.Service {
