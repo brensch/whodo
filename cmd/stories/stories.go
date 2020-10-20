@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/brensch/whodo/pkg/cloudfunctions"
+	"github.com/brensch/whodo/pkg/firestorefunctions"
 	"github.com/brensch/whodo/pkg/storysyncer"
 )
 
@@ -19,7 +19,7 @@ func init() {
 	storyServer = storysyncer.InitServer(context.Background())
 }
 
-func HelloCool(ctx context.Context, e cloudfunctions.FirestoreEvent) (err error) {
+func HelloCool(ctx context.Context, e firestorefunctions.FirestoreEvent) (err error) {
 	fullPath := strings.Split(e.Value.Name, "/documents/")[1]
 	pathParts := strings.Split(fullPath, "/")
 	collection := pathParts[0]
