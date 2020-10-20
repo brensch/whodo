@@ -1,4 +1,4 @@
-package firestorefunctions
+package cloudfunctions
 
 import "time"
 
