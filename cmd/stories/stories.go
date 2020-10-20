@@ -29,6 +29,7 @@ func HelloCool(ctx context.Context, e FirestoreEvent) (err error) {
 		return
 	}
 
+	// e.
 	log.Println("doc:", doc)
 	log.Println("collection:", collection)
 	log.Println("event:", string(eventJSON))
