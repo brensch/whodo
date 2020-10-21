@@ -29,26 +29,15 @@ func HelloCool(ctx context.Context, e FirestoreEvent) (err error) {
 		return
 	}
 
+	// ds, err := storyServer.FirestoreClient.NewDocumentSnapshot(e.Value)
+
 	log.Println(e.OldValue.Fields)
 
-	// e.
 	log.Println("doc:", doc)
 	log.Println("collection:", collection)
 	log.Println("event:", string(eventJSON))
+
+	storyServer.FirestoreClient.Collection(storysyncer.StoriesCollection).Doc(doc)
 	return
 
-	// curValue := e.Value.Fields.Original.StringValue
-	// newValue := strings.ToUpper(curValue)
-	// if curValue == newValue {
-	// 	log.Printf("%q is already upper case: skipping", curValue)
-	// 	return nil
-	// }
-	// log.Printf("Replacing value: %q -> %q", curValue, newValue)
-
-	// data := map[string]string{"original": newValue}
-	// _, err := storyServer.FirestoreClient.Collection(collection).Doc(doc).Set(ctx, data)
-	// if err != nil {
-	// 	return fmt.Errorf("Set: %v", err)
-	// }
-	// return nil
 }

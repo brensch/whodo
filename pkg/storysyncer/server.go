@@ -14,34 +14,9 @@ const (
 	StoriesCollection = "stories2"
 )
 
-// HelloFirestore is triggered by a change to a Firestore document.
-// func HelloFirestore(ctx context.Context, e FirestoreEvent) error {
-// 	meta, err := metadata.FromContext(ctx)
-// 	if err != nil {
-// 		return fmt.Errorf("metadata.FromContext: %v", err)
-// 	}
-// 	log.Printf("Function triggered by change to: %v", meta.Resource)
-// 	log.Printf("Old value: %+v", e.OldValue)
-// 	log.Printf("New value: %+v", e.Value)
-// 	return nil
-// }
-
-// func init() {
-// 	ctx = context.Background()
-// 	SheetsClient = GetSheetsService()
-// 	FirestoreClient = GetFirestoreClient()
-
-// }
-
 type Server struct {
 	SheetsClient    *sheets.Service
 	FirestoreClient *firestore.Client
-	// stories         []Story
-	// sheetsMetadataCHAN chan *SheetsMetadata
-
-	// sheetsLock sync.Mutex
-
-	// engine *gin.Engine
 }
 
 type SheetsMetadata struct {
@@ -56,12 +31,6 @@ func InitServer(ctx context.Context) (s *Server) {
 		SheetsClient:    GetSheetsService(ctx),
 		FirestoreClient: GetFirestoreClient(ctx),
 	}
-
-	// snapshotQueryItr := s.FirestoreClient.Collection(StoriesCollection).Snapshots(ctx)
-
-	// go s.listenForStoryChanges(snapshotQueryItr)
-
-	// return
 
 }
 

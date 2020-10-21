@@ -1,22 +1,19 @@
 package stories
 
-import (
-	"time"
+import "time"
 
-	"github.com/brensch/whodo/pkg/storysyncer"
-)
-
+// https://github.com/googleapis/google-cloud-go/issues/1438
 type FirestoreEvent struct {
-	OldValue   FirestoreValue `json:"oldValue"`
-	Value      FirestoreValue `json:"value"`
+	OldValue   FirestoreEvent `json:"oldValue"`
+	Value      FirestoreEvent `json:"value"`
 	UpdateMask struct {
 		FieldPaths []string `json:"fieldPaths"`
 	} `json:"updateMask"`
 }
 
 type FirestoreValue struct {
-	CreateTime time.Time         `json:"createTime"`
-	Name       string            `json:"name"`
-	UpdateTime time.Time         `json:"updateTime"`
-	Fields     storysyncer.Story `json:"fields"`
+	CreateTime time.Time   `json:"createTime"`
+	Name       string      `json:"name"`
+	UpdateTime time.Time   `json:"updateTime"`
+	Fields     interface{} `json:"fields"`
 }

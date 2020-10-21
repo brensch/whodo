@@ -3,9 +3,17 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "functions": {
+    "source": "backend",
+    "predeploy": "npm --prefix \"$RESOURCE_DIR\" run build"
+  },
   "hosting": {
-    "public": "./cmd/frontend/build",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "public": "frontend/build",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
     "rewrites": [
       {
         "source": "**",
@@ -14,11 +22,21 @@
     ]
   },
   "emulators": {
+    "functions": {
+      "port": 5001
+    },
     "firestore": {
-      "port": 8080
+      "port": 5002
+    },
+    "pubsub": {
+      "port": 5003
     },
     "ui": {
-      "enabled": true
+      "enabled": true,
+      "port": 5005
+    },
+    "hosting": {
+      "port": 5000
     }
   }
 }
