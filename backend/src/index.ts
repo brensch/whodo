@@ -5,10 +5,12 @@ import { ReadStoryFromSheet } from "./Sheets";
 
 admin.initializeApp();
 
+const STORIES_COLLECTION = "stories2";
+
 const db = admin.firestore();
 
 export const watchStories = functions.firestore
-  .document("stories2/{docID}")
+  .document(`${STORIES_COLLECTION}/{docID}`)
   .onWrite((change, context) => {
     const storyAfter = change.after.data() as Story;
     return ReadStoryFromSheet(storyAfter.SheetID)
@@ -17,11 +19,11 @@ export const watchStories = functions.firestore
           throw Error;
         }
 
-        return db.collection("stories2").doc(change.after.id).set(res);
+        return db.collection(STORIES_COLLECTION).doc(change.after.id).set(res);
       })
       .catch((err) =>
         db
-          .collection("stories2")
+          .collection(STORIES_COLLECTION)
           .doc(change.after.id)
           .update({ sync_error: err.toString() }),
       );
