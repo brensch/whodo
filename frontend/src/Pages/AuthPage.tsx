@@ -403,6 +403,7 @@ export const ChooseName = () => {
 
   const SelectName = () => {
     if (authState.user === null || authState.user.email === null) {
+      console.log("choose name failed", authState.user);
       return;
     }
     // const newUserDetails: UserDetails = {

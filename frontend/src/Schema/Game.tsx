@@ -1,4 +1,4 @@
-import { UserDetails, USER_COLLECTION } from "./User";
+import { UserDetails, USER_DETAILS_COLLECTION } from "./User";
 // import { Character, CharacterName, Story } from "./Story";
 import { db } from "../Firebase";
 import * as firebase from "firebase/app";
@@ -203,7 +203,7 @@ export interface Note {
 //     var batch = db.batch();
 
 //     const gameDoc = db.collection(GAME_COLLECTION).doc(this.ID);
-//     const userDoc = db.collection(USER_COLLECTION).doc(user.ID);
+//     const userDoc = db.collection(USER_DETAILS_COLLECTION).doc(user.ID);
 //     batch.update(gameDoc, {
 //       Participants: firebase.firestore.FieldValue.arrayUnion(
 //         JSON.parse(JSON.stringify(newParticipant)),

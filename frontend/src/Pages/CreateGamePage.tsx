@@ -111,7 +111,9 @@ const CreateGamePage = () => {
       //   .addToFirestore(name, selectedDate, userDetails)
       //   .then(() => history.push(`/game/${newGame.ID}`));
 
-      CreateGame(name, selectedDate, userDetails);
+      CreateGame(name, selectedDate, userDetails).then((gameID) =>
+        history.push(`/game/${gameID}`),
+      );
     }
   };
 

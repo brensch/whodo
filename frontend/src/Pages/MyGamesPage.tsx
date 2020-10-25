@@ -52,9 +52,9 @@ import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
 import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
-import { UserDetails } from "../Schema/User";
+import { UserDetails, UserGames } from "../Schema/User";
 import { Story } from "../Schema/Story";
-import { ConnectGameState } from "../Api";
+import { ConnectGameState, GetUserGames } from "../Api";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -115,9 +115,18 @@ const useStyles = makeStyles((theme) => ({
 const MyGamesPage = () => {
   const classes = useStyles();
   let history = useHistory();
+  const [userGames, setUserGames] = useState<UserGames>({
+    Games: [],
+  });
   const { userDetails, userDetailsInitialising } = useContext(
     StateStoreContext,
   );
+
+  useEffect(() => {
+    if (!userDetailsInitialising && !!userDetails) {
+      GetUserGames(userDetails.ID).then(setUserGames);
+    }
+  }, [userDetails, userDetailsInitialising]);
 
   return (
     <React.Fragment>
@@ -127,7 +136,7 @@ const MyGamesPage = () => {
         aria-labelledby="games-list"
         className={classes.root}
       >
-        {userDetails?.Games.map((gameID) => (
+        {userGames.Games.map((gameID) => (
           <GameItem id={gameID} />
         ))}
       </List>

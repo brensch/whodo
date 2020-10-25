@@ -9,6 +9,11 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null;
     }
+    match /user_games/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null;
+    }
+
     match /stories {
       allow read: if true;
     }
@@ -19,10 +24,15 @@ service cloud.firestore {
       allow create: if request.auth != null;
 
 			//	check if user is in the participant id list
-      allow update: if request.auth.uid in resource.data.ParticipantIDs;
+      allow update: if request.auth.uid in resource.data.UserIDs;
       
       // check if user is just adding themself to the participant list
-      allow update: if request.auth != null && request.resource.data.ParticipantIDs == resource.data.ParticipantIDs.concat([request.auth.uid])
+      allow update: if request.auth != null && request.resource.data.UserIDs == resource.data.UserIDs.concat([request.auth.uid])
+    }
+
+    match /playerviews/{playerViewID} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == resource.data.UserID;
+      allow create: if request.auth != null && request.resource.data.UserID == request.auth.uid;
     }
   }
 }

@@ -174,8 +174,15 @@ const GamePage = () => {
     } else {
       setGameStage("correctGuesses");
     }
-  }, [gameState]);
+  }, [gameState, playerView]);
   // console.log(gameState);
+
+  console.log(gameState);
+  if (gameState !== null) {
+    console.log(gameState.StoryMetadata);
+  }
+  console.log(gameStage);
+  console.log(playerView);
 
   if (gameState === null || playerView === null) {
     return <div>loading</div>;
@@ -294,7 +301,7 @@ const ChooseStory = () => {
       .collection(STORY_METADATA_COLLECTION)
       .onSnapshot((snapshot) => {
         const allStories = snapshot.docs.map((doc) => {
-          return (doc as unknown) as StoryMetadata;
+          return (doc.data() as unknown) as StoryMetadata;
         });
         setStories(allStories);
       });
@@ -336,10 +343,35 @@ const ChooseStory = () => {
           className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography align="center">
-              choose a story with {gameState.UserIDs.length} characters so
-              everyone can play.
+            <Typography>current players:</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            {gameState.Users.map((user) => (
+              <Typography align="center">{user.Name}</Typography>
+            ))}
+          </Grid>
+          <Grid item xs={12}>
+            <Typography>
+              pick a story with {gameState.UserIDs.length} characters, or find
+              more friends
             </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={() =>
+                  setSnackState({
+                    severity: "info",
+                    message: "invite link copied to clipboard",
+                  })
+                }
+              >
+                invite
+              </Button>
+            </CopyToClipboard>
           </Grid>
 
           <Grid item xs={12}>
@@ -368,31 +400,6 @@ const ChooseStory = () => {
                 </ListItem>
               ))}
             </List>
-          </Grid>
-          <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() =>
-                  setSnackState({
-                    severity: "info",
-                    message: "link copied to clipboard",
-                  })
-                }
-              >
-                need more players still?
-              </Button>
-            </CopyToClipboard>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>current crew:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {gameState.Users.map((user) => (
-              <Typography align="center">{user.Name}</Typography>
-            ))}
           </Grid>
         </Grid>
       </Container>
