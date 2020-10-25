@@ -49,9 +49,10 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase, auth } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
+import { GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
+import { CreateGame } from "../Api";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -105,10 +106,12 @@ const CreateGamePage = () => {
 
   const createGame = () => {
     if (!!userDetails) {
-      const newGame = new Game();
-      newGame
-        .addToFirestore(name, selectedDate, userDetails)
-        .then(() => history.push(`/game/${newGame.ID}`));
+      // const newGame = new Game();
+      // newGame
+      //   .addToFirestore(name, selectedDate, userDetails)
+      //   .then(() => history.push(`/game/${newGame.ID}`));
+
+      CreateGame(name, selectedDate, userDetails);
     }
   };
 

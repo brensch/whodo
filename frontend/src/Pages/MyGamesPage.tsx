@@ -50,10 +50,11 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game, Participant } from "../Schema/Game";
+import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { Story } from "../Schema/Story";
+import { ConnectGameState } from "../Api";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -143,38 +144,23 @@ interface GameItemProps {
 const GameItem = ({ id }: GameItemProps) => {
   let history = useHistory();
 
-  const [game, setGame] = useState<Game | null>(null);
+  const [game, setGame] = useState<GameState | null>(null);
 
   useEffect(() => {
-    const unsub = db
-      .collection("games")
-      .doc(id)
-      .onSnapshot((doc) => {
-        const wholeReceivedData = {
-          ID: doc.id,
-          ...doc.data(),
-        } as unknown;
-        setGame(new Game(wholeReceivedData as Game));
-      });
-    return () => {
-      unsub();
-    };
+    ConnectGameState(id, setGame);
   }, []);
 
   if (game === null) {
     return null;
   }
 
-  if (game.ID === "invalid") {
-    return <div>something went wrong getting this game</div>;
-  }
   console.log(game);
 
   return (
-    <ListItem button onClick={() => history.push("/game/" + game.ID)}>
+    <ListItem button onClick={() => history.push("/game/" + id)}>
       <ListItemText
-        primary={`${game.Name} - ${game.Participants.length} players`}
-        secondary={game.Story !== null && game.Story.Name}
+        primary={`${game.Name} - ${game.Users.length} players`}
+        secondary={game.StoryMetadata !== null && game.StoryMetadata.Name}
       />
     </ListItem>
   );

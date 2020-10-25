@@ -50,10 +50,12 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game, Participant } from "../Schema/Game";
+import { GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
-import { Story } from "../Schema/Story";
+import { StoryMetadata, STORY_METADATA_COLLECTION } from "../Schema/Story";
+import { ConnectGameState, ConnectPlayerView, SetGameStory } from "../Api";
+import { useRadioGroup } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -85,15 +87,16 @@ interface ParamTypes {
 }
 
 interface GameStore {
-  game: Game;
+  gameState: GameState;
+  playerView: PlayerView;
 }
 
 const GamePageContext = createContext<GameStore>(undefined!);
 
-type GameState =
+type GameStage =
   | "loading"
   | "invalid"
-  | "invite"
+  // | "invite"
   | "chooseStory"
   | "pickCharacter"
   | "othersPickingCharacter"
@@ -108,17 +111,20 @@ type GameState =
 
 const GamePage = () => {
   let { id } = useParams<ParamTypes>();
-  const [game, setGame] = useState<Game | null>(null);
-  const [gameState, setGameState] = useState<GameState>("loading");
+  const [gameStage, setGameStage] = useState<GameStage>("loading");
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [playerView, setPlayerView] = useState<PlayerView | null>(null);
+
   let { userDetails, userDetailsInitialising, setSnackState } = useContext(
     StateStoreContext,
   );
   const [now, setNow] = useState(new Date());
 
-  // load the game
+  // load the gameState
   useEffect(() => {
     if (userDetails !== null) {
-      new Game().connect(id, setGame);
+      ConnectGameState(id, setGameState);
+      ConnectPlayerView(userDetails, id, setPlayerView);
     }
   }, [userDetails]);
 
@@ -129,75 +135,71 @@ const GamePage = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // calculate which game state we're in
+  // calculate which gameState state we're in
   useEffect(() => {
-    if (game === null) {
-      setGameState("loading");
-      return;
-    } else if (game.ID === "invalid") {
-      setGameState("invalid");
+    if (gameState === null || playerView === null) {
+      setGameStage("loading");
       return;
     }
 
-    const thisParticipant = game.Participants.find(
-      (participant) => participant.User.ID === userDetails?.ID,
-    );
+    // const thisParticipant = gameState.User.find(
+    //   (participant) => participant.User.ID === userDetails?.ID,
+    // );
 
-    if (!game?.ParticipantsLocked) {
-      setGameState("invite");
-    } else if (game.Story === null) {
-      setGameState("chooseStory");
-    } else if (game.participantsStillDeciding.length > 0) {
-      setGameState("pickCharacter");
+    if (gameState.StoryMetadata === null) {
+      setGameStage("chooseStory");
+    } else if (gameState.CharacterPicks.length < gameState.Users.length) {
+      setGameStage("pickCharacter");
     } else if (
-      game.participantsReadyToStart.length < game.Participants.length &&
-      !!game.StartTime &&
-      now < game.StartTime.toDate()
+      gameState.ReadyToStart.length < gameState.Users.length &&
+      now < gameState.StartTime
     ) {
-      setGameState("waitingForGoTime");
-    } else if (!thisParticipant?.ReadRules) {
-      setGameState("rules");
-    } else if (game.CurrentRound < game.Story.Rounds.length) {
-      setGameState("viewRound");
-    } else if (thisParticipant.Guess === null) {
-      setGameState("guessKiller");
-    } else if (game.participantsStillGuessing.length > 0) {
-      setGameState("waitForGuesses");
+      setGameStage("waitingForGoTime");
+    } else if (!playerView.ReadRules) {
+      setGameStage("rules");
+    } else if (gameState.CurrentRound < gameState.StoryMetadata.RoundCount) {
+      setGameStage("viewRound");
     } else if (
-      game.participantsReadyForAnswer.length < game.Participants.length
+      gameState.Guesses.filter(
+        (guess) => guess.ParticipantID === userDetails?.ID,
+      ).length === 0
     ) {
-      setGameState("revealGuesses");
-    } else if (game.CurrentAnswer < game.Story.Characters.length) {
-      setGameState("readAnswers");
+      setGameStage("guessKiller");
+    } else if (gameState.Guesses.length < gameState.Users.length) {
+      setGameStage("waitForGuesses");
+    } else if (gameState.ReadyForAnswer.length < gameState.Users.length) {
+      setGameStage("revealGuesses");
+    } else if (!gameState.FinishedAnswers) {
+      setGameStage("readAnswers");
     } else {
-      setGameState("correctGuesses");
+      setGameStage("correctGuesses");
     }
-  }, [game]);
+  }, [gameState]);
   // console.log(gameState);
 
-  if (game === null) {
+  if (gameState === null || playerView === null) {
     return <div>loading</div>;
   }
 
-  if (game === undefined) {
-    return <div>invalid game, check url</div>;
+  if (gameState === undefined) {
+    return <div>invalid gameState, check url</div>;
   }
 
-  if (game.ID === "invalid") {
-    return <div>invalid game m8</div>;
-  }
+  // if (gameState.ID === "invalid") {
+  //   return <div>invalid gameState m8</div>;
+  // }
 
-  if (userDetails !== null && !game.ParticipantIDs.includes(userDetails.ID)) {
+  if (userDetails !== null && !gameState.UserIDs.includes(userDetails.ID)) {
     return <Redirect to={`/join/${id}`} />;
   }
 
   return (
-    <GamePageContext.Provider value={{ game }}>
+    <GamePageContext.Provider value={{ gameState, playerView }}>
       <React.Fragment>
         {(() => {
-          switch (gameState) {
-            case "invite":
-              return <InviteView />;
+          switch (gameStage) {
+            // case "invite":
+            //   return <InviteView />;
             case "chooseStory":
               return <ChooseStory />;
           }
@@ -211,7 +213,8 @@ export default GamePage;
 
 const InviteView = () => {
   const classes = useStyles();
-  let { game } = useContext(GamePageContext);
+  let { id } = useParams<ParamTypes>();
+  let { gameState } = useContext(GamePageContext);
   let { setSnackState } = useContext(StateStoreContext);
 
   return (
@@ -229,16 +232,16 @@ const InviteView = () => {
             <Typography>assemble a crew for</Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="h3">{game.Name}</Typography>
+            <Typography variant="h3">{gameState.Name}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Typography variant="h5">
-              {!!game.StartTime &&
-                game.StartTime.toDate().toLocaleDateString("en-AU")}
+              {!!gameState.StartTime &&
+                gameState.StartTime.toLocaleDateString("en-AU")}
             </Typography>
           </Grid>
           <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${game.ID}`}>
+            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
               <Button
                 variant="contained"
                 color="primary"
@@ -259,7 +262,7 @@ const InviteView = () => {
               variant="contained"
               color="primary"
               className={classes.button}
-              onClick={() => game.lockParticipants()}
+              // onClick={() => gameState.lockParticipants()}
             >
               ready to go
             </Button>
@@ -268,8 +271,8 @@ const InviteView = () => {
             <Typography>current crew:</Typography>
           </Grid>
           <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
+            {gameState.Users.map((user) => (
+              <Typography align="center">{user.Name}</Typography>
             ))}
           </Grid>
         </Grid>
@@ -280,24 +283,21 @@ const InviteView = () => {
 
 const ChooseStory = () => {
   const classes = useStyles();
-  let { game } = useContext(GamePageContext);
+  let { id } = useParams<ParamTypes>();
+  let { gameState } = useContext(GamePageContext);
   let { setSnackState } = useContext(StateStoreContext);
-  const [stories, setStories] = useState<Array<Story>>([]);
-  const [modalStory, setModalStory] = useState<Story | null>(null);
+  const [stories, setStories] = useState<Array<StoryMetadata>>([]);
+  const [modalStory, setModalStory] = useState<StoryMetadata | null>(null);
 
   useEffect(() => {
-    const unsub = db.collection("stories2").onSnapshot((snapshot) => {
-      const allStories = snapshot.docs.map((doc) => {
-        const newStory = new Story();
-        Object.assign(newStory, {
-          id: doc.id,
-          ...doc.data(),
+    const unsub = db
+      .collection(STORY_METADATA_COLLECTION)
+      .onSnapshot((snapshot) => {
+        const allStories = snapshot.docs.map((doc) => {
+          return (doc as unknown) as StoryMetadata;
         });
-        console.log(newStory);
-        return newStory;
+        setStories(allStories);
       });
-      setStories(allStories);
-    });
     return () => {
       unsub();
     };
@@ -337,7 +337,7 @@ const ChooseStory = () => {
         >
           <Grid item xs={12}>
             <Typography align="center">
-              choose a story with {game.Participants.length} characters so
+              choose a story with {gameState.UserIDs.length} characters so
               everyone can play.
             </Typography>
           </Grid>
@@ -346,11 +346,9 @@ const ChooseStory = () => {
             <List>
               {stories.map((story) => (
                 <ListItem
-                  disabled={
-                    game.Participants.length !== story.Characters.length
-                  }
+                  disabled={gameState.UserIDs.length !== story.CharacterCount}
                   onClick={() =>
-                    game.pickStory(story).catch((err) =>
+                    SetGameStory(id, story).catch((err) =>
                       setSnackState({
                         severity: "error",
                         message: err.toString(),
@@ -360,7 +358,7 @@ const ChooseStory = () => {
                 >
                   <ListItemText
                     primary={story.Name}
-                    secondary={`${story.Characters.length} players`}
+                    secondary={`${story.CharacterCount} players`}
                   />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" onClick={() => setModalStory(story)}>
@@ -372,7 +370,7 @@ const ChooseStory = () => {
             </List>
           </Grid>
           <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${game.ID}`}>
+            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
               <Button
                 variant="contained"
                 color="primary"
@@ -392,8 +390,8 @@ const ChooseStory = () => {
             <Typography>current crew:</Typography>
           </Grid>
           <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
+            {gameState.Users.map((user) => (
+              <Typography align="center">{user.Name}</Typography>
             ))}
           </Grid>
         </Grid>

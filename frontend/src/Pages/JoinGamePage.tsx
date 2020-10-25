@@ -50,9 +50,10 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
+import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
+import { ConnectGameState, AddUserToGame } from "../Api";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -76,7 +77,7 @@ const JoinGamePage = () => {
 
   let history = useHistory();
   let { id } = useParams<ParamTypes>();
-  const [game, setGame] = useState<Game | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
   // const authState = useAuth();
   let { userDetails, userDetailsInitialising, setSnackState } = useContext(
     StateStoreContext,
@@ -85,7 +86,7 @@ const JoinGamePage = () => {
   useEffect(() => {
     if (userDetails !== null) {
       try {
-        new Game().connect(id, setGame);
+        ConnectGameState(id, setGameState);
       } catch (err) {
         setSnackState({
           severity: "error",
@@ -95,17 +96,17 @@ const JoinGamePage = () => {
     }
   }, [userDetails]);
 
-  if (game === null) {
+  if (gameState === null) {
     return <div>loading</div>;
   }
 
-  if (game === undefined) {
-    return <div>invalid game, check url</div>;
+  if (gameState === undefined) {
+    return <div>invalid gameState, check url</div>;
   }
 
-  // if user has already joined redirect to actual game
-  if (userDetails !== null && game.ParticipantIDs.includes(userDetails.ID)) {
-    return <Redirect to={`/game/${id}`} />;
+  // if user has already joined redirect to actual gameState
+  if (userDetails !== null && gameState.UserIDs.includes(userDetails.ID)) {
+    return <Redirect to={`/gameState/${id}`} />;
   }
 
   return (
@@ -123,7 +124,7 @@ const JoinGamePage = () => {
             <Typography>you've been invited to join</Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="h3">{game.Name}</Typography>
+            <Typography variant="h3">{gameState.Name}</Typography>
           </Grid>
           <Grid item xs={12}>
             <Button
@@ -132,10 +133,10 @@ const JoinGamePage = () => {
               className={classes.button}
               onClick={() => {
                 if (userDetails !== null) {
-                  // console.log(typeOf(game));
-                  return game
-                    .addParticipant(userDetails)
-                    .then(() => history.push(`/game/${id}`));
+                  // console.log(typeOf(gameState));
+                  return AddUserToGame(id, userDetails).then(() =>
+                    history.push(`/gameState/${id}`),
+                  );
                 }
               }}
             >
@@ -146,8 +147,8 @@ const JoinGamePage = () => {
             <Typography>current crew:</Typography>
           </Grid>
           <Grid item xs={12}>
-            {game.Participants.map((participant) => (
-              <Typography align="center">{participant.User.Name}</Typography>
+            {gameState.Users.map((userDetails) => (
+              <Typography align="center">{userDetails.Name}</Typography>
             ))}
           </Grid>
         </Grid>

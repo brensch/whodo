@@ -51,9 +51,10 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase, auth } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
+import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
+import { CreateUserDetails } from "../Api";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -401,14 +402,16 @@ export const ChooseName = () => {
   let authState = useAuth();
 
   const SelectName = () => {
-    if (authState.user === null) {
+    if (authState.user === null || authState.user.email === null) {
       return;
     }
-    const newUserDetails = new UserDetails(
-      authState.user.uid,
-      authState.user.email,
-    );
-    newUserDetails.addToFirestore(name);
+    // const newUserDetails: UserDetails = {
+    //   ID: authState.user.uid,
+    //   Email: authState.user.email,
+    //   Name: name,
+    //   Games: [],
+    // };
+    CreateUserDetails(authState.user.uid, authState.user.email, name);
   };
 
   if (authState.initialising) {

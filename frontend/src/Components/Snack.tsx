@@ -49,7 +49,7 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase, auth } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { Game } from "../Schema/Game";
+import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 
@@ -78,7 +78,7 @@ export const Snack = () => {
             message: "",
             severity: undefined,
           }),
-        500
+        500,
       );
     }
   }, [open]);

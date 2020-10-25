@@ -50,66 +50,6 @@ import {
 import { useAuth, db, firebase, auth } from "../Firebase";
 import { StateStoreContext } from "../Context";
 
-export interface Story {
-  Conclusion: string;
-  Name: string;
-  Blurb: string;
-  Answers: Answer[];
-  Rounds: Round[];
-  Info: Info[];
-  ID: string;
-  SheetID: string;
-  TimelineEvents: TimelineEvent[];
-  Clues: Clue[];
-  Characters: Character[];
-}
-
-const GetStory = (story: any): Story | null => {
-  const storyCasted = story as Story
-  if (story.)
-  console.log(story.Name);
-  console.log(story);
-  return storyCasted
-};
-
-export interface Answer {
-  Character: string;
-  Details: string;
-}
-
-export interface Character {
-  Accessories: string;
-  Name: string;
-  Blurb: string;
-  Costume: string;
-}
-
-export interface Clue {
-  URL: string;
-  Round: string;
-  Description: string;
-  CharacterName: string;
-  Name: string;
-}
-
-export interface Info {
-  Public: boolean;
-  Content: string;
-  Round: string;
-  Character: string;
-}
-
-export interface Round {
-  Name: string;
-  Intro: string;
-}
-
-export interface TimelineEvent {
-  Time: string;
-  Event: string;
-  Character: string;
-}
-
 const useStyles = makeStyles(() => ({
   root: {
     flexGrow: 1,
@@ -128,21 +68,21 @@ const OptionsPage = () => {
   const classes = useStyles();
   let { setSnackState } = useContext(StateStoreContext);
 
-  useEffect(() => {
-    const unsub = db
-      .collection("stories2")
-      .doc("skye is cool")
-      .onSnapshot((doc) => {
-        // console.log(JSON.stringify(doc.data()));
-        const send = doc.data() as Story;
-        DoCoolThing(send);
-        console.log(send);
-        console.log(send.Name);
-      });
-    return () => {
-      unsub();
-    };
-  }, []);
+  // useEffect(() => {
+  //   const unsub = db
+  //     .collection("stories2")
+  //     .doc("skye is cool")
+  //     .onSnapshot((doc) => {
+  //       // console.log(JSON.stringify(doc.data()));
+  //       const send = doc.data() as Story;
+  //       // DoCoolThing(send);
+  //       console.log(send);
+  //       console.log(send.Name);
+  //     });
+  //   return () => {
+  //     unsub();
+  //   };
+  // }, []);
 
   return (
     <React.Fragment>
