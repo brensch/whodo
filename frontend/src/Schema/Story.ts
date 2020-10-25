@@ -7,13 +7,14 @@ export interface Story {
   Answers: Answer[];
   Rounds: Round[];
   Info: Info[];
-  // ID: string;
   SheetID: string;
   TimelineEvents: TimelineEvent[];
   Clues: Clue[];
   Characters: Character[];
   SyncError: Error | null;
 }
+
+export interface StorySummary {}
 
 export interface CharacterStory {
   Answer: Answer | null;
@@ -27,8 +28,6 @@ export interface StoryMetadata {
   Conclusion: string;
   Name: string;
   Blurb: string;
-  RoundCount: number;
-  CharacterCount: number;
 }
 
 export interface Answer {
@@ -74,7 +73,7 @@ export interface TimelineEvent {
 }
 
 // used to trigger update of all playerviews
-export interface SelectedStory {
-  SelectedAt?: firebase.firestore.Timestamp;
-  Metadata: StoryMetadata;
-}
+// export interface SelectedStory {
+//   SelectedAt?: firebase.firestore.Timestamp;
+//   Metadata: StoryMetadata;
+// }

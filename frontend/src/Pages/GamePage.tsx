@@ -82,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-interface ParamTypes {
+export interface ParamTypes {
   id: string;
 }
 
@@ -91,7 +91,7 @@ interface GameStore {
   playerView: PlayerView;
 }
 
-const GamePageContext = createContext<GameStore>(undefined!);
+export const GamePageContext = createContext<GameStore>(undefined!);
 
 type GameStage =
   | "loading"
@@ -146,7 +146,7 @@ const GamePage = () => {
     //   (participant) => participant.User.ID === userDetails?.ID,
     // );
 
-    if (gameState.StoryMetadata === null) {
+    if (gameState.SelectedStory === null) {
       setGameStage("chooseStory");
     } else if (gameState.CharacterPicks.length < gameState.Users.length) {
       setGameStage("pickCharacter");
@@ -157,7 +157,7 @@ const GamePage = () => {
       setGameStage("waitingForGoTime");
     } else if (!playerView.ReadRules) {
       setGameStage("rules");
-    } else if (gameState.CurrentRound < gameState.StoryMetadata.RoundCount) {
+    } else if (gameState.CurrentRound < gameState.SelectedStory.RoundCount) {
       setGameStage("viewRound");
     } else if (
       gameState.Guesses.filter(
@@ -179,7 +179,7 @@ const GamePage = () => {
 
   console.log(gameState);
   if (gameState !== null) {
-    console.log(gameState.StoryMetadata);
+    console.log(gameState.SelectedStory);
   }
   console.log(gameStage);
   console.log(playerView);
@@ -209,6 +209,8 @@ const GamePage = () => {
             //   return <InviteView />;
             case "chooseStory":
               return <ChooseStory />;
+            case "pickCharacter":
+              return <ChooseStory />;
           }
         })()}
       </React.Fragment>
@@ -218,75 +220,75 @@ const GamePage = () => {
 
 export default GamePage;
 
-const InviteView = () => {
-  const classes = useStyles();
-  let { id } = useParams<ParamTypes>();
-  let { gameState } = useContext(GamePageContext);
-  let { setSnackState } = useContext(StateStoreContext);
+// const InviteView = () => {
+//   const classes = useStyles();
+//   let { id } = useParams<ParamTypes>();
+//   let { gameState } = useContext(GamePageContext);
+//   let { setSnackState } = useContext(StateStoreContext);
 
-  return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>assemble a crew for</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">{gameState.Name}</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h5">
-              {!!gameState.StartTime &&
-                gameState.StartTime.toLocaleDateString("en-AU")}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() => {
-                  setSnackState({
-                    severity: "info",
-                    message: "link copied to clipboard",
-                  });
-                }}
-              >
-                invite
-              </Button>
-            </CopyToClipboard>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              // onClick={() => gameState.lockParticipants()}
-            >
-              ready to go
-            </Button>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography>current crew:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {gameState.Users.map((user) => (
-              <Typography align="center">{user.Name}</Typography>
-            ))}
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
-  );
-};
+//   return (
+//     <React.Fragment>
+//       <Container>
+//         <Grid
+//           container
+//           spacing={3}
+//           justify="center"
+//           alignItems="center"
+//           direction="column"
+//           className={classes.optionsButtons}
+//         >
+//           <Grid item xs={12}>
+//             <Typography>assemble a crew for</Typography>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <Typography variant="h3">{gameState.Name}</Typography>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <Typography variant="h5">
+//               {!!gameState.StartTime &&
+//                 gameState.StartTime.toLocaleDateString("en-AU")}
+//             </Typography>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+//               <Button
+//                 variant="contained"
+//                 color="primary"
+//                 className={classes.button}
+//                 onClick={() => {
+//                   setSnackState({
+//                     severity: "info",
+//                     message: "link copied to clipboard",
+//                   });
+//                 }}
+//               >
+//                 invite
+//               </Button>
+//             </CopyToClipboard>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <Button
+//               variant="contained"
+//               color="primary"
+//               className={classes.button}
+//               // onClick={() => gameState.lockParticipants()}
+//             >
+//               ready to go
+//             </Button>
+//           </Grid>
+//           <Grid item xs={12}>
+//             <Typography>current crew:</Typography>
+//           </Grid>
+//           <Grid item xs={12}>
+//             {gameState.Users.map((user) => (
+//               <Typography align="center">{user.Name}</Typography>
+//             ))}
+//           </Grid>
+//         </Grid>
+//       </Container>
+//     </React.Fragment>
+//   );
+// };
 
 const ChooseStory = () => {
   const classes = useStyles();
@@ -351,7 +353,7 @@ const ChooseStory = () => {
             ))}
           </Grid>
           <Grid item xs={12}>
-            <Typography>
+            <Typography align="center">
               pick a story with {gameState.UserIDs.length} characters, or find
               more friends
             </Typography>

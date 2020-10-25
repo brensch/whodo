@@ -1,16 +1,18 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { Story } from "./Schema/Story";
+import {
+  Story,
+  STORY_COLLECTION,
+  STORY_METADATA_COLLECTION,
+} from "./Schema/Story";
 import { ReadStoryFromSheet } from "./Sheets";
 
 admin.initializeApp();
 
-const STORIES_COLLECTION = "stories2";
-
 const db = admin.firestore();
 
 export const watchStories = functions.firestore
-  .document(`${STORIES_COLLECTION}/{docID}`)
+  .document(`${STORY_COLLECTION}/{docID}`)
   .onWrite((change, context) => {
     const storyAfter = change.after.data() as Story;
     return ReadStoryFromSheet(storyAfter.SheetID)
@@ -19,11 +21,21 @@ export const watchStories = functions.firestore
           throw Error;
         }
 
-        return db.collection(STORIES_COLLECTION).doc(change.after.id).set(res);
+        const batch = db.batch();
+
+        const storyDoc = db.collection(STORY_COLLECTION).doc(change.after.id);
+        batch.set(storyDoc, res);
+
+        const metadataDoc = db
+          .collection(STORY_METADATA_COLLECTION)
+          .doc(change.after.id);
+        batch.set(metadataDoc, res.Metadata);
+
+        return batch.commit();
       })
       .catch((err) =>
         db
-          .collection(STORIES_COLLECTION)
+          .collection(STORY_COLLECTION)
           .doc(change.after.id)
           .update({ sync_error: err.toString() }),
       );

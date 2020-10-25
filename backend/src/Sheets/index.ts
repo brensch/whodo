@@ -2,7 +2,7 @@ import { google, sheets_v4 } from "googleapis";
 import { GoogleAuth } from "google-auth-library";
 import {
   Character,
-  Metadata,
+  StoryMetadata,
   Round,
   TimelineEvent,
   Info,
@@ -35,7 +35,7 @@ export const ReadStoryFromSheet = async (
 
   const Rounds = await readRounds(SheetID);
   const TimelineEvents = await readTimelineEvents(SheetID);
-  const Metadata = await readMetadata(SheetID);
+  const StoryMetadata = await readStoryMetadata(SheetID);
   const Info = await readInfo(SheetID);
   const Characters = await readCharacters(SheetID);
   const Clues = await readClues(SheetID);
@@ -47,8 +47,8 @@ export const ReadStoryFromSheet = async (
   if (TimelineEvents instanceof Error) {
     return TimelineEvents;
   }
-  if (Metadata instanceof Error) {
-    return Metadata;
+  if (StoryMetadata instanceof Error) {
+    return StoryMetadata;
   }
   if (Info instanceof Error) {
     return Info;
@@ -63,8 +63,12 @@ export const ReadStoryFromSheet = async (
     return Answers;
   }
 
+  // populate metadata counts
+  StoryMetadata.CharacterCount = Characters.length;
+  StoryMetadata.RoundCount = Rounds.length;
+
   return {
-    Metadata: Metadata,
+    Metadata: StoryMetadata,
     Answers: Answers,
     Rounds: Rounds,
     Info: Info,
@@ -194,9 +198,9 @@ export const readInfo = async (sheetID: string): Promise<Info[] | Error> => {
   return Error("no data found");
 };
 
-export const readMetadata = async (
+export const readStoryMetadata = async (
   sheetID: string,
-): Promise<Metadata | Error> => {
+): Promise<StoryMetadata | Error> => {
   if (!sheets) {
     sheets = await initSheets();
   }
@@ -212,6 +216,10 @@ export const readMetadata = async (
       Name: rows[0][0],
       Blurb: rows[1][0],
       Conclusion: rows[2][0],
+
+      // these fields get populated later
+      RoundCount: 0,
+      CharacterCount: 0,
     };
   }
 

@@ -135,7 +135,7 @@ const JoinGamePage = () => {
                 if (userDetails !== null) {
                   // console.log(typeOf(gameState));
                   return AddUserToGame(id, userDetails).then(() =>
-                    history.push(`/gameState/${id}`),
+                    history.push(`/game/${id}`),
                   );
                 }
               }}
