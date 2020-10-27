@@ -1,9 +1,10 @@
 import { UserDetails } from "./User";
 import * as firebase from "firebase/app";
-import { StoryMetadata, CharacterStory, Clue, Character } from "./Story";
+import { StorySummary, CharacterStory, Clue } from "./Story";
 
 export const GAME_COLLECTION = "games";
 export const PLAYERVIEW_COLLECTION = "playerviews";
+export const POPULATE_INFO_REQUESTS = "populate_info_requests";
 
 export interface GameState {
   Name: string;
@@ -20,7 +21,7 @@ export interface GameState {
   // store all clues for immediate reveal (not sensitive)
   DiscoveredClues: string[];
 
-  SelectedStory: StoryMetadata | null;
+  SelectedStory: StorySummary | null;
 
   FinishedAnswers: boolean;
 
@@ -29,23 +30,32 @@ export interface GameState {
   ReadyForAnswer: string[];
 
   CharacterPicks: CharacterPick[];
-  Characters: Character[];
   Clues: Clue[];
 }
 
+type PopulateInfoRequestState =
+  | "picking"
+  | "havePicked"
+  | "synced"
+  | "changedMind";
+
+export interface PopulateInfoRequest {
+  State: PopulateInfoRequestState;
+}
+
 export interface CharacterPick {
-  ParticipantID: string;
+  UserID: string;
   CharacterName: string;
 }
 
 export interface Guess {
-  ParticipantID: string;
+  UserID: string;
   Killer: string;
   Why: string;
 }
 
 export interface FinishedRound {
-  ParticipantID: string;
+  UserID: string;
   Round: number;
   Finished: boolean;
 }

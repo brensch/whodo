@@ -4,6 +4,8 @@ import {
   GAME_COLLECTION,
   PlayerView,
   PLAYERVIEW_COLLECTION,
+  POPULATE_INFO_REQUESTS,
+  PopulateInfoRequest,
 } from "../Schema/Game";
 import {
   UserDetails,
@@ -13,7 +15,7 @@ import {
 } from "../Schema/User";
 import { db } from "../Firebase";
 import * as firebase from "firebase/app";
-import { StoryMetadata, SELECTEDSTORY_COLLECTION } from "../Schema/Story";
+import { StoryMetadata, StorySummary } from "../Schema/Story";
 import { v4 as uuidv4 } from "uuid";
 
 export const ConnectGameState = (
@@ -27,6 +29,23 @@ export const ConnectGameState = (
         // lose type safety here in case of incorrect DB data
         // TODO: add type checks at runtime
         set((doc.data() as unknown) as GameState);
+      });
+  } catch (err) {
+    throw err;
+  }
+};
+
+export const ConnectPopulateInfoRequest = (
+  id: string,
+  set: React.Dispatch<React.SetStateAction<PopulateInfoRequest | null>>,
+) => {
+  try {
+    db.collection(POPULATE_INFO_REQUESTS)
+      .doc(id)
+      .onSnapshot((doc) => {
+        // lose type safety here in case of incorrect DB data
+        // TODO: add type checks at runtime
+        set((doc.data() as unknown) as PopulateInfoRequest);
       });
   } catch (err) {
     throw err;
@@ -53,7 +72,6 @@ export const CreateGame = (
 
     CurrentRound: 0,
     CharacterPicks: [],
-    Characters: [],
     SelectedStory: null,
     Clues: [],
   };
@@ -71,6 +89,11 @@ export const CreateGame = (
     Games: firebase.firestore.FieldValue.arrayUnion(gameID),
   });
 
+  // create populateinforequest
+  const popInfoDoc = db.collection(POPULATE_INFO_REQUESTS).doc(gameID);
+  const newPopInfo: PopulateInfoRequest = { State: "picking" };
+  batch.set(popInfoDoc, newPopInfo);
+
   // create playerview
   const playerViewID = uuidv4();
   const playerViewDoc = db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID);
@@ -85,6 +108,13 @@ export const CreateGame = (
   batch.set(playerViewDoc, newPlayerView);
 
   return batch.commit().then(() => gameID);
+};
+
+export const RequestInfoPopulation = (gameID: string) => {
+  const newState: PopulateInfoRequest = {
+    State: "havePicked",
+  };
+  return db.collection(POPULATE_INFO_REQUESTS).doc(gameID).update(newState);
 };
 
 export const AddUserToGame = (gameID: string, userDetails: UserDetails) => {
@@ -120,25 +150,21 @@ export const AddUserToGame = (gameID: string, userDetails: UserDetails) => {
   return batch.commit();
 };
 
-export const SetGameStory = (gameID: string, storyMetadata: StoryMetadata) => {
+export const SetGameStory = (
+  gameID: string,
+  storySummary: StorySummary | null,
+) => {
   const gameDoc = db.collection(GAME_COLLECTION).doc(gameID);
-  // const selectedStoryDoc = db.collection(SELECTEDSTORY_COLLECTION).doc(gameID);
 
-  // const selectedStory: SelectedStory = {
-  //   Metadata: storyMetadata,
-  // };
-  // doing updates as batch to ensure game gets added to user object as well
-  var batch = db.batch();
+  var updateObject: any = {
+    SelectedStory: storySummary,
+  };
 
-  batch.update(gameDoc, {
-    StoryMetadata: storyMetadata,
-  });
-  // batch.set(selectedStoryDoc, {
-  //   SelectedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  //   ...selectedStory,
-  // });
+  if (storySummary === null) {
+    updateObject.CharacterPicks = [];
+  }
 
-  return batch.commit();
+  return gameDoc.update(updateObject);
 };
 
 export const ConnectPlayerView = (
@@ -200,11 +226,11 @@ export const GetUserGames = (id: string) => {
 
 export const PickCharacter = (
   gameID: string,
-  participantID: string,
+  userID: string,
   characterName: string,
 ) => {
   const characterPick: CharacterPick = {
-    ParticipantID: participantID,
+    UserID: userID,
     CharacterName: characterName,
   };
 

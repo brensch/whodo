@@ -106,7 +106,7 @@ const JoinGamePage = () => {
 
   // if user has already joined redirect to actual gameState
   if (userDetails !== null && gameState.UserIDs.includes(userDetails.ID)) {
-    return <Redirect to={`/gameState/${id}`} />;
+    return <Redirect to={`/game/${id}`} />;
   }
 
   return (

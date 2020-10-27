@@ -50,53 +50,29 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { GameState } from "../Schema/Game";
+import { GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
-import { UserDetails, UserGames } from "../Schema/User";
-import { Story } from "../Schema/Story";
-import { ConnectGameState, GetUserGames } from "../Api";
+import { UserDetails } from "../Schema/User";
+import { StorySummary, STORY_SUMMARY_COLLECTION } from "../Schema/Story";
+import {
+  ConnectGameState,
+  ConnectPlayerView,
+  PickCharacter,
+  SetGameStory,
+} from "../Api";
+import { useRadioGroup } from "@material-ui/core";
+import { ParamTypes, GamePageContext } from "../Pages/GamePage";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  menuButton: {
-    marginRight: theme.spacing(0),
-  },
-  title: {
-    flexGrow: 1,
+  optionsButtons: {
+    minHeight: "70vh",
   },
   button: {
     width: "300px",
     textTransform: "none",
-  },
-  buttonFullWidth: {
-    width: "100%",
-    textTransform: "none",
-  },
-  padded: {
-    padding: "10px",
-  },
-
-  optionsButtons: {
-    minHeight: "70vh",
-  },
-  avatar: {
-    width: theme.spacing(3),
-    height: theme.spacing(3),
-  },
-  clues: {
-    padding: 10,
-    maxWidth: 1000,
-    alignContent: "center",
-  },
-  cluesContainer: {
-    padding: 10,
-    maxWidth: 1000,
-  },
-  notesPopup: {},
-  cluesGrid: {
-    display: "flex",
   },
   modal: {
     display: "flex",
@@ -112,67 +88,17 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const MyGamesPage = () => {
+export default () => {
   const classes = useStyles();
-  let history = useHistory();
-  const [userGames, setUserGames] = useState<UserGames>({
-    Games: [],
-  });
-  const { userDetails, userDetailsInitialising } = useContext(
-    StateStoreContext,
-  );
-
-  useEffect(() => {
-    if (!userDetailsInitialising && !!userDetails) {
-      GetUserGames(userDetails.ID).then(setUserGames);
-    }
-  }, [userDetails, userDetailsInitialising]);
+  let { id } = useParams<ParamTypes>();
+  let { gameState } = useContext(GamePageContext);
+  let { setSnackState } = useContext(StateStoreContext);
+  const [stories, setStories] = useState<Array<StorySummary>>([]);
+  const [modalStory, setModalStory] = useState<StorySummary | null>(null);
 
   return (
     <React.Fragment>
-      <Typography align="center">your games</Typography>
-      <List
-        component="nav"
-        aria-labelledby="games-list"
-        className={classes.root}
-      >
-        {userGames.Games.map((gameID) => (
-          <GameItem id={gameID} />
-        ))}
-      </List>
+      <div>waiting for go time</div>
     </React.Fragment>
-  );
-};
-
-export default MyGamesPage;
-
-interface GameItemProps {
-  id: string;
-}
-
-const GameItem = ({ id }: GameItemProps) => {
-  let history = useHistory();
-
-  const [game, setGame] = useState<GameState | null>(null);
-
-  useEffect(() => {
-    ConnectGameState(id, setGame);
-  }, []);
-
-  if (game === null) {
-    return null;
-  }
-
-  console.log(game);
-
-  return (
-    <ListItem button onClick={() => history.push("/game/" + id)}>
-      <ListItemText
-        primary={`${game.Name} - ${game.Users.length} players`}
-        secondary={
-          game.SelectedStory !== null && game.SelectedStory.Metadata.Name
-        }
-      />
-    </ListItem>
   );
 };

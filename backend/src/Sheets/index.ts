@@ -9,6 +9,7 @@ import {
   Clue,
   Answer,
   Story,
+  StorySummary,
 } from "../Schema/Story";
 
 let sheets: sheets_v4.Sheets;
@@ -64,8 +65,6 @@ export const ReadStoryFromSheet = async (
   }
 
   // populate metadata counts
-  StoryMetadata.CharacterCount = Characters.length;
-  StoryMetadata.RoundCount = Rounds.length;
 
   return {
     Metadata: StoryMetadata,
@@ -77,6 +76,15 @@ export const ReadStoryFromSheet = async (
     Clues: Clues,
     Characters: Characters,
     SyncError: null,
+  };
+};
+
+export const SummariseStory = (story: Story, storyID: string): StorySummary => {
+  return {
+    ID: storyID,
+    Characters: story.Characters,
+    Rounds: story.Rounds,
+    Metadata: story.Metadata,
   };
 };
 
@@ -216,10 +224,6 @@ export const readStoryMetadata = async (
       Name: rows[0][0],
       Blurb: rows[1][0],
       Conclusion: rows[2][0],
-
-      // these fields get populated later
-      RoundCount: 0,
-      CharacterCount: 0,
     };
   }
 

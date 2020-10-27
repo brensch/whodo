@@ -50,12 +50,34 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { GameState, PlayerView } from "../Schema/Game";
+import { GameState, PlayerView, PopulateInfoRequest } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
-import { StoryMetadata, STORY_METADATA_COLLECTION } from "../Schema/Story";
-import { ConnectGameState, ConnectPlayerView, SetGameStory } from "../Api";
+import {
+  StoryMetadata,
+  StorySummary,
+  STORY_SUMMARY_COLLECTION,
+} from "../Schema/Story";
+import {
+  ConnectGameState,
+  ConnectPlayerView,
+  ConnectPopulateInfoRequest,
+  RequestInfoPopulation,
+  SetGameStory,
+} from "../Api";
 import { useRadioGroup } from "@material-ui/core";
+import {
+  CorrectGuesses,
+  GuessKiller,
+  PickCharacter,
+  PickStory,
+  ReadAnswers,
+  RevealGuesses,
+  Rules,
+  ViewRound,
+  WaitForGuesses,
+  WaitingForGoTime,
+} from "../GameStages";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -96,23 +118,28 @@ export const GamePageContext = createContext<GameStore>(undefined!);
 type GameStage =
   | "loading"
   | "invalid"
-  // | "invite"
-  | "chooseStory"
-  | "pickCharacter"
-  | "othersPickingCharacter"
-  | "waitingForGoTime"
-  | "rules"
-  | "viewRound"
-  | "guessKiller"
-  | "waitForGuesses"
-  | "revealGuesses"
-  | "readAnswers"
-  | "correctGuesses";
+  | "requestingInfoPopulation"
+
+  // states with pages
+  | "PickStory"
+  | "PickCharacter"
+  | "WaitingForGoTime"
+  | "Rules"
+  | "ViewRound"
+  | "GuessKiller"
+  | "WaitForGuesses"
+  | "RevealGuesses"
+  | "ReadAnswers"
+  | "CorrectGuesses";
 
 const GamePage = () => {
   let { id } = useParams<ParamTypes>();
   const [gameStage, setGameStage] = useState<GameStage>("loading");
   const [gameState, setGameState] = useState<GameState | null>(null);
+  const [
+    populateInfoRequest,
+    setPopulateInfoRequest,
+  ] = useState<PopulateInfoRequest | null>(null);
   const [playerView, setPlayerView] = useState<PlayerView | null>(null);
 
   let { userDetails, userDetailsInitialising, setSnackState } = useContext(
@@ -124,6 +151,7 @@ const GamePage = () => {
   useEffect(() => {
     if (userDetails !== null) {
       ConnectGameState(id, setGameState);
+      ConnectPopulateInfoRequest(id, setPopulateInfoRequest);
       ConnectPlayerView(userDetails, id, setPlayerView);
     }
   }, [userDetails]);
@@ -137,7 +165,11 @@ const GamePage = () => {
 
   // calculate which gameState state we're in
   useEffect(() => {
-    if (gameState === null || playerView === null) {
+    if (
+      gameState === null ||
+      playerView === null ||
+      populateInfoRequest === null
+    ) {
       setGameStage("loading");
       return;
     }
@@ -147,42 +179,42 @@ const GamePage = () => {
     // );
 
     if (gameState.SelectedStory === null) {
-      setGameStage("chooseStory");
+      setGameStage("PickStory");
     } else if (gameState.CharacterPicks.length < gameState.Users.length) {
-      setGameStage("pickCharacter");
+      setGameStage("PickCharacter");
+    } else if (populateInfoRequest.State === "picking") {
+      setGameStage("requestingInfoPopulation");
+      // get every client to watch the state of the game and ask for the server to populate info
+      RequestInfoPopulation(id).catch((err) =>
+        setSnackState({
+          severity: "error",
+          message: err.toString(),
+        }),
+      );
     } else if (
       gameState.ReadyToStart.length < gameState.Users.length &&
       now < gameState.StartTime
     ) {
-      setGameStage("waitingForGoTime");
+      setGameStage("WaitingForGoTime");
     } else if (!playerView.ReadRules) {
-      setGameStage("rules");
-    } else if (gameState.CurrentRound < gameState.SelectedStory.RoundCount) {
-      setGameStage("viewRound");
+      setGameStage("Rules");
+    } else if (gameState.CurrentRound < gameState.SelectedStory.Rounds.length) {
+      setGameStage("ViewRound");
     } else if (
-      gameState.Guesses.filter(
-        (guess) => guess.ParticipantID === userDetails?.ID,
-      ).length === 0
+      gameState.Guesses.filter((guess) => guess.UserID === userDetails?.ID)
+        .length === 0
     ) {
-      setGameStage("guessKiller");
+      setGameStage("GuessKiller");
     } else if (gameState.Guesses.length < gameState.Users.length) {
-      setGameStage("waitForGuesses");
+      setGameStage("WaitForGuesses");
     } else if (gameState.ReadyForAnswer.length < gameState.Users.length) {
-      setGameStage("revealGuesses");
+      setGameStage("RevealGuesses");
     } else if (!gameState.FinishedAnswers) {
-      setGameStage("readAnswers");
+      setGameStage("ReadAnswers");
     } else {
-      setGameStage("correctGuesses");
+      setGameStage("CorrectGuesses");
     }
-  }, [gameState, playerView]);
-  // console.log(gameState);
-
-  console.log(gameState);
-  if (gameState !== null) {
-    console.log(gameState.SelectedStory);
-  }
-  console.log(gameStage);
-  console.log(playerView);
+  }, [gameState, playerView, populateInfoRequest]);
 
   if (gameState === null || playerView === null) {
     return <div>loading</div>;
@@ -191,10 +223,6 @@ const GamePage = () => {
   if (gameState === undefined) {
     return <div>invalid gameState, check url</div>;
   }
-
-  // if (gameState.ID === "invalid") {
-  //   return <div>invalid gameState m8</div>;
-  // }
 
   if (userDetails !== null && !gameState.UserIDs.includes(userDetails.ID)) {
     return <Redirect to={`/join/${id}`} />;
@@ -207,10 +235,32 @@ const GamePage = () => {
           switch (gameStage) {
             // case "invite":
             //   return <InviteView />;
-            case "chooseStory":
-              return <ChooseStory />;
-            case "pickCharacter":
-              return <ChooseStory />;
+            case "PickStory":
+              return <PickStory />;
+            case "PickCharacter":
+              return <PickCharacter />;
+            case "WaitingForGoTime":
+              return <WaitingForGoTime />;
+            case "PickStory":
+              return <PickStory />;
+            case "PickCharacter":
+              return <PickCharacter />;
+            case "WaitingForGoTime":
+              return <WaitingForGoTime />;
+            case "Rules":
+              return <Rules />;
+            case "ViewRound":
+              return <ViewRound />;
+            case "GuessKiller":
+              return <GuessKiller />;
+            case "WaitForGuesses":
+              return <WaitForGuesses />;
+            case "RevealGuesses":
+              return <RevealGuesses />;
+            case "ReadAnswers":
+              return <ReadAnswers />;
+            case "CorrectGuesses":
+              return <CorrectGuesses />;
           }
         })()}
       </React.Fragment>
@@ -289,122 +339,3 @@ export default GamePage;
 //     </React.Fragment>
 //   );
 // };
-
-const ChooseStory = () => {
-  const classes = useStyles();
-  let { id } = useParams<ParamTypes>();
-  let { gameState } = useContext(GamePageContext);
-  let { setSnackState } = useContext(StateStoreContext);
-  const [stories, setStories] = useState<Array<StoryMetadata>>([]);
-  const [modalStory, setModalStory] = useState<StoryMetadata | null>(null);
-
-  useEffect(() => {
-    const unsub = db
-      .collection(STORY_METADATA_COLLECTION)
-      .onSnapshot((snapshot) => {
-        const allStories = snapshot.docs.map((doc) => {
-          return (doc.data() as unknown) as StoryMetadata;
-        });
-        setStories(allStories);
-      });
-    return () => {
-      unsub();
-    };
-  }, []);
-
-  return (
-    <React.Fragment>
-      <Modal
-        open={modalStory !== null}
-        onClose={() => setModalStory(null)}
-        className={classes.modal}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={modalStory !== null}>
-          <div className={classes.modalPaper}>
-            <h2 id="story-modal-title">
-              {modalStory !== null && modalStory.Name}
-            </h2>
-            <p id="story-modal-description">
-              {modalStory !== null && modalStory.Blurb}
-            </p>
-          </div>
-        </Fade>
-      </Modal>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>current players:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {gameState.Users.map((user) => (
-              <Typography align="center">{user.Name}</Typography>
-            ))}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography align="center">
-              pick a story with {gameState.UserIDs.length} characters, or find
-              more friends
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() =>
-                  setSnackState({
-                    severity: "info",
-                    message: "invite link copied to clipboard",
-                  })
-                }
-              >
-                invite
-              </Button>
-            </CopyToClipboard>
-          </Grid>
-
-          <Grid item xs={12}>
-            <List>
-              {stories.map((story) => (
-                <ListItem
-                  disabled={gameState.UserIDs.length !== story.CharacterCount}
-                  onClick={() =>
-                    SetGameStory(id, story).catch((err) =>
-                      setSnackState({
-                        severity: "error",
-                        message: err.toString(),
-                      }),
-                    )
-                  }
-                >
-                  <ListItemText
-                    primary={story.Name}
-                    secondary={`${story.CharacterCount} players`}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" onClick={() => setModalStory(story)}>
-                      <InfoIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              ))}
-            </List>
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
-  );
-};

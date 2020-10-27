@@ -1,6 +1,7 @@
 export const STORY_COLLECTION = "stories2";
-export const STORY_METADATA_COLLECTION = "storymetadata";
-export const SELECTEDSTORY_COLLECTION = "selectedstories";
+// export const STORY_METADATA_COLLECTION = "storymetadata";
+// export const SELECTEDSTORY_COLLECTION = "selectedstories";
+export const STORY_SUMMARY_COLLECTION = "storysummaries";
 
 export interface Story {
   Metadata: StoryMetadata;
@@ -14,11 +15,16 @@ export interface Story {
   SyncError: Error | null;
 }
 
-export interface StorySummary {}
+export interface StorySummary {
+  ID: string;
+  Characters: Character[];
+  Rounds: Round[];
+  Metadata: StoryMetadata;
+}
 
 export interface CharacterStory {
   Answer: Answer | null;
-  InfoState: InfoState[];
+  InfoStates: InfoState[];
   TimelineEvents: TimelineEvent[];
   CluesToReveal: Clue[];
   Character: Character;

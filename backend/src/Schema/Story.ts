@@ -1,6 +1,7 @@
 export const STORY_COLLECTION = "stories2";
-export const STORY_METADATA_COLLECTION = "storymetadata";
-export const SELECTEDSTORY_COLLECTION = "selectedstories";
+// export const STORY_METADATA_COLLECTION = "storymetadata";
+// export const SELECTEDSTORY_COLLECTION = "selectedstories";
+export const STORY_SUMMARY_COLLECTION = "storysummaries";
 
 export interface Story {
   Metadata: StoryMetadata;
@@ -14,9 +15,16 @@ export interface Story {
   SyncError: Error | null;
 }
 
+export interface StorySummary {
+  ID: string;
+  Characters: Character[];
+  Rounds: Round[];
+  Metadata: StoryMetadata;
+}
+
 export interface CharacterStory {
   Answer: Answer | null;
-  InfoState: InfoState[];
+  InfoStates: InfoState[];
   TimelineEvents: TimelineEvent[];
   CluesToReveal: Clue[];
   Character: Character;
@@ -26,8 +34,6 @@ export interface StoryMetadata {
   Conclusion: string;
   Name: string;
   Blurb: string;
-  RoundCount: number;
-  CharacterCount: number;
 }
 
 export interface Answer {
@@ -73,7 +79,7 @@ export interface TimelineEvent {
 }
 
 // used to trigger update of all playerviews
-export interface SelectedStory {
-  SelectedAt?: firebase.firestore.Timestamp;
-  Metadata: StoryMetadata;
-}
+// export interface SelectedStory {
+//   SelectedAt?: firebase.firestore.Timestamp;
+//   Metadata: StoryMetadata;
+// }
