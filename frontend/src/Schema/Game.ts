@@ -14,7 +14,7 @@ export interface GameState {
 
   CurrentRound: number;
 
-  StartTime: Date;
+  StartTime: firebase.firestore.Timestamp;
 
   Guesses: Guess[];
 
@@ -57,10 +57,10 @@ export interface Guess {
 export interface FinishedRound {
   UserID: string;
   Round: number;
-  Finished: boolean;
 }
 
 export interface PlayerView {
+  ID: string;
   UserID: string;
   GameID: string;
   CharacterStory: CharacterStory | null;

@@ -59,6 +59,7 @@ import {
   ConnectPlayerView,
   PickCharacter,
   SetGameStory,
+  SetReadRules,
 } from "../Api";
 import { useRadioGroup } from "@material-ui/core";
 import { ParamTypes, GamePageContext } from "../Pages/GamePage";
@@ -79,6 +80,10 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
+  },
   modalPaper: {
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
@@ -91,7 +96,7 @@ const useStyles = makeStyles((theme) => ({
 export default () => {
   const classes = useStyles();
   let { id } = useParams<ParamTypes>();
-  let { gameState } = useContext(GamePageContext);
+  let { gameState, playerView } = useContext(GamePageContext);
   const { userDetails, userDetailsInitialising, setSnackState } = useContext(
     StateStoreContext,
   );
@@ -104,85 +109,98 @@ export default () => {
     return null;
   }
 
-  let participantHasPicked =
-    gameState.CharacterPicks.filter((pick) => pick.UserID === userDetails.ID)
-      .length !== 0;
-
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
-          </Grid>
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Typography variant="h5" align="center">
+            rules
+          </Typography>
         </Grid>
-      </Container>
-    </React.Fragment>
+        <Grid item xs={12}>
+          <List className={classes.root}>
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="talk"
+                secondary={
+                  <React.Fragment>
+                    start conversations using your public info, but only reveal
+                    your private info when asked about it by another character.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="don't lie"
+                secondary={
+                  <React.Fragment>
+                    it gets weird if you lie about your secrets. gotta come
+                    clean when asked.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="complete rounds"
+                secondary={
+                  <React.Fragment>
+                    once you've revealed all your information for a round,
+                    there's a button down the buttom to show you're ready for
+                    the next round.{" "}
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="guess the killer"
+                secondary={
+                  <React.Fragment>
+                    once all rounds are finished, make a guess about who did it
+                    and why. once everyone has guessed, the true story is
+                    revealed.
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+            <ListItem alignItems="flex-start">
+              <ListItemText
+                primary="have fun/win"
+                secondary={
+                  <React.Fragment>
+                    the winner is whoever has the most fun (or all people who
+                    guessed the killer correctly){" "}
+                  </React.Fragment>
+                }
+              />
+            </ListItem>
+            <Divider component="li" />
+          </List>
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.buttonFullWidth}
+            onClick={() => SetReadRules(playerView.ID)}
+          >
+            <Typography align="center">let's go</Typography>
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };

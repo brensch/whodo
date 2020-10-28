@@ -54,11 +54,6 @@ import { GameState, PlayerView, PopulateInfoRequest } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import {
-  StoryMetadata,
-  StorySummary,
-  STORY_SUMMARY_COLLECTION,
-} from "../Schema/Story";
-import {
   ConnectGameState,
   ConnectPlayerView,
   ConnectPopulateInfoRequest,
@@ -193,7 +188,7 @@ const GamePage = () => {
       );
     } else if (
       gameState.ReadyToStart.length < gameState.Users.length &&
-      now < gameState.StartTime
+      now < gameState.StartTime.toDate()
     ) {
       setGameStage("WaitingForGoTime");
     } else if (!playerView.ReadRules) {
@@ -228,6 +223,12 @@ const GamePage = () => {
     return <Redirect to={`/join/${id}`} />;
   }
 
+  console.log(gameStage);
+  console.log(gameState.ReadyToStart.length < gameState.Users.length);
+  console.log(now < gameState.StartTime.toDate());
+  console.log(gameState.StartTime);
+  console.log(now);
+
   return (
     <GamePageContext.Provider value={{ gameState, playerView }}>
       <React.Fragment>
@@ -235,12 +236,6 @@ const GamePage = () => {
           switch (gameStage) {
             // case "invite":
             //   return <InviteView />;
-            case "PickStory":
-              return <PickStory />;
-            case "PickCharacter":
-              return <PickCharacter />;
-            case "WaitingForGoTime":
-              return <WaitingForGoTime />;
             case "PickStory":
               return <PickStory />;
             case "PickCharacter":

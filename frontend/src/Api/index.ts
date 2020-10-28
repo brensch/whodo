@@ -6,6 +6,7 @@ import {
   PLAYERVIEW_COLLECTION,
   POPULATE_INFO_REQUESTS,
   PopulateInfoRequest,
+  FinishedRound,
 } from "../Schema/Game";
 import {
   UserDetails,
@@ -15,7 +16,7 @@ import {
 } from "../Schema/User";
 import { db } from "../Firebase";
 import * as firebase from "firebase/app";
-import { StoryMetadata, StorySummary } from "../Schema/Story";
+import { StoryMetadata, StorySummary, InfoState, Clue } from "../Schema/Story";
 import { v4 as uuidv4 } from "uuid";
 
 export const ConnectGameState = (
@@ -63,7 +64,7 @@ export const CreateGame = (
     UserIDs: [userDetails.ID],
     Users: [userDetails],
     Guesses: [],
-    StartTime: selectedDate,
+    StartTime: firebase.firestore.Timestamp.fromDate(selectedDate),
     DiscoveredClues: [],
     FinishedRounds: [],
     ReadyToStart: [],
@@ -98,6 +99,7 @@ export const CreateGame = (
   const playerViewID = uuidv4();
   const playerViewDoc = db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID);
   const newPlayerView: PlayerView = {
+    ID: playerViewID,
     UserID: userDetails.ID,
     GameID: gameID,
     CharacterStory: null,
@@ -138,6 +140,7 @@ export const AddUserToGame = (gameID: string, userDetails: UserDetails) => {
   const playerViewID = uuidv4();
   const playerViewDoc = db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID);
   const newPlayerView: PlayerView = {
+    ID: playerViewID,
     UserID: userDetails.ID,
     GameID: gameID,
     CharacterStory: null,
@@ -240,4 +243,81 @@ export const PickCharacter = (
     .update({
       CharacterPicks: firebase.firestore.FieldValue.arrayUnion(characterPick),
     });
+};
+
+export const SetReadyToStart = (gameID: string, userID: string) => {
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      ReadyToStart: firebase.firestore.FieldValue.arrayUnion(userID),
+    });
+};
+
+export const SetReadRules = (playerViewID: string) => {
+  return db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID).update({
+    ReadRules: true,
+  });
+};
+
+// taking in entire infoarray instead of removing single info then adding it back to preserve order
+export const ToggleInfoDone = (
+  playerViewID: string,
+  infoArray: InfoState[],
+  indexToToggle: number,
+) => {
+  infoArray[indexToToggle].Done = !infoArray[indexToToggle].Done;
+
+  return db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID).update({
+    "CharacterStory.InfoStates": infoArray,
+  });
+};
+
+export const DiscoverClue = (gameID: string, clue: Clue) => {
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      Clues: firebase.firestore.FieldValue.arrayUnion(clue),
+    });
+};
+
+export const SetFinishedRound = (
+  gameID: string,
+  round: number,
+  userID: string,
+) => {
+  const finishedRound: FinishedRound = {
+    Round: round,
+    UserID: userID,
+  };
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      FinishedRounds: firebase.firestore.FieldValue.arrayUnion(finishedRound),
+    });
+};
+
+export const SetUnfinishedRound = (
+  gameID: string,
+  round: number,
+  userID: string,
+) => {
+  const finishedRound: FinishedRound = {
+    Round: round,
+    UserID: userID,
+  };
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      FinishedRounds: firebase.firestore.FieldValue.arrayRemove(finishedRound),
+    });
+};
+
+export const SetRound = (gameID: string, round: number) => {
+  return db.collection(GAME_COLLECTION).doc(gameID).update({
+    CurrentRound: round,
+  });
 };

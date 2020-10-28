@@ -65,6 +65,7 @@ export interface Info {
 
 export interface InfoState extends Info {
   Done: boolean;
+  Sequence: number;
 }
 
 export interface Round {

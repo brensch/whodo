@@ -198,7 +198,7 @@ export const readInfo = async (sheetID: string): Promise<Info[] | Error> => {
       .map((row) => ({
         Round: row[0],
         Character: row[1],
-        Public: row[2],
+        Public: row[2] === "TRUE",
         Content: row[3],
       }));
   }

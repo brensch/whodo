@@ -5,6 +5,7 @@ import {
   Story,
   STORY_COLLECTION,
   STORY_SUMMARY_COLLECTION,
+  InfoState,
 } from "./Schema/Story";
 import {
   GAME_COLLECTION,
@@ -106,8 +107,6 @@ const JoinCharactersWithUsers = async (gameID: string) => {
       return;
     }
 
-    console.log("characterPick", characterPick);
-
     // get full character object from the character name
     const character = story.Characters.find(
       (character) => character.Name === characterPick.CharacterName,
@@ -120,8 +119,6 @@ const JoinCharactersWithUsers = async (gameID: string) => {
       return;
     }
 
-    console.log("character", character);
-
     // answers
     const answer = story.Answers.find(
       (answer) => answer.Character === character.Name,
@@ -132,10 +129,11 @@ const JoinCharactersWithUsers = async (gameID: string) => {
     }
 
     // info - set done to false on load
-    const infoStates = story.Info.filter(
+    const infoStates: InfoState[] = story.Info.filter(
       (info) => info.Character === character.Name,
-    ).map((info) => ({
+    ).map((info, i) => ({
       Done: false,
+      Sequence: i,
       ...info,
     }));
 
