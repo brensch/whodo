@@ -90,6 +90,11 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     backgroundColor: "red",
   },
+  test: {
+    width: "100%",
+    height: "100px",
+    backgroundColor: "red",
+  },
 }));
 
 export interface ParamTypes {
@@ -221,34 +226,32 @@ const GamePage = () => {
 
   return (
     <GamePageContext.Provider value={{ gameState, playerView }}>
-      <Container className={classes.baseContainer}>
-        <React.Fragment>
-          {(() => {
-            switch (gameStage) {
-              case "PickStory":
-                return <PickStory />;
-              case "PickCharacter":
-                return <PickCharacter />;
-              case "WaitingForGoTime":
-                return <WaitingForGoTime />;
-              case "Rules":
-                return <Rules />;
-              case "ViewRound":
-                return <ViewRound />;
-              case "GuessKiller":
-                return <GuessKiller />;
-              case "WaitForGuesses":
-                return <WaitForGuesses />;
-              case "RevealGuesses":
-                return <RevealGuesses />;
-              case "ReadAnswers":
-                return <ReadAnswers />;
-              case "CorrectGuesses":
-                return <CorrectGuesses />;
-            }
-          })()}
-        </React.Fragment>
-      </Container>
+      <React.Fragment>
+        {(() => {
+          switch (gameStage) {
+            case "PickStory":
+              return <PickStory />;
+            case "PickCharacter":
+              return <PickCharacter />;
+            case "WaitingForGoTime":
+              return <WaitingForGoTime />;
+            case "Rules":
+              return <Rules />;
+            case "ViewRound":
+              return <ViewRound />;
+            case "GuessKiller":
+              return <GuessKiller />;
+            case "WaitForGuesses":
+              return <WaitForGuesses />;
+            case "RevealGuesses":
+              return <RevealGuesses />;
+            case "ReadAnswers":
+              return <ReadAnswers />;
+            case "CorrectGuesses":
+              return <CorrectGuesses />;
+          }
+        })()}
+      </React.Fragment>
     </GamePageContext.Provider>
   );
 };
