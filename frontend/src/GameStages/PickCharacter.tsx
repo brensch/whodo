@@ -74,6 +74,12 @@ const useStyles = makeStyles((theme) => ({
     width: "300px",
     textTransform: "none",
   },
+  listItem: {
+    width: "300px",
+  },
+  ListItemText: {
+    textAlign: "center",
+  },
   modal: {
     display: "flex",
     alignItems: "center",
@@ -109,80 +115,77 @@ export default () => {
       .length !== 0;
 
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Grid item xs={12}>
+        <Typography>
+          {participantHasPicked
+            ? "wait for your crew to pick"
+            : "pick a character"}
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <List className={classes.root}>
+          {gameState.SelectedStory.Characters.map((character) => {
+            const pickMatchingThisCharacter = gameState.CharacterPicks.find(
+              (pick) => pick.CharacterName == character.Name,
+            );
+            return (
+              <ListItem
+                className={classes.listItem}
+                button
+                disabled={
+                  participantHasPicked ||
+                  pickMatchingThisCharacter !== undefined
+                }
+                onClick={() =>
+                  PickCharacter(id, userDetails.ID, character.Name).catch(
+                    (err) =>
+                      setSnackState({
+                        severity: "error",
+                        message: err.toString(),
+                      }),
+                  )
+                }
+              >
+                <ListItemText
+                  className={classes.ListItemText}
+                  primary={character.Name}
+                  secondary={
+                    pickMatchingThisCharacter !== undefined &&
+                    gameState.Users.find(
+                      (user) => user.ID === pickMatchingThisCharacter.UserID,
+                    )?.Name
+                  }
+                />
+              </ListItem>
+            );
+          })}
+        </List>
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.button}
+          onClick={() =>
+            SetGameStory(id, null).catch((err) =>
+              setSnackState({
+                severity: "error",
+                message: err.toString(),
+              }),
+            )
+          }
         >
-          <Grid item xs={12}>
-            <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
+          choose a different story
+        </Button>
+      </Grid>
+    </Grid>
   );
 };

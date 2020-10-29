@@ -14,6 +14,8 @@ import {
   GameState,
   PLAYERVIEW_COLLECTION,
   PlayerView,
+  REVEAL_ANSWER_REQUESTS,
+  RevealAnswerRequest,
 } from "./Schema/Game";
 import { ReadStoryFromSheet, SummariseStory } from "./Sheets";
 
@@ -31,12 +33,15 @@ export const watchStories = functions.firestore
           throw Error;
         }
 
+        res.ID = change.after.id;
+
         const batch = db.batch();
 
         const storyDoc = db.collection(STORY_COLLECTION).doc(change.after.id);
         batch.set(storyDoc, res);
 
         const storySummary = SummariseStory(res, change.after.id);
+
         const summaryDoc = db
           .collection(STORY_SUMMARY_COLLECTION)
           .doc(change.after.id);
@@ -119,14 +124,14 @@ const JoinCharactersWithUsers = async (gameID: string) => {
       return;
     }
 
-    // answers
-    const answer = story.Answers.find(
-      (answer) => answer.Character === character.Name,
-    );
-    if (answer === undefined) {
-      console.log("could not find answer for character", character.Name);
-      return;
-    }
+    // // answers
+    // const answer = story.Answers.find(
+    //   (answer) => answer.Character === character.Name,
+    // );
+    // if (answer === undefined) {
+    //   console.log("could not find answer for character", character.Name);
+    //   return;
+    // }
 
     // info - set done to false on load
     const infoStates: InfoState[] = story.Info.filter(
@@ -147,7 +152,6 @@ const JoinCharactersWithUsers = async (gameID: string) => {
     );
 
     const characterStory: CharacterStory = {
-      Answer: answer,
       InfoStates: infoStates,
       TimelineEvents: timelineEvents,
       CluesToReveal: clues,
@@ -182,6 +186,45 @@ export const watchPopulateInfoRequest = functions.firestore
     }
 
     return;
+  });
+
+export const watchRevealAnswerRequests = functions.firestore
+  .document(`${REVEAL_ANSWER_REQUESTS}/{docID}`)
+  .onWrite(async (change, context) => {
+    const requestAfter = change.after.data() as RevealAnswerRequest;
+
+    const gameRef = db.collection(GAME_COLLECTION).doc(change.after.id);
+    const gameDoc = await gameRef.get();
+    const gameState = gameDoc.data() as GameState;
+
+    if (gameState.SelectedStory === null) {
+      console.log("no selected story for game", change.after.id);
+    }
+
+    const storyDoc = await db
+      .collection(STORY_COLLECTION)
+      .doc(gameState.SelectedStory!.ID)
+      .get();
+
+    const story = storyDoc.data() as Story;
+
+    console.log(story);
+
+    // check if all answers have been read
+    if (requestAfter.AnswerNumbers.length > story.Answers.length) {
+      return await gameRef.update({
+        FinishedAnswers: true,
+        "SelectedStory.Metadata.Conclusion": story.Metadata.Conclusion,
+      });
+    }
+
+    const answers = requestAfter.AnswerNumbers.map(
+      (number) => story.Answers[number],
+    );
+
+    return await gameRef.update({
+      Answers: answers,
+    });
   });
 
 // export const watchPopulateInfoRequest = functions.firestore

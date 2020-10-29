@@ -50,15 +50,20 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { GameState, PlayerView } from "../Schema/Game";
+import { CharacterPick, GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
-import { StoryMetadata, STORY_SUMMARY_COLLECTION } from "../Schema/Story";
+import {
+  StoryMetadata,
+  STORY_SUMMARY_COLLECTION,
+  Character,
+} from "../Schema/Story";
 import {
   ConnectGameState,
   ConnectPlayerView,
   PickCharacter,
   SetGameStory,
+  SubmitReadyForAnswer,
 } from "../Api";
 import { useRadioGroup } from "@material-ui/core";
 import { ParamTypes, GamePageContext } from "../Pages/GamePage";
@@ -86,6 +91,15 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "80vh",
     overflow: "scroll",
   },
+  clues: {
+    padding: 10,
+    maxWidth: 1000,
+    alignContent: "center",
+  },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
+  },
 }));
 
 export default () => {
@@ -96,93 +110,83 @@ export default () => {
     StateStoreContext,
   );
 
-  if (
-    userDetails === null ||
-    userDetailsInitialising ||
-    gameState.SelectedStory === null
-  ) {
-    return null;
-  }
+  // const SubmitReady = () => {
+  //   db.collection("games")
+  //     .doc(game.id)
+  //     .update({
+  //       [`participants.${user.id}.ready_for_answer`]: true,
+  //     });
+  // };
 
-  let participantHasPicked =
-    gameState.CharacterPicks.filter((pick) => pick.UserID === userDetails.ID)
-      .length !== 0;
+  let userHasDecided: boolean =
+    gameState.ReadyForAnswer.find((userID) => userID === userDetails?.ID) !==
+    undefined;
 
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
-          </Grid>
+    <Container>
+      <Grid container spacing={3} className={classes.clues}>
+        <Grid item xs={12}>
+          <Typography align="center">here's what everyone guessed </Typography>
         </Grid>
-      </Container>
-    </React.Fragment>
+        {gameState.Guesses.map((guess) => {
+          const guesserUser: UserDetails | undefined = gameState.Users.find(
+            (user) => user.ID === guess.UserID,
+          );
+
+          const guesserPick:
+            | CharacterPick
+            | undefined = gameState.CharacterPicks.find(
+            (pick) => pick.UserID === guess.UserID,
+          );
+
+          const killerPick:
+            | CharacterPick
+            | undefined = gameState.CharacterPicks.find(
+            (pick) => pick.CharacterName === guess.Killer,
+          );
+
+          const killerUser: UserDetails | undefined = gameState.Users.find(
+            (user) => user.ID === killerPick?.UserID,
+          );
+
+          return (
+            <Grid item xs={12}>
+              <Paper variant="outlined">
+                <Grid container className={classes.clues}>
+                  <Grid item xs={12}>
+                    <Typography variant="h5">
+                      {guesserPick?.CharacterName} ({guesserUser?.Name})
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="h6">
+                      guessed: {guess.Killer} ({killerUser?.Name})
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="h6">because: {guess.Why}</Typography>
+                  </Grid>
+                </Grid>
+              </Paper>
+            </Grid>
+          );
+        })}
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={userHasDecided}
+            className={classes.buttonFullWidth}
+            onClick={() => {
+              SubmitReadyForAnswer(id, userDetails!.ID);
+            }}
+          >
+            {userHasDecided
+              ? "waiting for others"
+              : "ok cool, but who really did it?"}
+          </Button>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };

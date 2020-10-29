@@ -53,6 +53,7 @@ import { GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { CreateGame } from "../Api";
+import { baseThemeOptions } from "../Components/Theme";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -74,21 +75,7 @@ interface LocationState {
 }
 
 const datePickerTheme = createMuiTheme({
-  palette: {
-    type: "dark",
-    primary: {
-      light: "#ba8fa4",
-      main: "#ba8fa4",
-      dark: "#8fbaba",
-      contrastText: "#fff",
-    },
-    secondary: {
-      light: "#ff7961",
-      main: "#f44336",
-      dark: "#ba000d",
-      contrastText: "#ba8fa4",
-    },
-  },
+  ...baseThemeOptions,
   typography: {
     fontFamily: ["Lucida Console", "Monaco", "monospace"].join(","),
     fontSize: 13,
@@ -106,11 +93,6 @@ const CreateGamePage = () => {
 
   const createGame = () => {
     if (!!userDetails) {
-      // const newGame = new Game();
-      // newGame
-      //   .addToFirestore(name, selectedDate, userDetails)
-      //   .then(() => history.push(`/game/${newGame.ID}`));
-
       CreateGame(name, selectedDate, userDetails).then((gameID) =>
         history.push(`/game/${gameID}`),
       );

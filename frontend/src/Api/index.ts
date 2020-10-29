@@ -7,6 +7,10 @@ import {
   POPULATE_INFO_REQUESTS,
   PopulateInfoRequest,
   FinishedRound,
+  Note,
+  Guess,
+  REVEAL_ANSWER_REQUESTS,
+  RevealAnswerRequest,
 } from "../Schema/Game";
 import {
   UserDetails,
@@ -64,13 +68,13 @@ export const CreateGame = (
     UserIDs: [userDetails.ID],
     Users: [userDetails],
     Guesses: [],
+    Answers: [],
     StartTime: firebase.firestore.Timestamp.fromDate(selectedDate),
     DiscoveredClues: [],
     FinishedRounds: [],
     ReadyToStart: [],
     FinishedAnswers: false,
     ReadyForAnswer: [],
-
     CurrentRound: 0,
     CharacterPicks: [],
     SelectedStory: null,
@@ -223,7 +227,7 @@ export const GetUserGames = (id: string) => {
     .doc(id)
     .get()
     .then((doc) => {
-      return (doc as unknown) as UserGames;
+      return (doc.data() as unknown) as UserGames;
     });
 };
 
@@ -319,5 +323,67 @@ export const SetUnfinishedRound = (
 export const SetRound = (gameID: string, round: number) => {
   return db.collection(GAME_COLLECTION).doc(gameID).update({
     CurrentRound: round,
+  });
+};
+
+export const TakeNote = (
+  playerViewID: string,
+  round: number,
+  subject: string,
+  message: string,
+) => {
+  const newNote: Note = {
+    AboutCharacter: subject,
+    Message: message,
+    Round: round,
+    Time: firebase.firestore.Timestamp.fromDate(new Date()),
+  };
+  return db
+    .collection(PLAYERVIEW_COLLECTION)
+    .doc(playerViewID)
+    .update({
+      Notes: firebase.firestore.FieldValue.arrayUnion(newNote),
+    });
+};
+
+export const SubmitGuess = (
+  gameID: string,
+  userID: string,
+  killer: string,
+  why: string,
+) => {
+  const guess: Guess = {
+    UserID: userID,
+    Killer: killer,
+    Why: why,
+  };
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      Guesses: firebase.firestore.FieldValue.arrayUnion(guess),
+    });
+};
+
+export const SubmitReadyForAnswer = (gameID: string, userID: string) => {
+  return db
+    .collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      ReadyForAnswer: firebase.firestore.FieldValue.arrayUnion(userID),
+    });
+};
+
+export const RequestNextAnswer = (gameID: string, number: number) => {
+  const gameRef = db.collection(REVEAL_ANSWER_REQUESTS).doc(gameID);
+  if (number === 0) {
+    const newRequest: RevealAnswerRequest = {
+      AnswerNumbers: [0],
+    };
+    gameRef.set(newRequest);
+  }
+
+  return gameRef.update({
+    AnswerNumbers: firebase.firestore.FieldValue.arrayUnion(number),
   });
 };

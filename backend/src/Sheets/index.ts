@@ -67,6 +67,7 @@ export const ReadStoryFromSheet = async (
   // populate metadata counts
 
   return {
+    ID: null,
     Metadata: StoryMetadata,
     Answers: Answers,
     Rounds: Rounds,
@@ -80,11 +81,16 @@ export const ReadStoryFromSheet = async (
 };
 
 export const SummariseStory = (story: Story, storyID: string): StorySummary => {
+  const metadataNoConclusion: StoryMetadata = {
+    Name: story.Metadata.Name,
+    Blurb: story.Metadata.Blurb,
+    Conclusion: null,
+  };
   return {
     ID: storyID,
     Characters: story.Characters,
     Rounds: story.Rounds,
-    Metadata: story.Metadata,
+    Metadata: metadataNoConclusion,
   };
 };
 
@@ -147,7 +153,8 @@ export const readAnswers = async (
 
   const rows = r.data.values;
   if (rows && rows.length) {
-    return rows.map((row) => ({
+    return rows.map((row, i) => ({
+      Number: i,
       Character: row[0],
       Details: row[1],
     }));

@@ -104,10 +104,6 @@ export default () => {
     return null;
   }
 
-  let participantHasPicked =
-    gameState.CharacterPicks.filter((pick) => pick.UserID === userDetails.ID)
-      .length !== 0;
-
   return (
     <React.Fragment>
       <Container>
@@ -121,65 +117,8 @@ export default () => {
         >
           <Grid item xs={12}>
             <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
+              wait for everyone to choose the killer. i'm excited, are you?
             </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
           </Grid>
         </Grid>
       </Container>

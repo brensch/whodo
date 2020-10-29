@@ -18,7 +18,11 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "./Firebase";
 
-import { ThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import {
+  ThemeProvider,
+  createMuiTheme,
+  ThemeOptions,
+} from "@material-ui/core/styles";
 
 import AuthPage, { SignOut } from "./Pages/AuthPage";
 import StartPage from "./Pages/StartPage";
@@ -34,27 +38,9 @@ import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/AuthPage";
 import { Header } from "./Components/Header";
 import { Snack } from "./Components/Snack";
+import { baseThemeOptions } from "./Components/Theme";
 
-const theme = createMuiTheme({
-  palette: {
-    type: "dark",
-    primary: {
-      light: "#ba8fa4",
-      main: "#ba8fa4",
-      dark: "#8fbaba",
-      contrastText: "#fff",
-    },
-    secondary: {
-      light: "#ff7961",
-      main: "#f44336",
-      dark: "#ba000d",
-      contrastText: "#ba8fa4",
-    },
-  },
-  typography: {
-    fontFamily: ["Lucida Console", "Monaco", "monospace"].join(","),
-  },
-});
+const theme = createMuiTheme(baseThemeOptions);
 
 const App = () => {
   return (

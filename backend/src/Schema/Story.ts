@@ -1,9 +1,10 @@
-export const STORY_COLLECTION = "stories2";
+export const STORY_COLLECTION = "stories";
 // export const STORY_METADATA_COLLECTION = "storymetadata";
 // export const SELECTEDSTORY_COLLECTION = "selectedstories";
 export const STORY_SUMMARY_COLLECTION = "storysummaries";
 
 export interface Story {
+  ID: string | null;
   Metadata: StoryMetadata;
   Answers: Answer[];
   Rounds: Round[];
@@ -23,20 +24,21 @@ export interface StorySummary {
 }
 
 export interface CharacterStory {
-  Answer: Answer | null;
   InfoStates: InfoState[];
   TimelineEvents: TimelineEvent[];
   CluesToReveal: Clue[];
   Character: Character;
 }
 
+// Conclusion is null in summary until set by function
 export interface StoryMetadata {
-  Conclusion: string;
+  Conclusion: string | null;
   Name: string;
   Blurb: string;
 }
 
 export interface Answer {
+  Number: number;
   Character: string;
   Details: string;
 }

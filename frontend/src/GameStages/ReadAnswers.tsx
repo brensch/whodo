@@ -50,7 +50,7 @@ import {
 } from "react-router-dom";
 import { useAuth, db, firebase } from "../Firebase";
 // import * as api from "../Firebase/Api";
-import { GameState, PlayerView } from "../Schema/Game";
+import { CharacterPick, GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { StoryMetadata, STORY_SUMMARY_COLLECTION } from "../Schema/Story";
@@ -58,10 +58,12 @@ import {
   ConnectGameState,
   ConnectPlayerView,
   PickCharacter,
+  RequestNextAnswer,
   SetGameStory,
 } from "../Api";
 import { useRadioGroup } from "@material-ui/core";
 import { ParamTypes, GamePageContext } from "../Pages/GamePage";
+import { Answer } from "../Schema/Story";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -86,12 +88,21 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "80vh",
     overflow: "scroll",
   },
+  clues: {
+    padding: 10,
+    maxWidth: 1000,
+    alignContent: "center",
+  },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
+  },
 }));
 
 export default () => {
   const classes = useStyles();
   let { id } = useParams<ParamTypes>();
-  let { gameState } = useContext(GamePageContext);
+  let { gameState, playerView } = useContext(GamePageContext);
   const { userDetails, userDetailsInitialising, setSnackState } = useContext(
     StateStoreContext,
   );
@@ -104,85 +115,41 @@ export default () => {
     return null;
   }
 
-  let participantHasPicked =
-    gameState.CharacterPicks.filter((pick) => pick.UserID === userDetails.ID)
-      .length !== 0;
+  let userAnswer: Answer | undefined = gameState.Answers.find(
+    (answer) => answer.Character === playerView.CharacterStory?.Character.Name,
+  );
+
+  console.log(userAnswer);
+  console.log(gameState.Answers.length);
+  console.log(userAnswer !== undefined && userAnswer.Number);
+
+  if (
+    userAnswer === undefined ||
+    gameState.Answers.length > userAnswer.Number + 1
+  ) {
+    return <div>someone else is reading their answer. listen patiently</div>;
+  }
 
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
+    <Grid container justify="center" spacing={2} className={classes.clues}>
+      <Grid item xs={12}>
+        <Typography variant="h4">
+          read to the group. they're all listening.
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        {userAnswer.Details}
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          className={classes.buttonFullWidth}
+          onClick={() => RequestNextAnswer(id, userAnswer!.Number + 1)}
         >
-          <Grid item xs={12}>
-            <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
+          finished reading
+        </Button>
+      </Grid>
+    </Grid>
   );
 };

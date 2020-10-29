@@ -58,6 +58,7 @@ import {
   ConnectPlayerView,
   ConnectPopulateInfoRequest,
   RequestInfoPopulation,
+  RequestNextAnswer,
   SetGameStory,
 } from "../Api";
 import { useRadioGroup } from "@material-ui/core";
@@ -85,17 +86,9 @@ const useStyles = makeStyles((theme) => ({
     width: "300px",
     textTransform: "none",
   },
-  modal: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalPaper: {
-    backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3),
-    maxHeight: "80vh",
-    overflow: "scroll",
+  baseContainer: {
+    width: "100%",
+    backgroundColor: "red",
   },
 }));
 
@@ -112,7 +105,6 @@ export const GamePageContext = createContext<GameStore>(undefined!);
 
 type GameStage =
   | "loading"
-  | "invalid"
   | "requestingInfoPopulation"
 
   // states with pages
@@ -129,6 +121,8 @@ type GameStage =
 
 const GamePage = () => {
   let { id } = useParams<ParamTypes>();
+  const classes = useStyles();
+
   const [gameStage, setGameStage] = useState<GameStage>("loading");
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [
@@ -163,15 +157,11 @@ const GamePage = () => {
     if (
       gameState === null ||
       playerView === null ||
-      populateInfoRequest === null
+      populateInfoRequest === null ||
+      gameState === undefined
     ) {
-      setGameStage("loading");
       return;
     }
-
-    // const thisParticipant = gameState.User.find(
-    //   (participant) => participant.User.ID === userDetails?.ID,
-    // );
 
     if (gameState.SelectedStory === null) {
       setGameStage("PickStory");
@@ -205,132 +195,62 @@ const GamePage = () => {
     } else if (gameState.ReadyForAnswer.length < gameState.Users.length) {
       setGameStage("RevealGuesses");
     } else if (!gameState.FinishedAnswers) {
+      if (gameState.Answers.length === 0) {
+        RequestNextAnswer(id, 0);
+      }
       setGameStage("ReadAnswers");
     } else {
       setGameStage("CorrectGuesses");
     }
   }, [gameState, playerView, populateInfoRequest]);
 
-  if (gameState === null || playerView === null) {
-    return <div>loading</div>;
-  }
+  console.log(gameState);
+  console.log(playerView);
 
   if (gameState === undefined) {
-    return <div>invalid gameState, check url</div>;
+    return <div>invalid game id, check url or go home and start again.</div>;
+  }
+
+  if (gameState === null || playerView === null) {
+    return <div>loading</div>;
   }
 
   if (userDetails !== null && !gameState.UserIDs.includes(userDetails.ID)) {
     return <Redirect to={`/join/${id}`} />;
   }
 
-  console.log(gameStage);
-  console.log(gameState.ReadyToStart.length < gameState.Users.length);
-  console.log(now < gameState.StartTime.toDate());
-  console.log(gameState.StartTime);
-  console.log(now);
-
   return (
     <GamePageContext.Provider value={{ gameState, playerView }}>
-      <React.Fragment>
-        {(() => {
-          switch (gameStage) {
-            // case "invite":
-            //   return <InviteView />;
-            case "PickStory":
-              return <PickStory />;
-            case "PickCharacter":
-              return <PickCharacter />;
-            case "WaitingForGoTime":
-              return <WaitingForGoTime />;
-            case "Rules":
-              return <Rules />;
-            case "ViewRound":
-              return <ViewRound />;
-            case "GuessKiller":
-              return <GuessKiller />;
-            case "WaitForGuesses":
-              return <WaitForGuesses />;
-            case "RevealGuesses":
-              return <RevealGuesses />;
-            case "ReadAnswers":
-              return <ReadAnswers />;
-            case "CorrectGuesses":
-              return <CorrectGuesses />;
-          }
-        })()}
-      </React.Fragment>
+      <Container className={classes.baseContainer}>
+        <React.Fragment>
+          {(() => {
+            switch (gameStage) {
+              case "PickStory":
+                return <PickStory />;
+              case "PickCharacter":
+                return <PickCharacter />;
+              case "WaitingForGoTime":
+                return <WaitingForGoTime />;
+              case "Rules":
+                return <Rules />;
+              case "ViewRound":
+                return <ViewRound />;
+              case "GuessKiller":
+                return <GuessKiller />;
+              case "WaitForGuesses":
+                return <WaitForGuesses />;
+              case "RevealGuesses":
+                return <RevealGuesses />;
+              case "ReadAnswers":
+                return <ReadAnswers />;
+              case "CorrectGuesses":
+                return <CorrectGuesses />;
+            }
+          })()}
+        </React.Fragment>
+      </Container>
     </GamePageContext.Provider>
   );
 };
 
 export default GamePage;
-
-// const InviteView = () => {
-//   const classes = useStyles();
-//   let { id } = useParams<ParamTypes>();
-//   let { gameState } = useContext(GamePageContext);
-//   let { setSnackState } = useContext(StateStoreContext);
-
-//   return (
-//     <React.Fragment>
-//       <Container>
-//         <Grid
-//           container
-//           spacing={3}
-//           justify="center"
-//           alignItems="center"
-//           direction="column"
-//           className={classes.optionsButtons}
-//         >
-//           <Grid item xs={12}>
-//             <Typography>assemble a crew for</Typography>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Typography variant="h3">{gameState.Name}</Typography>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Typography variant="h5">
-//               {!!gameState.StartTime &&
-//                 gameState.StartTime.toLocaleDateString("en-AU")}
-//             </Typography>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-//               <Button
-//                 variant="contained"
-//                 color="primary"
-//                 className={classes.button}
-//                 onClick={() => {
-//                   setSnackState({
-//                     severity: "info",
-//                     message: "link copied to clipboard",
-//                   });
-//                 }}
-//               >
-//                 invite
-//               </Button>
-//             </CopyToClipboard>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Button
-//               variant="contained"
-//               color="primary"
-//               className={classes.button}
-//               // onClick={() => gameState.lockParticipants()}
-//             >
-//               ready to go
-//             </Button>
-//           </Grid>
-//           <Grid item xs={12}>
-//             <Typography>current crew:</Typography>
-//           </Grid>
-//           <Grid item xs={12}>
-//             {gameState.Users.map((user) => (
-//               <Typography align="center">{user.Name}</Typography>
-//             ))}
-//           </Grid>
-//         </Grid>
-//       </Container>
-//     </React.Fragment>
-//   );
-// };

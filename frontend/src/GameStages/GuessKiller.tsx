@@ -59,6 +59,7 @@ import {
   ConnectPlayerView,
   PickCharacter,
   SetGameStory,
+  SubmitGuess,
 } from "../Api";
 import { useRadioGroup } from "@material-ui/core";
 import { ParamTypes, GamePageContext } from "../Pages/GamePage";
@@ -86,6 +87,7 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "80vh",
     overflow: "scroll",
   },
+  formControl: {},
 }));
 
 export default () => {
@@ -96,93 +98,83 @@ export default () => {
     StateStoreContext,
   );
 
-  if (
-    userDetails === null ||
-    userDetailsInitialising ||
-    gameState.SelectedStory === null
-  ) {
-    return null;
-  }
+  const [why, setWhy] = useState<string>("");
+  const [killer, setKiller] = useState<string>("");
 
-  let participantHasPicked =
-    gameState.CharacterPicks.filter((pick) => pick.UserID === userDetails.ID)
-      .length !== 0;
+  // const SubmitGuess = () => {
+  //   db.collection("games")
+  //     .doc(game.id)
+  //     .update({
+  //       [`participants.${user.id}.guess`]: {
+  //         killer: killer,
+  //         why: why,
+  //       },
+  //     });
+  // };
 
   return (
-    <React.Fragment>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
+    <Grid
+      container
+      spacing={3}
+      justify="center"
+      alignItems="center"
+      direction="column"
+      className={classes.optionsButtons}
+    >
+      <Grid item xs={12}>
+        <Typography align="center">
+          ok, enough fun. time to guess who the killer was and why.
+        </Typography>
+      </Grid>
+      <Grid item xs={12}>
+        <FormControl variant="outlined" className={classes.formControl}>
+          <InputLabel id="killer-label">killer</InputLabel>
+          <Select
+            labelId="killer-label"
+            id="killer-select"
+            value={killer}
+            className={classes.button}
+            onChange={(e) => setKiller(e.target.value as string)}
+            label="killer"
+          >
+            {gameState.CharacterPicks.map((pick) => {
+              const userName = gameState.Users.find(
+                (user) => user.ID === pick.UserID,
+              );
+              return (
+                <MenuItem value={pick.CharacterName}>
+                  {pick.CharacterName} ({userName?.Name})
+                </MenuItem>
+              );
+            })}
+          </Select>
+        </FormControl>
+      </Grid>
+      <Grid item xs={12}>
+        <TextField
+          value={why}
+          id="why"
+          label="why"
+          variant="outlined"
+          className={classes.button}
+          onChange={(e) => {
+            setWhy(e.currentTarget.value);
+          }}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={killer === "" || why === ""}
+          className={classes.button}
+          onClick={() => {
+            SubmitGuess(id, userDetails!.ID, killer, why);
+          }}
         >
-          <Grid item xs={12}>
-            <Typography>
-              {participantHasPicked
-                ? "wait for your crew to pick"
-                : "pick a character"}
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <List className={classes.root}>
-              {gameState.SelectedStory.Characters.map((character) => {
-                const pickMatchingThisCharacter = gameState.CharacterPicks.find(
-                  (pick) => pick.CharacterName == character.Name,
-                );
-                return (
-                  <ListItem
-                    button
-                    disabled={
-                      participantHasPicked ||
-                      pickMatchingThisCharacter !== undefined
-                    }
-                    onClick={() =>
-                      PickCharacter(id, userDetails.ID, character.Name).catch(
-                        (err) =>
-                          setSnackState({
-                            severity: "error",
-                            message: err.toString(),
-                          }),
-                      )
-                    }
-                  >
-                    <ListItemText
-                      primary={character.Name}
-                      secondary={
-                        pickMatchingThisCharacter !== undefined &&
-                        gameState.Users.find(
-                          (user) =>
-                            user.ID === pickMatchingThisCharacter.UserID,
-                        )?.Name
-                      }
-                    />
-                  </ListItem>
-                );
-              })}
-            </List>
-          </Grid>
-          <Grid item xs={12}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                SetGameStory(id, null).catch((err) =>
-                  setSnackState({
-                    severity: "error",
-                    message: err.toString(),
-                  }),
-                )
-              }
-            >
-              choose a different story
-            </Button>
-          </Grid>
-        </Grid>
-      </Container>
-    </React.Fragment>
+          i'm sure. submit.
+        </Button>
+      </Grid>
+    </Grid>
   );
 };

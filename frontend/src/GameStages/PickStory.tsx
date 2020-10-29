@@ -39,6 +39,7 @@ import Alert from "@material-ui/lab/Alert";
 import { DateTimePicker } from "@material-ui/pickers";
 import { formatDistance } from "date-fns";
 import React, { useContext, useEffect, useState, createContext } from "react";
+
 import CopyToClipboard from "react-copy-to-clipboard";
 import {
   Redirect,
@@ -73,6 +74,9 @@ const useStyles = makeStyles((theme) => ({
   button: {
     width: "300px",
     textTransform: "none",
+  },
+  listItem: {
+    width: "300px",
   },
   modal: {
     display: "flex",
@@ -134,51 +138,57 @@ export default () => {
           </div>
         </Fade>
       </Modal>
-      <Container>
-        <Grid
-          container
-          spacing={3}
-          justify="center"
-          alignItems="center"
-          direction="column"
-          className={classes.optionsButtons}
-        >
-          <Grid item xs={12}>
-            <Typography>current players:</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            {gameState.Users.map((user) => (
-              <Typography align="center">{user.Name}</Typography>
-            ))}
-          </Grid>
-          <Grid item xs={12}>
-            <Typography align="center">
-              pick a story with {gameState.UserIDs.length} characters, or find
-              more friends
-            </Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.button}
-                onClick={() =>
-                  setSnackState({
-                    severity: "info",
-                    message: "invite link copied to clipboard",
-                  })
-                }
-              >
-                invite
-              </Button>
-            </CopyToClipboard>
-          </Grid>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
+        <Grid item xs={12}>
+          <Typography>
+            {gameState.UserIDs.length} player
+            {gameState.UserIDs.length > 1 && "s"}:
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          {gameState.Users.map((user) => (
+            <Typography align="center">{user.Name}</Typography>
+          ))}
+        </Grid>
+        {/* <Grid item xs={12}>
+          <Typography align="center">
+            pick a story with {gameState.UserIDs.length} characters, or find
+            more friends
+          </Typography>
+        </Grid> */}
+        <Grid item xs={12}>
+          <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.button}
+              onClick={() =>
+                setSnackState({
+                  severity: "info",
+                  message: "invite link copied to clipboard",
+                })
+              }
+            >
+              invite
+            </Button>
+          </CopyToClipboard>
+        </Grid>
 
-          <Grid item xs={12}>
-            <List>
-              {stories.map((story) => (
+        <Grid item xs={12}>
+          <List component="nav">
+            {stories.map((story) => (
+              <React.Fragment>
+                <Divider />
                 <ListItem
+                  button
+                  className={classes.listItem}
                   disabled={
                     gameState.UserIDs.length !== story.Characters.length
                   }
@@ -201,7 +211,11 @@ export default () => {
                 >
                   <ListItemText
                     primary={story.Metadata.Name}
-                    secondary={`${story.Characters.length} players`}
+                    secondary={`${
+                      story.Characters.length !== gameState.UserIDs.length
+                        ? "need"
+                        : ""
+                    } ${story.Characters.length} players`}
                   />
                   <ListItemSecondaryAction>
                     <IconButton edge="end" onClick={() => setModalStory(story)}>
@@ -209,11 +223,12 @@ export default () => {
                     </IconButton>
                   </ListItemSecondaryAction>
                 </ListItem>
-              ))}
-            </List>
-          </Grid>
+              </React.Fragment>
+            ))}
+            <Divider />
+          </List>
         </Grid>
-      </Container>
+      </Grid>
     </React.Fragment>
   );
 };
