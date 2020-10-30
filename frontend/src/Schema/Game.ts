@@ -21,9 +21,6 @@ export interface GameState {
 
   Answers: Answer[];
 
-  // store all clues for immediate reveal (not sensitive)
-  DiscoveredClues: Clue[];
-
   SelectedStory: StorySummary | null;
 
   FinishedAnswers: boolean;

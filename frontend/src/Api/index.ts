@@ -70,7 +70,6 @@ export const CreateGame = (
     Guesses: [],
     Answers: [],
     StartTime: firebase.firestore.Timestamp.fromDate(selectedDate),
-    DiscoveredClues: [],
     FinishedRounds: [],
     ReadyToStart: [],
     FinishedAnswers: false,
@@ -386,4 +385,20 @@ export const RequestNextAnswer = (gameID: string, number: number) => {
   return gameRef.update({
     AnswerNumbers: firebase.firestore.FieldValue.arrayUnion(number),
   });
+};
+
+export const RevealClue = (gameID: string, clue: Clue) => {
+  db.collection(GAME_COLLECTION)
+    .doc(gameID)
+    .update({
+      Clues: firebase.firestore.FieldValue.arrayUnion(clue),
+    });
+};
+
+export const MarkClueSeen = (playerViewID: string, clue: Clue) => {
+  db.collection(PLAYERVIEW_COLLECTION)
+    .doc(playerViewID)
+    .update({
+      CluesSeen: firebase.firestore.FieldValue.arrayUnion(clue.Name),
+    });
 };

@@ -137,13 +137,7 @@ export default () => {
         </Fade>
       </Modal>
       <Container>
-        <Grid
-          container
-          spacing={3}
-          // justify="center"
-          alignItems="stretch"
-          direction="column"
-        >
+        <Grid container spacing={3} alignItems="stretch" direction="column">
           <Grid item xs={12}>
             <Typography variant="h4" gutterBottom align={"center"}>
               pick a story

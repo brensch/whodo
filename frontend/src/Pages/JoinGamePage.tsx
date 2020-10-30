@@ -60,12 +60,15 @@ const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
   button: {
-    width: "300px",
+    width: "100%",
     textTransform: "none",
+  },
+  fullWidth: {
+    width: "100%",
+  },
+  outerGrid: {
+    height: "70vh",
   },
 }));
 
@@ -87,7 +90,7 @@ const JoinGamePage = () => {
     setHeaderText,
   } = useContext(StateStoreContext);
 
-  useEffect(() => setHeaderText("join game"), []);
+  useEffect(() => setHeaderText("game invite"), []);
 
   useEffect(() => {
     if (userDetails !== null) {
@@ -121,16 +124,18 @@ const JoinGamePage = () => {
         <Grid
           container
           spacing={3}
-          justify="center"
-          alignItems="center"
+          alignItems="stretch"
           direction="column"
-          className={classes.optionsButtons}
+          // className={classes.outerGrid}
         >
           <Grid item xs={12}>
-            <Typography>you've been invited to join</Typography>
-          </Grid>
-          <Grid item xs={12}>
-            <Typography variant="h3">{gameState.Name}</Typography>
+            <Typography
+              variant="h4"
+              className={classes.fullWidth}
+              align={"center"}
+            >
+              {gameState.Name}
+            </Typography>
           </Grid>
           <Grid item xs={12}>
             <Button
@@ -146,11 +151,11 @@ const JoinGamePage = () => {
                 }
               }}
             >
-              alright then.
+              join game
             </Button>
           </Grid>
           <Grid item xs={12}>
-            <Typography>current crew:</Typography>
+            <Typography align={"center"}>current players:</Typography>
           </Grid>
           <Grid item xs={12}>
             {gameState.Users.map((userDetails) => (

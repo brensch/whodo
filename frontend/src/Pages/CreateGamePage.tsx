@@ -121,6 +121,7 @@ const CreateGamePage = () => {
             onChange={(e) => {
               setName(e.currentTarget.value);
             }}
+            inputProps={{ maxLength: 25 }}
           />
         </Grid>
         <Grid item xs={12}>

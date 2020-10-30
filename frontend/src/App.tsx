@@ -38,7 +38,7 @@ import {
 import { UserDetails, UserDetailsState } from "./Schema/User";
 import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/AuthPage";
-import { Header, Snack, baseThemeOptions } from "./Components";
+import { Header, Snack, baseThemeOptions, Authorising } from "./Components";
 
 const theme = createMuiTheme(baseThemeOptions);
 
@@ -89,7 +89,7 @@ const PrivateRoute: React.ComponentType<any> = ({
   let { userDetails, userDetailsInitialising } = useContext(StateStoreContext);
 
   if (authState.initialising) {
-    return <div>authorising</div>;
+    return <Authorising />;
   }
 
   console.log(userDetails);

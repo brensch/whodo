@@ -55,17 +55,19 @@ export default () => {
   const classes = useStyles();
 
   return (
-    <Grid
-      container
-      spacing={3}
-      justify="center"
-      alignItems="center"
-      direction="column"
-      className={classes.centeredObject}
-    >
-      <Grid item xs={12}>
-        <Typography>loading</Typography>
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.centeredObject}
+      >
+        <Grid item xs={12}>
+          <Typography>loading</Typography>
+        </Grid>
       </Grid>
-    </Grid>
+    </Container>
   );
 };

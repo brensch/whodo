@@ -38,64 +38,36 @@ import InfoIcon from "@material-ui/icons/Info";
 import Alert from "@material-ui/lab/Alert";
 import { DateTimePicker } from "@material-ui/pickers";
 import { formatDistance } from "date-fns";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, createContext } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
-import {
-  Route,
-  Switch,
-  useHistory,
-  useLocation,
-  useParams,
-} from "react-router-dom";
-import { useAuth, db, firebase } from "../Firebase";
-import { StateStoreContext } from "../Context";
+import { useFormik, FormikErrors, FormikHelpers } from "formik";
 
 const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  title: {
-    flexGrow: 1,
+  centeredObject: {
+    minHeight: "70vh",
   },
 }));
 
 export default () => {
   const classes = useStyles();
-  let history = useHistory();
-  let { user } = useAuth();
-  let { headerText } = useContext(StateStoreContext);
 
   return (
-    <div className={classes.root}>
-      <AppBar position="static" color="transparent">
-        <Toolbar>
-          <IconButton
-            edge="start"
-            // className={classes.menuButton}
-            color="inherit"
-            aria-label="home-button"
-            onClick={() => history.push("/")}
-          >
-            <HomeIcon />
-          </IconButton>
-          <Typography
-            onClick={() => history.push("/")}
-            variant="h6"
-            className={classes.title}
-          >
-            whodo
-          </Typography>
-          <Typography
-            variant="subtitle1"
-            className={classes.title}
-            align={"right"}
-            noWrap={true}
-          >
-            &nbsp;&nbsp;
-            {headerText}
-          </Typography>
-        </Toolbar>
-      </AppBar>
-    </div>
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.centeredObject}
+      >
+        <Grid item xs={12}>
+          <Typography>authorising</Typography>
+        </Grid>
+      </Grid>
+    </Container>
   );
 };

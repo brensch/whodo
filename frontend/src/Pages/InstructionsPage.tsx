@@ -70,6 +70,8 @@ const useStyles = makeStyles((theme) => ({
 const Instructions = () => {
   let history = useHistory();
   const classes = useStyles();
+  let { setHeaderText } = useContext(StateStoreContext);
+  useEffect(() => setHeaderText("instructions"), []);
 
   return (
     <Container>

@@ -65,14 +65,19 @@ import {
   ToggleInfoDone,
   SetRound,
   TakeNote,
+  RevealClue,
+  MarkClueSeen,
 } from "../Api";
-import { useRadioGroup } from "@material-ui/core";
+import { TableHead, useRadioGroup } from "@material-ui/core";
 import { ParamTypes, GamePageContext } from "../Pages/GamePage";
 import BottomNavigation from "@material-ui/core/BottomNavigation";
 import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import RestoreIcon from "@material-ui/icons/Restore";
 import FavoriteIcon from "@material-ui/icons/Favorite";
 import LocationOnIcon from "@material-ui/icons/LocationOn";
+import AccessTimeIcon from "@material-ui/icons/AccessTime";
+import SearchIcon from "@material-ui/icons/Search";
+import NotesIcon from "@material-ui/icons/Notes";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -99,6 +104,12 @@ const useStyles = makeStyles((theme) => ({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  },
+  modalTitle: {
+    flexGrow: 1,
+  },
+  modalClose: {
+    padding: 0,
   },
   clues: {
     padding: 10,
@@ -131,6 +142,12 @@ const useStyles = makeStyles((theme) => ({
   divider: {
     height: "10px",
   },
+  timelineDivider: {
+    width: "100%",
+  },
+  infoBoxes: {
+    padding: 5,
+  },
 }));
 
 export default () => {
@@ -158,18 +175,6 @@ export default () => {
   // info objects are mapped to string (easier in spreadsheet)
   let roundToViewName = gameState.SelectedStory.Rounds[roundToView].Name;
 
-  let cluesDiscoveredByPlayer: Clue[] = playerView.CharacterStory.CluesToReveal.filter(
-    (clue) => {
-      if (clue.Round === roundToViewName) {
-        return (
-          gameState.Clues.find((gameClue) => gameClue.Name === clue.Name) !==
-          undefined
-        );
-      }
-      return false;
-    },
-  );
-
   let finishedWithThisRound =
     gameState.FinishedRounds.find(
       (finishedRound) =>
@@ -179,29 +184,16 @@ export default () => {
 
   return (
     <React.Fragment>
+      <UnseenClueModal />
       <Container>
         <div className={classes.root}>
           <Grid
             container
-            className={classes.cluesContainer}
-            // alignItems="center"
+            spacing={2}
             // justify="center"
+            alignItems="stretch"
+            direction="column"
           >
-            {/* <CluesModal />
-            <TimelineModal />
-            <NotesModal /> */}
-            {/* {previousRound !== null ? (
-            <Grid item xs={12}>
-              <Button
-                variant="contained"
-                color="primary"
-                className={classes.buttonFullWidth}
-                onClick={() => setPreviousRound(null)}
-              >
-                return to current round info
-              </Button>
-            </Grid>
-          ) : null} */}
             <Grid item xs={12}>
               <Typography variant="h4">
                 {gameState.SelectedStory.Rounds[roundToView].Name}
@@ -212,11 +204,9 @@ export default () => {
                 {gameState.SelectedStory.Rounds[roundToView].Intro}
               </Typography>
             </Grid>
+            <CluesToReveal />
             <Grid item xs={12}>
-              <div className={classes.divider} />
-            </Grid>
-            <Grid item xs={12}>
-              <Paper variant="outlined">
+              <Paper variant="outlined" className={classes.infoBoxes}>
                 <Grid container>
                   <Grid item xs={12}>
                     <Typography variant="h6">tell people:</Typography>
@@ -251,10 +241,7 @@ export default () => {
               </Paper>
             </Grid>
             <Grid item xs={12}>
-              <div className={classes.divider} />
-            </Grid>
-            <Grid item xs={12}>
-              <Paper variant="outlined">
+              <Paper variant="outlined" className={classes.infoBoxes}>
                 <Grid container>
                   <Grid item xs={12}>
                     <Typography variant="h6">keep secret:</Typography>
@@ -290,139 +277,77 @@ export default () => {
                 </Grid>
               </Paper>
             </Grid>
-            <Grid item xs={12}>
-              <div className={classes.divider} />
-            </Grid>
-            {cluesDiscoveredByPlayer.length > 0 ? (
-              <Grid item xs={12}>
-                <Paper variant="outlined">
-                  <Grid container>
-                    <Grid item xs={12}>
-                      <Typography variant="h6">discovered a clue:</Typography>
-                    </Grid>
-                    {cluesDiscoveredByPlayer.map((clue, i) => (
-                      <React.Fragment>
-                        <Grid item xs={12}>
-                          {clue.Description}
-                        </Grid>
-                        <Grid item xs={12} className={classes.padded}>
-                          <Button
-                            variant="contained"
-                            color="primary"
-                            className={classes.buttonFullWidth}
-                            onClick={() => DiscoverClue(id, clue)}
-                          >
-                            reveal {clue.Name} to group
-                          </Button>
-                        </Grid>
-                      </React.Fragment>
-                    ))}
-                  </Grid>
-                </Paper>
-              </Grid>
-            ) : null}
             {previousRound === null && (
-              <React.Fragment>
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    color={!finishedWithThisRound ? "primary" : "secondary"}
-                    className={classes.buttonFullWidth}
-                    onClick={() => {
-                      console.log(finishedWithThisRound);
-                      if (!finishedWithThisRound) {
-                        SetFinishedRound(
-                          id,
-                          gameState.CurrentRound,
-                          userDetails.ID,
-                        );
-                        return;
-                      }
-
-                      SetUnfinishedRound(
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color={!finishedWithThisRound ? "primary" : "secondary"}
+                  className={classes.buttonFullWidth}
+                  onClick={() => {
+                    console.log(finishedWithThisRound);
+                    if (!finishedWithThisRound) {
+                      SetFinishedRound(
                         id,
                         gameState.CurrentRound,
                         userDetails.ID,
                       );
-                    }}
-                  >
-                    <Grid
-                      container
-                      justify="center"
-                      alignItems="center"
-                      style={{ width: "100%" }}
-                    >
-                      {/* <Grid item xs={3}>
-                    {finishedWithThisRound ? (
-                      <CheckBoxIcon />
-                    ) : (
-                      <CheckBoxOutlineBlankIcon />
-                    )}
-                  </Grid> */}
-                      <Grid item xs={9}>
-                        <Typography align="center">
-                          {!finishedWithThisRound
-                            ? "finished this round?"
-                            : "finished. wait for others."}
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <div className={classes.divider} />
-                </Grid>
-              </React.Fragment>
+                      return;
+                    }
+
+                    SetUnfinishedRound(
+                      id,
+                      gameState.CurrentRound,
+                      userDetails.ID,
+                    );
+                  }}
+                >
+                  <Typography align="center">
+                    {!finishedWithThisRound
+                      ? "finished this round?"
+                      : "finished. wait for others."}
+                  </Typography>
+                </Button>
+              </Grid>
             )}
             {previousRound === null && (
-              <React.Fragment>
-                <Grid item xs={12}>
-                  {gameState.FinishedRounds.filter(
-                    (finished) => finished.Round === gameState.CurrentRound,
-                  ).length === gameState.UserIDs.length ? (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      className={classes.buttonFullWidth}
-                      onClick={() => SetRound(id, gameState.CurrentRound + 1)}
-                    >
-                      <Typography align="left"> next round</Typography>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      disabled
-                      className={classes.buttonFullWidth}
-                    >
-                      <Typography align="left">
-                        {" "}
-                        not everyone ready yet
-                      </Typography>
-                    </Button>
-                  )}
-                </Grid>
-                <Grid item xs={12}>
-                  <div className={classes.divider} />
-                </Grid>
-              </React.Fragment>
-            )}
-            {previousRound !== null && (
-              <React.Fragment>
-                <Grid item xs={12}>
+              <Grid item xs={12}>
+                {gameState.FinishedRounds.filter(
+                  (finished) => finished.Round === gameState.CurrentRound,
+                ).length === gameState.UserIDs.length ? (
                   <Button
                     variant="contained"
                     color="primary"
                     className={classes.buttonFullWidth}
-                    onClick={() => setPreviousRound(null)}
+                    onClick={() => SetRound(id, gameState.CurrentRound + 1)}
                   >
-                    <Typography align="left"> go to current round</Typography>
+                    <Typography align="left"> next round</Typography>
                   </Button>
-                </Grid>
-                <Grid item xs={12}>
-                  <div className={classes.divider} />
-                </Grid>
-              </React.Fragment>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    disabled
+                    className={classes.buttonFullWidth}
+                  >
+                    <Typography align="left">
+                      {" "}
+                      not everyone ready yet
+                    </Typography>
+                  </Button>
+                )}
+              </Grid>
+            )}
+            {previousRound !== null && (
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.buttonFullWidth}
+                  onClick={() => setPreviousRound(null)}
+                >
+                  <Typography align="left"> go to current round</Typography>
+                </Button>
+              </Grid>
             )}
             {gameState.CurrentRound > 0 && (
               <Grid item xs={12}>
@@ -462,6 +387,116 @@ export default () => {
   );
 };
 
+const UnseenClueModal = () => {
+  const classes = useStyles();
+  let { gameState, playerView } = useContext(GamePageContext);
+  let { id } = useParams<ParamTypes>();
+
+  let unseenClues = gameState.Clues.filter(
+    (clue) => !playerView.CluesSeen.includes(clue.Name),
+  );
+
+  console.log(gameState.Clues);
+  console.log(playerView.CluesSeen);
+
+  return (
+    <Modal
+      open={unseenClues.length > 0}
+      className={classes.modal}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{
+        timeout: 500,
+      }}
+    >
+      <Fade in={unseenClues.length > 0}>
+        <div className={classes.modalPaper}>
+          <Grid
+            container
+            className={classes.root}
+            spacing={2}
+            alignItems="flex-start"
+          >
+            <Grid item xs={12}>
+              <Typography variant="h4">new clue!</Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <List component="nav" aria-label="clues list">
+                {unseenClues.map((clue) => (
+                  <ListItem
+                    button
+                    onClick={() => window.open(clue.URL, "_blank")}
+                  >
+                    <ListItemText primary={clue.Name} secondary="tap to view" />
+                    <ListItemSecondaryAction
+                      onClick={() => MarkClueSeen(playerView.ID, clue)}
+                    >
+                      done
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            </Grid>
+          </Grid>
+        </div>
+      </Fade>
+    </Modal>
+  );
+};
+
+const CluesToReveal = () => {
+  const classes = useStyles();
+  let { gameState, playerView } = useContext(GamePageContext);
+  let { id } = useParams<ParamTypes>();
+
+  const [cluesModal, setCluesModal] = useState<boolean>(false);
+
+  if (gameState.SelectedStory === null || playerView.CharacterStory === null) {
+    return null;
+  }
+
+  let roundName = gameState.SelectedStory.Rounds[gameState.CurrentRound].Name;
+
+  let cluesDiscoveredThisRound = playerView.CharacterStory.CluesToReveal.filter(
+    (clue) => clue.Round === roundName,
+  ).filter((clue) => !playerView.CluesSeen.includes(clue.Name));
+
+  console.log(playerView.CluesSeen);
+
+  if (cluesDiscoveredThisRound.length === 0) {
+    return null;
+  }
+
+  return (
+    <Grid item xs={12}>
+      <Paper variant="outlined" className={classes.infoBoxes}>
+        <Grid container spacing={2} alignItems="stretch" direction="column">
+          <Grid item xs={12}>
+            <Typography variant="h6">you discovered a clue!</Typography>
+          </Grid>
+          {cluesDiscoveredThisRound.map((clue) => (
+            <React.Fragment>
+              <Grid item xs={12}>
+                {clue.Description}
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  variant="contained"
+                  color={"primary"}
+                  className={classes.buttonFullWidth}
+                  onClick={() => RevealClue(id, clue)}
+                >
+                  reveal {clue.Name} to group
+                </Button>
+              </Grid>
+            </React.Fragment>
+          ))}
+        </Grid>
+      </Paper>
+    </Grid>
+  );
+};
+
 const CluesModal = () => {
   const classes = useStyles();
   let { gameState, playerView } = useContext(GamePageContext);
@@ -482,26 +517,29 @@ const CluesModal = () => {
       >
         <Fade in={cluesModal}>
           <div className={classes.modalPaper}>
+            <AppBar position="static" color="inherit">
+              <Toolbar>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  clues
+                </Typography>
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setCluesModal(false)}
+                  className={classes.modalClose}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
             <Grid
               container
               className={classes.root}
               spacing={2}
               alignItems="flex-start"
             >
-              <Grid item xs={8}>
-                <Typography variant="h4">clues</Typography>
-              </Grid>
-              <Grid container item xs={4} justify="flex-end">
-                <IconButton
-                  aria-label="close"
-                  onClick={() => setCluesModal(false)}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </Grid>
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
-                  {gameState.DiscoveredClues.map((clue) => (
+                  {gameState.Clues.map((clue) => (
                     <ListItem
                       button
                       onClick={() => window.open(clue.URL, "_blank")}
@@ -509,7 +547,7 @@ const CluesModal = () => {
                       <ListItemText primary={clue.Name} />
                     </ListItem>
                   ))}
-                  {gameState.DiscoveredClues.length === 0 ? (
+                  {gameState.Clues.length === 0 ? (
                     <ListItem button>
                       <ListItemText primary="no clues discovered yet" />
                     </ListItem>
@@ -523,7 +561,7 @@ const CluesModal = () => {
       <BottomNavigationAction
         label="clues"
         showLabel
-        icon={<RestoreIcon />}
+        icon={<SearchIcon />}
         onClick={() => setCluesModal(true)}
       />
     </React.Fragment>
@@ -550,24 +588,28 @@ const TimelineModal = () => {
       >
         <Fade in={timelineModal}>
           <div className={classes.modalPaper}>
-            <Grid
-              container
-              className={classes.root}
-              spacing={2}
-              alignItems="flex-start"
-            >
-              <Grid item xs={8}>
-                <Typography variant="h4">timeline</Typography>
-              </Grid>
-              <Grid container item xs={4} justify="flex-end">
+            <AppBar position="static" color="inherit">
+              <Toolbar>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  timeline
+                </Typography>
                 <IconButton
                   aria-label="close"
                   onClick={() => setTimelineModal(false)}
+                  className={classes.modalClose}
                 >
                   <CloseIcon />
                 </IconButton>
-              </Grid>
+              </Toolbar>
+            </AppBar>
+            <Grid
+              container
+              direction="row"
+              justify="space-between"
+              alignItems="flex-start"
+            >
               <Grid item xs={12}>
+                <Divider className={classes.timelineDivider} />
                 <TableContainer component={Paper}>
                   <Table
                     className={classes.table}
@@ -596,7 +638,7 @@ const TimelineModal = () => {
       <BottomNavigationAction
         label="timeline"
         showLabel
-        icon={<RestoreIcon />}
+        icon={<AccessTimeIcon />}
         onClick={() => setTimelineModal(true)}
       />
     </React.Fragment>
@@ -626,24 +668,26 @@ const NotesModal = () => {
       >
         <Fade in={notesModal}>
           <div className={classes.modalPaper}>
+            <AppBar position="static" color="inherit">
+              <Toolbar>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  notes
+                </Typography>
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setNotesModal(false)}
+                  className={classes.modalClose}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
             <Grid
               container
               className={classes.root}
               spacing={2}
               alignItems="flex-start"
             >
-              <Grid item xs={8}>
-                <Typography variant="h4">notes</Typography>
-              </Grid>
-              <Grid container item xs={4} justify="flex-end">
-                <IconButton
-                  aria-label="close"
-                  onClick={() => setNotesModal(false)}
-                >
-                  <CloseIcon />
-                </IconButton>
-              </Grid>
-
               <Grid item xs={12}>
                 <TextField
                   value={newNote}
@@ -741,7 +785,7 @@ const NotesModal = () => {
       <BottomNavigationAction
         label="notes"
         showLabel
-        icon={<RestoreIcon />}
+        icon={<NotesIcon />}
         onClick={() => setNotesModal(true)}
       />
     </React.Fragment>
@@ -839,17 +883,17 @@ const NotesModal = () => {
 //     }
 //   });
 
-//   const unseenCluesArray = [];
+//   const unseenClues = [];
 //   game.discovered_clues.forEach((i) => {
 //     if (!participant.seen_clues.includes(i)) {
-//       unseenCluesArray.push(i);
+//       unseenClues.push(i);
 //     }
 //   });
 
 //   return (
 //     <React.Fragment>
 //       <Modal
-//         open={unseenCluesArray.length > 0}
+//         open={unseenClues.length > 0}
 //         className={classes.modal}
 //         closeAfterTransition
 //         BackdropComponent={Backdrop}
@@ -857,7 +901,7 @@ const NotesModal = () => {
 //           timeout: 500,
 //         }}
 //       >
-//         <Fade in={unseenCluesArray.length > 0}>
+//         <Fade in={unseenClues.length > 0}>
 //           <div className={classes.modalPaper}>
 //             <Grid
 //               container
@@ -870,7 +914,7 @@ const NotesModal = () => {
 //               </Grid>
 //               <Grid item xs={12}>
 //                 <List component="nav" aria-label="clues list">
-//                   {unseenCluesArray.map((clueNumber) => (
+//                   {unseenClues.map((clueNumber) => (
 //                     <ListItem
 //                       button
 //                       onClick={() =>
