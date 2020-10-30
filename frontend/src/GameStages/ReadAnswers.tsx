@@ -122,10 +122,6 @@ export default () => {
     (answer) => answer.Character === playerView.CharacterStory?.Character.Name,
   );
 
-  console.log(userAnswer);
-  console.log(gameState.Answers.length);
-  console.log(userAnswer !== undefined && userAnswer.Number);
-
   if (
     userAnswer === undefined ||
     gameState.Answers.length > userAnswer.Number + 1

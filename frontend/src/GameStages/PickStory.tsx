@@ -105,7 +105,6 @@ export default () => {
         const allStories = snapshot.docs.map((doc) => {
           return (doc.data() as unknown) as StorySummary;
         });
-        console.log(allStories);
         setStories(allStories);
       });
     return () => {

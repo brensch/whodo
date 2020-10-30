@@ -132,7 +132,6 @@ const CreateGamePage = () => {
               inputVariant="outlined"
               className={classes.button}
               value={selectedDate}
-              //   onChange={console.log}
               onChange={(event) => handleDateChange(event as Date)}
             />
           </ThemeProvider>

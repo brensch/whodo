@@ -217,9 +217,6 @@ const GamePage = () => {
     }
   }, [gameState, playerView, populateInfoRequest]);
 
-  console.log(gameState);
-  console.log(playerView);
-
   if (gameState === undefined) {
     return <div>invalid game id, check url or go home and start again.</div>;
   }

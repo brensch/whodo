@@ -375,16 +375,19 @@ const GoogleSignInButton = () => {
   const classes = useStyles();
   const provider = new firebase.auth.GoogleAuthProvider();
   let { doRedirect } = useContext(AuthPageContext);
-
-  // let startingLocation = useLocation<LocationState>();
-  // console.log(startingLocation.state);
+  const { setSnackState } = useContext(StateStoreContext);
 
   // take the location this page came from, and redirect to there
   const DoSignIn = () => {
     auth
       .signInWithPopup(provider)
       .then(() => doRedirect())
-      .catch((err) => console.log(err));
+      .catch((err) =>
+        setSnackState({
+          severity: "error",
+          message: err.toString(),
+        }),
+      );
   };
 
   return (
@@ -408,15 +411,9 @@ export const ChooseName = () => {
 
   const SelectName = () => {
     if (authState.user === null || authState.user.email === null) {
-      console.log("choose name failed", authState.user);
       return;
     }
-    // const newUserDetails: UserDetails = {
-    //   ID: authState.user.uid,
-    //   Email: authState.user.email,
-    //   Name: name,
-    //   Games: [],
-    // };
+
     CreateUserDetails(authState.user.uid, authState.user.email, name);
   };
 

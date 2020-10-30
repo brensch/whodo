@@ -92,15 +92,12 @@ const PrivateRoute: React.ComponentType<any> = ({
     return <Authorising />;
   }
 
-  console.log(userDetails);
-
   if (
     authState.user !== null &&
     !authState.initialising &&
     userDetails === null &&
     !userDetailsInitialising
   ) {
-    console.log("displayed choosename");
     return <ChooseName />;
   }
 

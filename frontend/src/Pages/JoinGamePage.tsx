@@ -144,7 +144,6 @@ const JoinGamePage = () => {
               className={classes.button}
               onClick={() => {
                 if (userDetails !== null) {
-                  // console.log(typeOf(gameState));
                   return AddUserToGame(id, userDetails).then(() =>
                     history.push(`/game/${id}`),
                   );

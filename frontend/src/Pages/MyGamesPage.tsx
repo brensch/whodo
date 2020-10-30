@@ -164,8 +164,6 @@ const GameItem = ({ id }: GameItemProps) => {
     return null;
   }
 
-  console.log(game);
-
   return (
     <ListItem button onClick={() => history.push("/game/" + id)}>
       <ListItemText

@@ -67,7 +67,6 @@ export const StateProvider: FunctionComponent<{}> = ({ children }) => {
     }
 
     if (authState.user === null && !authState.initialising) {
-      console.log("should set userdetails init false");
       setUserDetailsState({
         userDetailsInitialising: false,
         userDetails: null,
