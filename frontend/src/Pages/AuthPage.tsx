@@ -117,7 +117,7 @@ const SignIn = () => {
           className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography>sign in please</Typography>
+            <Typography>hey.</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
@@ -184,7 +184,6 @@ const SignUp = () => {
   let { setSnackState } = useContext(StateStoreContext);
   let { setShowSignUp, doRedirect } = useContext(AuthPageContext);
 
-  // const [err, setErr] = useState(null);
   const formik = useFormik({
     initialValues: {
       email: "",
@@ -237,7 +236,7 @@ const SignUp = () => {
           className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography>sign in please</Typography>
+            <Typography>whodo is fun i promise</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
