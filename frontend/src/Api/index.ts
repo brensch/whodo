@@ -20,7 +20,7 @@ import {
 } from "../Schema/User";
 import { db } from "../Firebase";
 import * as firebase from "firebase/app";
-import { StoryMetadata, StorySummary, InfoState, Clue } from "../Schema/Story";
+import { StorySummary, InfoState, Clue } from "../Schema/Story";
 import { v4 as uuidv4 } from "uuid";
 
 export const ConnectGameState = (

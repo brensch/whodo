@@ -1,8 +1,4 @@
-import {
-  ThemeProvider,
-  createMuiTheme,
-  ThemeOptions,
-} from "@material-ui/core/styles";
+import { ThemeOptions } from "@material-ui/core/styles";
 import { Shadows } from "@material-ui/core/styles/shadows";
 
 export const baseThemeOptions: ThemeOptions = {

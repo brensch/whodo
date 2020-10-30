@@ -1,44 +1,30 @@
-import React, { useContext, useEffect, useState } from "react";
-
 import DateFnsUtils from "@date-io/date-fns";
-import { enAU } from "date-fns/locale";
 import CssBaseline from "@material-ui/core/CssBaseline";
+import { createMuiTheme, ThemeProvider } from "@material-ui/core/styles";
 import { MuiPickersUtilsProvider } from "@material-ui/pickers";
-
+import { enAU } from "date-fns/locale";
+import React, { useContext } from "react";
 import {
   BrowserRouter as Router,
-  Route,
-  Link,
   Redirect,
-  RouteComponentProps,
-  withRouter,
-  useLocation,
-  useHistory,
+  Route,
   Switch,
 } from "react-router-dom";
-import { useAuth, db, firebase } from "./Firebase";
-
-import {
-  ThemeProvider,
-  createMuiTheme,
-  ThemeOptions,
-} from "@material-ui/core/styles";
-
+import { Authorising, baseThemeOptions, Header, Snack } from "./Components";
+import { StateProvider, StateStoreContext } from "./Context";
+import { useAuth } from "./Firebase";
 import {
   AuthPage,
-  StartPage,
-  OptionsPage,
   CreateGamePage,
-  JoinGamePage,
   GamePage,
-  SplashPage,
-  MyGamesPage,
   InstructionsPage,
+  JoinGamePage,
+  MyGamesPage,
+  OptionsPage,
+  SplashPage,
+  StartPage,
 } from "./Pages";
-import { UserDetails, UserDetailsState } from "./Schema/User";
-import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/AuthPage";
-import { Header, Snack, baseThemeOptions, Authorising } from "./Components";
 
 const theme = createMuiTheme(baseThemeOptions);
 

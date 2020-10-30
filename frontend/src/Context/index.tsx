@@ -1,12 +1,12 @@
 import React, {
   createContext,
   FunctionComponent,
-  useState,
   useEffect,
+  useState,
 } from "react";
-import { UserDetails, UserDetailsState } from "../Schema/User";
 import { SnackState } from "../Components";
-import { useAuth, db, firebase, auth } from "../Firebase";
+import { db, useAuth } from "../Firebase";
+import { UserDetails, UserDetailsState } from "../Schema/User";
 const USER_DETAILS_COLLECTION = "user_details";
 
 export interface StateStore {

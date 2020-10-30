@@ -1,6 +1,4 @@
 export const STORY_COLLECTION = "stories";
-// export const STORY_METADATA_COLLECTION = "storymetadata";
-// export const SELECTEDSTORY_COLLECTION = "selectedstories";
 export const STORY_SUMMARY_COLLECTION = "storysummaries";
 
 export interface Story {

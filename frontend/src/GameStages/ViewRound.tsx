@@ -1,5 +1,7 @@
 import AppBar from "@material-ui/core/AppBar";
 import Backdrop from "@material-ui/core/Backdrop";
+import BottomNavigation from "@material-ui/core/BottomNavigation";
+import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import Divider from "@material-ui/core/Divider";
@@ -16,12 +18,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Modal from "@material-ui/core/Modal";
 import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
-import Snackbar from "@material-ui/core/Snackbar";
-import {
-  createMuiTheme,
-  makeStyles,
-  ThemeProvider,
-} from "@material-ui/core/styles";
+import { makeStyles } from "@material-ui/core/styles";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -30,54 +27,25 @@ import TableRow from "@material-ui/core/TableRow";
 import TextField from "@material-ui/core/TextField";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
+import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
 import CloseIcon from "@material-ui/icons/Close";
-import HomeIcon from "@material-ui/icons/Home";
-import InfoIcon from "@material-ui/icons/Info";
-import Alert from "@material-ui/lab/Alert";
-import { DateTimePicker } from "@material-ui/pickers";
-import { formatDistance } from "date-fns";
-import React, { useContext, useEffect, useState, createContext } from "react";
-import CopyToClipboard from "react-copy-to-clipboard";
-import {
-  Redirect,
-  Route,
-  Switch,
-  useHistory,
-  useLocation,
-  useParams,
-} from "react-router-dom";
-import { useAuth, db, firebase } from "../Firebase";
-// import * as api from "../Firebase/Api";
-import { GameState, PlayerView } from "../Schema/Game";
-import { StateStoreContext } from "../Context";
-import { UserDetails } from "../Schema/User";
-import { Clue, StoryMetadata, STORY_SUMMARY_COLLECTION } from "../Schema/Story";
-import {
-  ConnectGameState,
-  ConnectPlayerView,
-  DiscoverClue,
-  PickCharacter,
-  SetFinishedRound,
-  SetUnfinishedRound,
-  SetGameStory,
-  ToggleInfoDone,
-  SetRound,
-  TakeNote,
-  RevealClue,
-  MarkClueSeen,
-} from "../Api";
-import { TableHead, useRadioGroup } from "@material-ui/core";
-import { ParamTypes, GamePageContext } from "../Pages/GamePage";
-import BottomNavigation from "@material-ui/core/BottomNavigation";
-import BottomNavigationAction from "@material-ui/core/BottomNavigationAction";
-import RestoreIcon from "@material-ui/icons/Restore";
-import FavoriteIcon from "@material-ui/icons/Favorite";
-import LocationOnIcon from "@material-ui/icons/LocationOn";
-import AccessTimeIcon from "@material-ui/icons/AccessTime";
-import SearchIcon from "@material-ui/icons/Search";
 import NotesIcon from "@material-ui/icons/Notes";
+import SearchIcon from "@material-ui/icons/Search";
+import React, { useContext, useState } from "react";
+import { useParams } from "react-router-dom";
+import {
+  MarkClueSeen,
+  RevealClue,
+  SetFinishedRound,
+  SetRound,
+  SetUnfinishedRound,
+  TakeNote,
+  ToggleInfoDone,
+} from "../Api";
+import { StateStoreContext } from "../Context";
+import { GamePageContext, ParamTypes } from "../Pages/GamePage";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -87,18 +55,6 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     position: "fixed",
     bottom: 0,
-    // alignContent: "center",
-    // backgroundColor: "transparent",
-  },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
-  button: {
-    width: "300px",
-    textTransform: "none",
-  },
-  padded: {
-    padding: "10px",
   },
   modal: {
     display: "flex",
@@ -110,16 +66,6 @@ const useStyles = makeStyles((theme) => ({
   },
   modalClose: {
     padding: 0,
-  },
-  clues: {
-    padding: 10,
-    maxWidth: 1000,
-    alignContent: "center",
-  },
-  cluesContainer: {
-    // padding: 10,
-    maxWidth: "100%",
-    padding: 2,
   },
   buttonFullWidth: {
     width: "100%",
@@ -133,15 +79,6 @@ const useStyles = makeStyles((theme) => ({
     maxWidth: "90%",
     overflow: "auto",
   },
-  table: {},
-  test: {
-    width: "100%",
-    height: "100px",
-    backgroundColor: "red",
-  },
-  divider: {
-    height: "10px",
-  },
   timelineDivider: {
     width: "100%",
   },
@@ -154,7 +91,7 @@ export default () => {
   const classes = useStyles();
   let { id } = useParams<ParamTypes>();
   let { gameState, playerView } = useContext(GamePageContext);
-  const { userDetails, userDetailsInitialising, setSnackState } = useContext(
+  const { userDetails, userDetailsInitialising } = useContext(
     StateStoreContext,
   );
   const [previousRound, setPreviousRound] = useState<number | null>(null);
@@ -179,7 +116,7 @@ export default () => {
     gameState.FinishedRounds.find(
       (finishedRound) =>
         finishedRound.UserID === userDetails.ID &&
-        finishedRound.Round == gameState.CurrentRound,
+        finishedRound.Round === gameState.CurrentRound,
     ) !== undefined;
 
   return (
@@ -212,7 +149,7 @@ export default () => {
                     <Typography variant="h6">tell people:</Typography>
                   </Grid>
                   {playerView.CharacterStory.InfoStates.filter(
-                    (info) => info.Public && info.Round == roundToViewName,
+                    (info) => info.Public && info.Round === roundToViewName,
                   ).map((info) => (
                     <React.Fragment>
                       <Grid
@@ -247,7 +184,7 @@ export default () => {
                     <Typography variant="h6">keep secret:</Typography>
                   </Grid>
                   {playerView.CharacterStory.InfoStates.filter(
-                    (info) => !info.Public && info.Round == roundToViewName,
+                    (info) => !info.Public && info.Round === roundToViewName,
                   ).map((info, i) => {
                     return (
                       <React.Fragment>
@@ -389,8 +326,6 @@ export default () => {
 const UnseenClueModal = () => {
   const classes = useStyles();
   let { gameState, playerView } = useContext(GamePageContext);
-  let { id } = useParams<ParamTypes>();
-
   let unseenClues = gameState.Clues.filter(
     (clue) => !playerView.CluesSeen.includes(clue.Name),
   );
@@ -445,8 +380,6 @@ const CluesToReveal = () => {
   let { gameState, playerView } = useContext(GamePageContext);
   let { id } = useParams<ParamTypes>();
 
-  const [cluesModal, setCluesModal] = useState<boolean>(false);
-
   if (gameState.SelectedStory === null || playerView.CharacterStory === null) {
     return null;
   }
@@ -493,7 +426,7 @@ const CluesToReveal = () => {
 
 const CluesModal = () => {
   const classes = useStyles();
-  let { gameState, playerView } = useContext(GamePageContext);
+  let { gameState } = useContext(GamePageContext);
 
   const [cluesModal, setCluesModal] = useState<boolean>(false);
 
@@ -564,7 +497,7 @@ const CluesModal = () => {
 
 const TimelineModal = () => {
   const classes = useStyles();
-  let { gameState, playerView } = useContext(GamePageContext);
+  let { playerView } = useContext(GamePageContext);
 
   const [timelineModal, setTimelineModal] = useState<boolean>(false);
 
@@ -605,11 +538,7 @@ const TimelineModal = () => {
               <Grid item xs={12}>
                 <Divider className={classes.timelineDivider} />
                 <TableContainer component={Paper}>
-                  <Table
-                    className={classes.table}
-                    size="small"
-                    aria-label="timeline-table"
-                  >
+                  <Table size="small" aria-label="timeline-table">
                     <TableBody>
                       {playerView.CharacterStory?.TimelineEvents.sort((a, b) =>
                         a.Time < b.Time ? 1 : -1,
