@@ -68,15 +68,13 @@ const useStyles = makeStyles((theme) => ({
   root: {
     flexGrow: 1,
   },
-  optionsButtons: {
-    minHeight: "70vh",
-  },
+
   button: {
-    width: "300px",
+    width: "100%",
     textTransform: "none",
   },
   listItem: {
-    width: "300px",
+    width: "100%",
   },
   modal: {
     display: "flex",
@@ -86,9 +84,9 @@ const useStyles = makeStyles((theme) => ({
   modalPaper: {
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3),
+    padding: theme.spacing(1, 1, 3),
     maxHeight: "80vh",
-    overflow: "scroll",
+    overflow: "auto",
   },
 }));
 
@@ -142,15 +140,19 @@ export default () => {
         <Grid
           container
           spacing={3}
-          justify="center"
-          alignItems="center"
+          // justify="center"
+          alignItems="stretch"
           direction="column"
-          className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography>
-              {gameState.UserIDs.length} player
-              {gameState.UserIDs.length > 1 && "s"}:
+            <Typography variant="h4" gutterBottom align={"center"}>
+              pick a story
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom align={"center"}>
+              with {gameState.UserIDs.length} player
+              {gameState.UserIDs.length > 1 && "s"}
             </Typography>
           </Grid>
           <Grid item xs={12}>
@@ -158,12 +160,7 @@ export default () => {
               <Typography align="center">{user.Name}</Typography>
             ))}
           </Grid>
-          {/* <Grid item xs={12}>
-          <Typography align="center">
-            pick a story with {gameState.UserIDs.length} characters, or find
-            more friends
-          </Typography>
-        </Grid> */}
+
           <Grid item xs={12}>
             <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
               <Button
@@ -181,7 +178,6 @@ export default () => {
               </Button>
             </CopyToClipboard>
           </Grid>
-
           <Grid item xs={12}>
             <List component="nav">
               {stories.map((story) => (

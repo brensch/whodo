@@ -74,6 +74,7 @@ import {
   WaitForGuesses,
   WaitingForGoTime,
 } from "../GameStages";
+import { Loading } from "../Components";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -136,10 +137,15 @@ const GamePage = () => {
   ] = useState<PopulateInfoRequest | null>(null);
   const [playerView, setPlayerView] = useState<PlayerView | null>(null);
 
-  let { userDetails, userDetailsInitialising, setSnackState } = useContext(
-    StateStoreContext,
-  );
+  let {
+    userDetails,
+    userDetailsInitialising,
+    setSnackState,
+    setHeaderText,
+  } = useContext(StateStoreContext);
   const [now, setNow] = useState(new Date());
+
+  useEffect(() => setHeaderText(""), []);
 
   // load the gameState
   useEffect(() => {
@@ -167,6 +173,8 @@ const GamePage = () => {
     ) {
       return;
     }
+
+    setHeaderText(gameState.Name);
 
     if (gameState.SelectedStory === null) {
       setGameStage("PickStory");
@@ -217,7 +225,7 @@ const GamePage = () => {
   }
 
   if (gameState === null || playerView === null) {
-    return <div>loading</div>;
+    return <Loading />;
   }
 
   if (userDetails !== null && !gameState.UserIDs.includes(userDetails.ID)) {

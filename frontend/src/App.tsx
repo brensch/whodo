@@ -24,21 +24,21 @@ import {
   ThemeOptions,
 } from "@material-ui/core/styles";
 
-import AuthPage, { SignOut } from "./Pages/AuthPage";
-import StartPage from "./Pages/StartPage";
-import OptionsPage from "./Pages/OptionsPage";
-import CreatePage from "./Pages/CreateGamePage";
-import JoinPage from "./Pages/JoinGamePage";
-import GamePage from "./Pages/GamePage";
-import SplashPage from "./Pages/SplashPage";
-import MyGamesPage from "./Pages/MyGamesPage";
-import InstructionsPage from "./Pages/InstructionsPage";
+import {
+  AuthPage,
+  StartPage,
+  OptionsPage,
+  CreateGamePage,
+  JoinGamePage,
+  GamePage,
+  SplashPage,
+  MyGamesPage,
+  InstructionsPage,
+} from "./Pages";
 import { UserDetails, UserDetailsState } from "./Schema/User";
 import { StateProvider, StateStoreContext } from "./Context";
 import { ChooseName } from "./Pages/AuthPage";
-import { Header } from "./Components/Header";
-import { Snack } from "./Components/Snack";
-import { baseThemeOptions } from "./Components/Theme";
+import { Header, Snack, baseThemeOptions } from "./Components";
 
 const theme = createMuiTheme(baseThemeOptions);
 
@@ -65,13 +65,13 @@ const Routes = () => {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
-      <Route exact path="/" component={SplashPage} />
+      <Route path="/splash" component={SplashPage} />
 
       {/* game related routes */}
-      <PrivateRoute path="/join/:id" component={JoinPage} />
+      <PrivateRoute exact path="/" component={StartPage} />
+      <PrivateRoute path="/join/:id" component={JoinGamePage} />
       <PrivateRoute path="/game/:id" component={GamePage} />
-      <PrivateRoute path="/start" component={StartPage} />
-      <PrivateRoute path="/create" component={CreatePage} />
+      <PrivateRoute path="/create" component={CreateGamePage} />
 
       {/* additional pages */}
       <PrivateRoute path="/mygames" component={MyGamesPage} />

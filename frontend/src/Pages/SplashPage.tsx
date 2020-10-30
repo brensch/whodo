@@ -54,6 +54,7 @@ import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { Story } from "../Schema/Story";
+import Loading from "../Components/Loading";
 
 const SplashPage = () => {
   let history = useHistory();
@@ -64,7 +65,7 @@ const SplashPage = () => {
   }
 
   if (userDetailsInitialising) {
-    return <div>loading splash</div>;
+    return <Loading />;
   }
 
   return (

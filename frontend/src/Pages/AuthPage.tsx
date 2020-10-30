@@ -55,6 +55,7 @@ import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { CreateUserDetails } from "../Api";
+import { Loading } from "../Components";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -416,7 +417,7 @@ export const ChooseName = () => {
   };
 
   if (authState.initialising) {
-    return <div>loading</div>;
+    return <Loading />;
   }
 
   return (

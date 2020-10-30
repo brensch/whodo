@@ -118,7 +118,7 @@ const MyGamesPage = () => {
   const [userGames, setUserGames] = useState<UserGames>({
     Games: [],
   });
-  const { userDetails, userDetailsInitialising } = useContext(
+  const { userDetails, userDetailsInitialising, setHeaderText } = useContext(
     StateStoreContext,
   );
 
@@ -128,9 +128,10 @@ const MyGamesPage = () => {
     }
   }, [userDetails, userDetailsInitialising]);
 
+  useEffect(() => setHeaderText("my games"), []);
+
   return (
     <React.Fragment>
-      <Typography align="center">your games</Typography>
       <List
         component="nav"
         aria-labelledby="games-list"

@@ -5,7 +5,7 @@ import React, {
   useEffect,
 } from "react";
 import { UserDetails, UserDetailsState } from "../Schema/User";
-import { SnackState } from "../Components/Snack";
+import { SnackState } from "../Components";
 import { useAuth, db, firebase, auth } from "../Firebase";
 const USER_DETAILS_COLLECTION = "user_details";
 
@@ -14,6 +14,8 @@ export interface StateStore {
   userDetails: UserDetails | null;
   snackState: SnackState;
   setSnackState: React.Dispatch<React.SetStateAction<SnackState>>;
+  headerText: string;
+  setHeaderText: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const StateStoreContext = createContext<StateStore>(undefined!);
@@ -31,6 +33,8 @@ export const StateProvider: FunctionComponent<{}> = ({ children }) => {
     severity: undefined,
     message: "",
   });
+
+  const [headerText, setHeaderText] = useState<string>("");
 
   // get user details from the
   useEffect(() => {
@@ -78,6 +82,8 @@ export const StateProvider: FunctionComponent<{}> = ({ children }) => {
         userDetails: userDetailsState.userDetails,
         snackState,
         setSnackState,
+        headerText,
+        setHeaderText,
       }}
     >
       {children}

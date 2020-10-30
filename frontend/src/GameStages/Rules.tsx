@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
     minHeight: "70vh",
   },
   button: {
-    width: "300px",
+    width: "100%",
     textTransform: "none",
   },
   modal: {
@@ -83,13 +83,6 @@ const useStyles = makeStyles((theme) => ({
   buttonFullWidth: {
     width: "100%",
     textTransform: "none",
-  },
-  modalPaper: {
-    backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3),
-    maxHeight: "80vh",
-    overflow: "scroll",
   },
 }));
 
@@ -114,13 +107,12 @@ export default () => {
       <Grid
         container
         spacing={3}
-        justify="center"
-        alignItems="center"
+        alignItems="stretch"
         direction="column"
         className={classes.optionsButtons}
       >
         <Grid item xs={12}>
-          <Typography variant="h5" align="center">
+          <Typography variant="h4" align="center">
             rules
           </Typography>
         </Grid>
@@ -187,7 +179,6 @@ export default () => {
                 }
               />
             </ListItem>
-            <Divider component="li" />
           </List>
         </Grid>
         <Grid item xs={12}>

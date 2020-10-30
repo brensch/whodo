@@ -53,7 +53,7 @@ import { GameState, PlayerView } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { CreateGame } from "../Api";
-import { baseThemeOptions } from "../Components/Theme";
+import { baseThemeOptions } from "../Components";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -89,7 +89,9 @@ const CreateGamePage = () => {
   const [selectedDate, handleDateChange] = useState<Date>(new Date());
 
   let history = useHistory();
-  const { userDetails } = useContext(StateStoreContext);
+  const { userDetails, setHeaderText } = useContext(StateStoreContext);
+
+  useEffect(() => setHeaderText("new game"), []);
 
   const createGame = () => {
     if (!!userDetails) {

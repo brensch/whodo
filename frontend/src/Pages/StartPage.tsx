@@ -66,7 +66,9 @@ const useStyles = makeStyles((theme) => ({
 const StartPage = () => {
   let history = useHistory();
   const classes = useStyles();
-  let { setSnackState } = useContext(StateStoreContext);
+  let { setSnackState, setHeaderText } = useContext(StateStoreContext);
+
+  useEffect(() => setHeaderText(""), []);
 
   return (
     <Container>

@@ -54,6 +54,7 @@ import { GameState } from "../Schema/Game";
 import { StateStoreContext } from "../Context";
 import { UserDetails } from "../Schema/User";
 import { ConnectGameState, AddUserToGame } from "../Api";
+import Loading from "../Components/Loading";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -79,9 +80,14 @@ const JoinGamePage = () => {
   let { id } = useParams<ParamTypes>();
   const [gameState, setGameState] = useState<GameState | null>(null);
   // const authState = useAuth();
-  let { userDetails, userDetailsInitialising, setSnackState } = useContext(
-    StateStoreContext,
-  );
+  let {
+    userDetails,
+    userDetailsInitialising,
+    setSnackState,
+    setHeaderText,
+  } = useContext(StateStoreContext);
+
+  useEffect(() => setHeaderText("join game"), []);
 
   useEffect(() => {
     if (userDetails !== null) {
@@ -97,7 +103,7 @@ const JoinGamePage = () => {
   }, [userDetails]);
 
   if (gameState === null) {
-    return <div>loading</div>;
+    return <Loading />;
   }
 
   if (gameState === undefined) {
