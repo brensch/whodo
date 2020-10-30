@@ -36,10 +36,10 @@ service cloud.firestore {
       allow create: if request.auth != null;
 
 			//	check if user is in the participant id list
-      allow update: if request.auth.uid in resource.data.UserIDs && !resource.data.Locked;
+      allow update: if request.auth.uid in resource.data.UserIDs;
       
       // check if user is just adding themself to the participant list
-      allow update: if request.auth != null && request.resource.data.UserIDs == resource.data.UserIDs.concat([request.auth.uid])
+      allow update: if request.auth != null && request.resource.data.UserIDs == resource.data.UserIDs.concat([request.auth.uid]) && !resource.data.Locked
     }
 
     match /playerviews/{playerViewID} {
