@@ -124,68 +124,70 @@ export default () => {
   }
 
   return (
-    <Grid
-      container
-      spacing={3}
-      justify="center"
-      alignItems="center"
-      direction="column"
-      className={classes.optionsButtons}
-    >
-      <Grid item xs={12}>
-        <Typography align="center">
-          alright time to get ready. go get a costume before the game starts.
-          <br />
-          you'll be playing:
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="h4" align="center">
-          {playerView.CharacterStory.Character.Name}
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography align="center">
-          {playerView.CharacterStory.Character.Blurb}
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="h6" align="center">
-          time until the fun begins:
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <Typography variant="h4" align="center">
-          {formatDistance(gameState.StartTime.toDate(), now)}
-        </Typography>
-      </Grid>
-      {!gameState.ReadyToStart.includes(userDetails.ID) && (
-        <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.buttonFullWidth}
-            onClick={() => {
-              SetReadyToStart(id, userDetails?.ID);
-            }}
-          >
-            i want to start now
-          </Button>
-        </Grid>
-      )}
-      {gameState.ReadyToStart.length > 0 ? (
+    <Container>
+      <Grid
+        container
+        spacing={3}
+        justify="center"
+        alignItems="center"
+        direction="column"
+        className={classes.optionsButtons}
+      >
         <Grid item xs={12}>
           <Typography align="center">
-            There are some users already ready to start:{" "}
-            {gameState.ReadyToStart.map((readyID) => {
-              const readyUser = gameState.Users.find(
-                (user) => user.ID === readyID,
-              );
-              return `${readyUser?.Name},`;
-            })}
+            alright time to get ready. go get a costume before the game starts.
+            <br />
+            you'll be playing:
           </Typography>
         </Grid>
-      ) : null}
-    </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h4" align="center">
+            {playerView.CharacterStory.Character.Name}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center">
+            {playerView.CharacterStory.Character.Blurb}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h6" align="center">
+            time until the fun begins:
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h4" align="center">
+            {formatDistance(gameState.StartTime.toDate(), now)}
+          </Typography>
+        </Grid>
+        {!gameState.ReadyToStart.includes(userDetails.ID) && (
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.buttonFullWidth}
+              onClick={() => {
+                SetReadyToStart(id, userDetails?.ID);
+              }}
+            >
+              i want to start now
+            </Button>
+          </Grid>
+        )}
+        {gameState.ReadyToStart.length > 0 ? (
+          <Grid item xs={12}>
+            <Typography align="center">
+              There are some users already ready to start:{" "}
+              {gameState.ReadyToStart.map((readyID) => {
+                const readyUser = gameState.Users.find(
+                  (user) => user.ID === readyID,
+                );
+                return `${readyUser?.Name},`;
+              })}
+            </Typography>
+          </Grid>
+        ) : null}
+      </Grid>
+    </Container>
   );
 };

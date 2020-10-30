@@ -131,25 +131,27 @@ export default () => {
   }
 
   return (
-    <Grid container justify="center" spacing={2} className={classes.clues}>
-      <Grid item xs={12}>
-        <Typography variant="h4">
-          read to the group. they're all listening.
-        </Typography>
+    <Container>
+      <Grid container justify="center" spacing={2} className={classes.clues}>
+        <Grid item xs={12}>
+          <Typography variant="h4">
+            read to the group. they're all listening.
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          {userAnswer.Details}
+        </Grid>
+        <Grid item xs={12}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.buttonFullWidth}
+            onClick={() => RequestNextAnswer(id, userAnswer!.Number + 1)}
+          >
+            finished reading
+          </Button>
+        </Grid>
       </Grid>
-      <Grid item xs={12}>
-        {userAnswer.Details}
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          className={classes.buttonFullWidth}
-          onClick={() => RequestNextAnswer(id, userAnswer!.Number + 1)}
-        >
-          finished reading
-        </Button>
-      </Grid>
-    </Grid>
+    </Container>
   );
 };

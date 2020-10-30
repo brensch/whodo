@@ -138,97 +138,104 @@ export default () => {
           </div>
         </Fade>
       </Modal>
-      <Grid
-        container
-        spacing={3}
-        justify="center"
-        alignItems="center"
-        direction="column"
-        className={classes.optionsButtons}
-      >
-        <Grid item xs={12}>
-          <Typography>
-            {gameState.UserIDs.length} player
-            {gameState.UserIDs.length > 1 && "s"}:
-          </Typography>
-        </Grid>
-        <Grid item xs={12}>
-          {gameState.Users.map((user) => (
-            <Typography align="center">{user.Name}</Typography>
-          ))}
-        </Grid>
-        {/* <Grid item xs={12}>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>
+              {gameState.UserIDs.length} player
+              {gameState.UserIDs.length > 1 && "s"}:
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            {gameState.Users.map((user) => (
+              <Typography align="center">{user.Name}</Typography>
+            ))}
+          </Grid>
+          {/* <Grid item xs={12}>
           <Typography align="center">
             pick a story with {gameState.UserIDs.length} characters, or find
             more friends
           </Typography>
         </Grid> */}
-        <Grid item xs={12}>
-          <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
-            <Button
-              variant="contained"
-              color="primary"
-              className={classes.button}
-              onClick={() =>
-                setSnackState({
-                  severity: "info",
-                  message: "invite link copied to clipboard",
-                })
-              }
-            >
-              invite
-            </Button>
-          </CopyToClipboard>
-        </Grid>
+          <Grid item xs={12}>
+            <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
+              <Button
+                variant="contained"
+                color="primary"
+                className={classes.button}
+                onClick={() =>
+                  setSnackState({
+                    severity: "info",
+                    message: "invite link copied to clipboard",
+                  })
+                }
+              >
+                invite
+              </Button>
+            </CopyToClipboard>
+          </Grid>
 
-        <Grid item xs={12}>
-          <List component="nav">
-            {stories.map((story) => (
-              <React.Fragment>
-                <Divider />
-                <ListItem
-                  button
-                  className={classes.listItem}
-                  disabled={
-                    gameState.UserIDs.length !== story.Characters.length
-                  }
-                  onClick={() => {
-                    if (gameState.UserIDs.length !== story.Characters.length) {
-                      setSnackState({
-                        severity: "info",
-                        message:
-                          "haven't invited enough people to play this game",
-                      });
-                      return;
+          <Grid item xs={12}>
+            <List component="nav">
+              {stories.map((story) => (
+                <React.Fragment>
+                  <Divider />
+                  <ListItem
+                    button
+                    className={classes.listItem}
+                    disabled={
+                      gameState.UserIDs.length !== story.Characters.length
                     }
-                    SetGameStory(id, story).catch((err) =>
-                      setSnackState({
-                        severity: "error",
-                        message: err.toString(),
-                      }),
-                    );
-                  }}
-                >
-                  <ListItemText
-                    primary={story.Metadata.Name}
-                    secondary={`${
-                      story.Characters.length !== gameState.UserIDs.length
-                        ? "need"
-                        : ""
-                    } ${story.Characters.length} players`}
-                  />
-                  <ListItemSecondaryAction>
-                    <IconButton edge="end" onClick={() => setModalStory(story)}>
-                      <InfoIcon />
-                    </IconButton>
-                  </ListItemSecondaryAction>
-                </ListItem>
-              </React.Fragment>
-            ))}
-            <Divider />
-          </List>
+                    onClick={() => {
+                      if (
+                        gameState.UserIDs.length !== story.Characters.length
+                      ) {
+                        setSnackState({
+                          severity: "info",
+                          message:
+                            "haven't invited enough people to play this game",
+                        });
+                        return;
+                      }
+                      SetGameStory(id, story).catch((err) =>
+                        setSnackState({
+                          severity: "error",
+                          message: err.toString(),
+                        }),
+                      );
+                    }}
+                  >
+                    <ListItemText
+                      primary={story.Metadata.Name}
+                      secondary={`${
+                        story.Characters.length !== gameState.UserIDs.length
+                          ? "need"
+                          : ""
+                      } ${story.Characters.length} players`}
+                    />
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        onClick={() => setModalStory(story)}
+                      >
+                        <InfoIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                </React.Fragment>
+              ))}
+              <Divider />
+            </List>
+          </Grid>
         </Grid>
-      </Grid>
+      </Container>
     </React.Fragment>
   );
 };
