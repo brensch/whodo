@@ -68,22 +68,6 @@ const OptionsPage = () => {
   const classes = useStyles();
   let { setSnackState } = useContext(StateStoreContext);
 
-  // useEffect(() => {
-  //   const unsub = db
-  //     .collection("stories2")
-  //     .doc("skye is cool")
-  //     .onSnapshot((doc) => {
-  //       // console.log(JSON.stringify(doc.data()));
-  //       const send = doc.data() as Story;
-  //       // DoCoolThing(send);
-  //       console.log(send);
-  //       console.log(send.Name);
-  //     });
-  //   return () => {
-  //     unsub();
-  //   };
-  // }, []);
-
   return (
     <React.Fragment>
       <Container>

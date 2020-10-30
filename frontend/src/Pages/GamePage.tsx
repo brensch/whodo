@@ -209,7 +209,7 @@ const GamePage = () => {
       setGameStage("RevealGuesses");
     } else if (!gameState.FinishedAnswers) {
       if (gameState.Answers.length === 0) {
-        RequestNextAnswer(id, 0);
+        RequestNextAnswer(id, playerView.ID, 0);
       }
       setGameStage("ReadAnswers");
     } else {

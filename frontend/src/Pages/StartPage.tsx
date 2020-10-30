@@ -87,7 +87,7 @@ const StartPage = () => {
             className={classes.button}
             onClick={() => history.push("/create")}
           >
-            create game
+            schedule a game
           </Button>
         </Grid>
         <Grid item xs={12}>
@@ -115,13 +115,7 @@ const StartPage = () => {
             // variant="contained"
             color="primary"
             className={classes.button}
-            onClick={() => {
-              setSnackState({
-                message: "optional as",
-                severity: "info",
-              });
-              return history.push("/options");
-            }}
+            onClick={() => history.push("/options")}
           >
             options
           </Button>

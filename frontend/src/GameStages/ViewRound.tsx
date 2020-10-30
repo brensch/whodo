@@ -396,9 +396,6 @@ const UnseenClueModal = () => {
     (clue) => !playerView.CluesSeen.includes(clue.Name),
   );
 
-  console.log(gameState.Clues);
-  console.log(playerView.CluesSeen);
-
   return (
     <Modal
       open={unseenClues.length > 0}

@@ -71,6 +71,7 @@ export interface PlayerView {
   Notes: Note[];
   CluesSeen: string[];
   ReadRules: boolean;
+  ReadAnswer: boolean;
 }
 
 export interface AnswerRead {

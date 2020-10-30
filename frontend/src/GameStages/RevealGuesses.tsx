@@ -75,22 +75,6 @@ const useStyles = makeStyles((theme) => ({
   optionsButtons: {
     minHeight: "70vh",
   },
-  button: {
-    width: "300px",
-    textTransform: "none",
-  },
-  modal: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  modalPaper: {
-    backgroundColor: theme.palette.background.paper,
-    boxShadow: theme.shadows[5],
-    padding: theme.spacing(2, 4, 3),
-    maxHeight: "80vh",
-    overflow: "scroll",
-  },
   clues: {
     padding: 10,
     maxWidth: 1000,
@@ -124,9 +108,11 @@ export default () => {
 
   return (
     <Container>
-      <Grid container spacing={3} className={classes.clues}>
+      <Grid container spacing={3} alignItems="stretch" direction="column">
         <Grid item xs={12}>
-          <Typography align="center">here's what everyone guessed </Typography>
+          <Typography align="center">
+            read everyone's guesses before finding out who did it:
+          </Typography>
         </Grid>
         {gameState.Guesses.map((guess) => {
           const guesserUser: UserDetails | undefined = gameState.Users.find(

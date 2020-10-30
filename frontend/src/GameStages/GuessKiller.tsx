@@ -71,8 +71,8 @@ const useStyles = makeStyles((theme) => ({
   optionsButtons: {
     minHeight: "70vh",
   },
-  button: {
-    width: "300px",
+  fullWidth: {
+    width: "100%",
     textTransform: "none",
   },
   modal: {
@@ -87,7 +87,6 @@ const useStyles = makeStyles((theme) => ({
     maxHeight: "80vh",
     overflow: "scroll",
   },
-  formControl: {},
 }));
 
 export default () => {
@@ -113,68 +112,74 @@ export default () => {
   // };
 
   return (
-    <Grid
-      container
-      spacing={3}
-      justify="center"
-      alignItems="center"
-      direction="column"
-      className={classes.optionsButtons}
-    >
-      <Grid item xs={12}>
-        <Typography align="center">
-          ok, enough fun. time to guess who the killer was and why.
-        </Typography>
-      </Grid>
-      <Grid item xs={12}>
-        <FormControl variant="outlined" className={classes.formControl}>
-          <InputLabel id="killer-label">killer</InputLabel>
-          <Select
-            labelId="killer-label"
-            id="killer-select"
-            value={killer}
-            className={classes.button}
-            onChange={(e) => setKiller(e.target.value as string)}
-            label="killer"
-          >
-            {gameState.CharacterPicks.map((pick) => {
-              const userName = gameState.Users.find(
-                (user) => user.ID === pick.UserID,
-              );
-              return (
-                <MenuItem value={pick.CharacterName}>
-                  {pick.CharacterName} ({userName?.Name})
-                </MenuItem>
-              );
-            })}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid item xs={12}>
-        <TextField
-          value={why}
-          id="why"
-          label="why"
-          variant="outlined"
-          className={classes.button}
-          onChange={(e) => {
-            setWhy(e.currentTarget.value);
-          }}
-        />
-      </Grid>
-      <Grid item xs={12}>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={killer === "" || why === ""}
-          className={classes.button}
-          onClick={() => {
-            SubmitGuess(id, userDetails!.ID, killer, why);
-          }}
-        >
-          i'm sure. submit.
-        </Button>
-      </Grid>
-    </Grid>
+    <Container>
+      <div className={classes.root}>
+        <Grid container spacing={3} alignItems="stretch" direction="column">
+          <Grid item xs={12}>
+            <Typography variant="h6" align="center">
+              ok, enough fun. time to guess whodo it and why.
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12}>
+            <FormControl variant="outlined" className={classes.fullWidth}>
+              <InputLabel id="killer-label">whodo</InputLabel>
+              <Select
+                labelId="killer-label"
+                id="killer-select"
+                value={killer}
+                className={classes.fullWidth}
+                onChange={(e) => setKiller(e.target.value as string)}
+                label="whodo"
+              >
+                {gameState.CharacterPicks.map((pick) => {
+                  const userName = gameState.Users.find(
+                    (user) => user.ID === pick.UserID,
+                  );
+                  return (
+                    <MenuItem value={pick.CharacterName}>
+                      {pick.CharacterName} ({userName?.Name})
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              value={why}
+              id="why"
+              label="why"
+              variant="outlined"
+              className={classes.fullWidth}
+              onChange={(e) => {
+                setWhy(e.currentTarget.value);
+              }}
+              multiline
+              rows={5}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={killer === "" || why === ""}
+              className={classes.fullWidth}
+              onClick={() => {
+                SubmitGuess(id, userDetails!.ID, killer, why);
+              }}
+            >
+              J'Accuse…!
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography variant="body2" align="center">
+              if you're not sure, just write something funny about one of the
+              players.
+            </Typography>
+          </Grid>
+        </Grid>
+      </div>
+    </Container>
   );
 };

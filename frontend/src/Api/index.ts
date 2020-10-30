@@ -109,6 +109,7 @@ export const CreateGame = (
     Notes: [],
     CluesSeen: [],
     ReadRules: false,
+    ReadAnswer: false,
   };
   batch.set(playerViewDoc, newPlayerView);
 
@@ -150,6 +151,7 @@ export const AddUserToGame = (gameID: string, userDetails: UserDetails) => {
     Notes: [],
     CluesSeen: [],
     ReadRules: false,
+    ReadAnswer: false,
   };
   batch.set(playerViewDoc, newPlayerView);
 
@@ -373,18 +375,34 @@ export const SubmitReadyForAnswer = (gameID: string, userID: string) => {
     });
 };
 
-export const RequestNextAnswer = (gameID: string, number: number) => {
+export const RequestNextAnswer = (
+  gameID: string,
+  playerViewID: string,
+  number: number,
+) => {
   const gameRef = db.collection(REVEAL_ANSWER_REQUESTS).doc(gameID);
+
+  // this function is also used to trigger the very first clue by all clients
   if (number === 0) {
     const newRequest: RevealAnswerRequest = {
       AnswerNumbers: [0],
     };
-    gameRef.set(newRequest);
+    return gameRef.set(newRequest);
   }
 
-  return gameRef.update({
+  const batch = db.batch();
+
+  const playerViewRef = db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID);
+
+  batch.update(playerViewRef, {
+    ReadAnswer: true,
+  });
+
+  batch.update(gameRef, {
     AnswerNumbers: firebase.firestore.FieldValue.arrayUnion(number),
   });
+
+  batch.commit();
 };
 
 export const RevealClue = (gameID: string, clue: Clue) => {

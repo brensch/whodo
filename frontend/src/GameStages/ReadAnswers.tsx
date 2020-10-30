@@ -89,13 +89,16 @@ const useStyles = makeStyles((theme) => ({
     overflow: "scroll",
   },
   clues: {
-    padding: 10,
+    padding: 30,
     maxWidth: 1000,
     alignContent: "center",
   },
   buttonFullWidth: {
     width: "100%",
     textTransform: "none",
+  },
+  centeredObject: {
+    minHeight: "70vh",
   },
 }));
 
@@ -127,26 +130,49 @@ export default () => {
     userAnswer === undefined ||
     gameState.Answers.length > userAnswer.Number + 1
   ) {
-    return <div>someone else is reading their answer. listen patiently</div>;
+    return (
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.centeredObject}
+        >
+          <Grid item xs={12}>
+            <Typography align={"center"}>
+              someone else is reading their answer.
+            </Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <Typography align={"center"}>listen patiently.</Typography>
+          </Grid>
+        </Grid>
+      </Container>
+    );
   }
 
   return (
     <Container>
-      <Grid container justify="center" spacing={2} className={classes.clues}>
+      <Grid container spacing={3} alignItems="stretch" direction="column">
         <Grid item xs={12}>
-          <Typography variant="h4">
-            read to the group. they're all listening.
+          <Typography variant="h5">
+            read to the group. they're all listening:
           </Typography>
         </Grid>
         <Grid item xs={12}>
-          {userAnswer.Details}
+          <Typography variant="body1">{userAnswer.Details}</Typography>
         </Grid>
         <Grid item xs={12}>
           <Button
             variant="contained"
             color="primary"
+            disabled={playerView.ReadAnswer}
             className={classes.buttonFullWidth}
-            onClick={() => RequestNextAnswer(id, userAnswer!.Number + 1)}
+            onClick={() =>
+              RequestNextAnswer(id, playerView.ID, userAnswer!.Number + 1)
+            }
           >
             finished reading
           </Button>

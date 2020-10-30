@@ -155,66 +155,68 @@ const SignIn = () => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <Grid
-        container
-        spacing={3}
-        justify="center"
-        alignItems="center"
-        direction="column"
-        className={classes.optionsButtons}
-      >
-        <Grid item xs={12}>
-          <Typography>sign in please</Typography>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>sign in please</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="email"
+              label="email"
+              variant="outlined"
+              className={classes.button}
+              onChange={formik.handleChange}
+              value={formik.values.email}
+              error={!!formik.errors.email}
+              helperText={formik.errors.email}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="password"
+              label="password"
+              variant="outlined"
+              type="password"
+              className={classes.button}
+              onChange={formik.handleChange}
+              value={formik.values.password}
+              error={!!formik.errors.password}
+              helperText={formik.errors.password}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              disabled={formik.isSubmitting}
+              type="submit"
+              variant="contained"
+              color="primary"
+              className={classes.button}
+            >
+              sign in
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <GoogleSignInButton />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              color="primary"
+              className={classes.button}
+              onClick={() => setShowSignUp(true)}
+            >
+              new user?
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="email"
-            label="email"
-            variant="outlined"
-            className={classes.button}
-            onChange={formik.handleChange}
-            value={formik.values.email}
-            error={!!formik.errors.email}
-            helperText={formik.errors.email}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="password"
-            label="password"
-            variant="outlined"
-            type="password"
-            className={classes.button}
-            onChange={formik.handleChange}
-            value={formik.values.password}
-            error={!!formik.errors.password}
-            helperText={formik.errors.password}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            disabled={formik.isSubmitting}
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-          >
-            sign in
-          </Button>
-        </Grid>
-        <Grid item xs={12}>
-          <GoogleSignInButton />
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            color="primary"
-            className={classes.button}
-            onClick={() => setShowSignUp(true)}
-          >
-            new user?
-          </Button>
-        </Grid>
-      </Grid>
+      </Container>
     </form>
   );
 };
@@ -273,79 +275,81 @@ const SignUp = () => {
 
   return (
     <form onSubmit={formik.handleSubmit}>
-      <Grid
-        container
-        spacing={3}
-        justify="center"
-        alignItems="center"
-        direction="column"
-        className={classes.optionsButtons}
-      >
-        <Grid item xs={12}>
-          <Typography>sign in please</Typography>
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.optionsButtons}
+        >
+          <Grid item xs={12}>
+            <Typography>sign in please</Typography>
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="email"
+              label="email"
+              variant="outlined"
+              className={classes.button}
+              onChange={formik.handleChange}
+              value={formik.values.email}
+              error={!!formik.errors.email}
+              helperText={formik.errors.email}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="password"
+              label="password"
+              variant="outlined"
+              type="password"
+              className={classes.button}
+              onChange={formik.handleChange}
+              value={formik.values.password}
+              error={!!formik.errors.password}
+              helperText={formik.errors.password}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              id="passwordConfirm"
+              label="password again"
+              variant="outlined"
+              type="password"
+              className={classes.button}
+              onChange={formik.handleChange}
+              value={formik.values.passwordConfirm}
+              error={!!formik.errors.passwordConfirm}
+              helperText={formik.errors.passwordConfirm}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              disabled={formik.isSubmitting}
+              type="submit"
+              variant="contained"
+              color="primary"
+              className={classes.button}
+            >
+              sign up
+            </Button>
+          </Grid>
+          <Grid item xs={12}>
+            <GoogleSignInButton />
+          </Grid>
+          <Grid item xs={12}>
+            <Button
+              color="primary"
+              className={classes.button}
+              onClick={() => setShowSignUp(false)}
+            >
+              existing user?
+            </Button>
+          </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="email"
-            label="email"
-            variant="outlined"
-            className={classes.button}
-            onChange={formik.handleChange}
-            value={formik.values.email}
-            error={!!formik.errors.email}
-            helperText={formik.errors.email}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="password"
-            label="password"
-            variant="outlined"
-            type="password"
-            className={classes.button}
-            onChange={formik.handleChange}
-            value={formik.values.password}
-            error={!!formik.errors.password}
-            helperText={formik.errors.password}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            id="passwordConfirm"
-            label="password again"
-            variant="outlined"
-            type="password"
-            className={classes.button}
-            onChange={formik.handleChange}
-            value={formik.values.passwordConfirm}
-            error={!!formik.errors.passwordConfirm}
-            helperText={formik.errors.passwordConfirm}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            disabled={formik.isSubmitting}
-            type="submit"
-            variant="contained"
-            color="primary"
-            className={classes.button}
-          >
-            sign up
-          </Button>
-        </Grid>
-        <Grid item xs={12}>
-          <GoogleSignInButton />
-        </Grid>
-        <Grid item xs={12}>
-          <Button
-            color="primary"
-            className={classes.button}
-            onClick={() => setShowSignUp(false)}
-          >
-            existing user?
-          </Button>
-        </Grid>
-      </Grid>
+      </Container>
     </form>
   );
 };

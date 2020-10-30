@@ -169,10 +169,10 @@ const GameItem = ({ id }: GameItemProps) => {
   return (
     <ListItem button onClick={() => history.push("/game/" + id)}>
       <ListItemText
-        primary={`${game.Name} - ${game.Users.length} players`}
-        secondary={
+        primary={`${game.Name}`}
+        secondary={`${
           game.SelectedStory !== null && game.SelectedStory.Metadata.Name
-        }
+        }: ${game.Users.map((user) => ` ${user.Name}`)}`}
       />
     </ListItem>
   );
