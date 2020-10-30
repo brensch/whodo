@@ -44,6 +44,7 @@ import {
   TakeNote,
   ToggleInfoDone,
 } from "../Api";
+import { CloudProblem } from "../Components";
 import { StateStoreContext } from "../Context";
 import { GamePageContext, ParamTypes } from "../Pages/GamePage";
 
@@ -100,10 +101,13 @@ export default () => {
     userDetails === null ||
     userDetailsInitialising ||
     gameState.SelectedStory === null ||
-    playerView.CharacterStory === null ||
     gameState.CurrentRound >= gameState.SelectedStory.Rounds.length
   ) {
     return null;
+  }
+
+  if (playerView.CharacterStory === null) {
+    return <CloudProblem />;
   }
 
   let roundToView =

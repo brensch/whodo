@@ -7,6 +7,7 @@ import { formatDistance } from "date-fns";
 import React, { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { SetReadyToStart } from "../Api";
+import { CloudProblem } from "../Components";
 import { StateStoreContext } from "../Context";
 import { GamePageContext, ParamTypes } from "../Pages/GamePage";
 
@@ -17,6 +18,9 @@ const useStyles = makeStyles(() => ({
   buttonFullWidth: {
     width: "100%",
     textTransform: "none",
+  },
+  centeredObject: {
+    minHeight: "70vh",
   },
 }));
 
@@ -36,12 +40,7 @@ export default () => {
   }, []);
 
   if (playerView.CharacterStory === null) {
-    return (
-      <div>
-        the cloud is working hard to retrieve your top secret clues. Please be
-        patient, it's hard being a cloud.
-      </div>
-    );
+    return <CloudProblem />;
   }
 
   if (userDetails === null) {
@@ -60,7 +59,7 @@ export default () => {
       >
         <Grid item xs={12}>
           <Typography align="center">
-            alright time to get ready. go get a costume before the game starts.
+            alright time to get ready.
             <br />
             you'll be playing:
           </Typography>
@@ -73,6 +72,26 @@ export default () => {
         <Grid item xs={12}>
           <Typography align="center">
             {playerView.CharacterStory.Character.Blurb}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center" variant={"h6"}>
+            costume:
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center" variant={"body1"}>
+            {playerView.CharacterStory.Character.Costume}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center" variant={"h6"}>
+            accessories:
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography align="center" variant={"body1"}>
+            {playerView.CharacterStory.Character.Accessories}
           </Typography>
         </Grid>
         <Grid item xs={12}>

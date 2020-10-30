@@ -33,7 +33,7 @@ const JoinGamePage = () => {
     StateStoreContext,
   );
 
-  useEffect(() => setHeaderText("game invite"), [setHeaderText]);
+  useEffect(() => setHeaderText("invitation"), [setHeaderText]);
 
   useEffect(() => {
     if (userDetails !== null) {
@@ -65,6 +65,11 @@ const JoinGamePage = () => {
     <React.Fragment>
       <Container>
         <Grid container spacing={3} alignItems="stretch" direction="column">
+          <Grid item xs={12}>
+            <Typography align={"center"} variant="h6">
+              you've been invited to a murder mystery:
+            </Typography>
+          </Grid>
           <Grid item xs={12}>
             <Typography
               variant="h4"

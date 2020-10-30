@@ -121,7 +121,7 @@ export default () => {
                   })
                 }
               >
-                invite
+                or invite more players
               </Button>
             </CopyToClipboard>
           </Grid>
