@@ -58,7 +58,8 @@ export const watchStories = functions.firestore
   });
 
 const JoinCharactersWithUsers = async (gameID: string) => {
-  const gameStateDoc = await db.collection(GAME_COLLECTION).doc(gameID).get();
+  const gameStateRef = db.collection(GAME_COLLECTION).doc(gameID);
+  const gameStateDoc = await gameStateRef.get();
 
   // .then((gameStateDoc) => {
   const gameState = gameStateDoc.data() as GameState;
@@ -146,16 +147,19 @@ const JoinCharactersWithUsers = async (gameID: string) => {
     batch.update(viewDoc.ref, { CharacterStory: characterStory });
   });
 
-  // update state to 'synced' as final update
-  const populateInfoRequestDoc = db
+  // update state to 'synced'
+  const populateInfoRequestRef = db
     .collection(POPULATE_INFO_REQUESTS)
     .doc(gameID);
-
   const newPopulateInfoRequestState: PopulateInfoRequest = {
     State: "synced",
   };
+  batch.update(populateInfoRequestRef, newPopulateInfoRequestState);
 
-  batch.update(populateInfoRequestDoc, newPopulateInfoRequestState);
+  // set state to locked to prevent any further players joining
+  batch.update(gameStateRef, {
+    Locked: true,
+  });
 
   return batch.commit();
 };

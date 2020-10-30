@@ -18,6 +18,9 @@ const useStyles = makeStyles(() => ({
   fullWidth: {
     width: "100%",
   },
+  centeredObject: {
+    minHeight: "70vh",
+  },
 }));
 
 interface ParamTypes {
@@ -59,6 +62,28 @@ const JoinGamePage = () => {
   // if user has already joined redirect to actual gameState
   if (userDetails !== null && gameState.UserIDs.includes(userDetails.ID)) {
     return <Redirect to={`/game/${id}`} />;
+  }
+
+  if (gameState.Locked) {
+    return (
+      <Container>
+        <Grid
+          container
+          spacing={3}
+          justify="center"
+          alignItems="center"
+          direction="column"
+          className={classes.centeredObject}
+        >
+          <Grid item xs={12}>
+            <Typography>
+              bother, this game has already started. looks like your friends
+              don't like you enough to wait for you to join the game.
+            </Typography>
+          </Grid>
+        </Grid>
+      </Container>
+    );
   }
 
   return (

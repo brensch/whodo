@@ -78,6 +78,7 @@ export const CreateGame = (
     CharacterPicks: [],
     SelectedStory: null,
     Clues: [],
+    Locked: false,
   };
 
   var batch = db.batch();

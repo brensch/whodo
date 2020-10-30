@@ -36,7 +36,7 @@ service cloud.firestore {
       allow create: if request.auth != null;
 
 			//	check if user is in the participant id list
-      allow update: if request.auth.uid in resource.data.UserIDs;
+      allow update: if request.auth.uid in resource.data.UserIDs && !resource.data.Locked;
       
       // check if user is just adding themself to the participant list
       allow update: if request.auth != null && request.resource.data.UserIDs == resource.data.UserIDs.concat([request.auth.uid])

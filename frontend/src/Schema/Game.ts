@@ -13,24 +13,19 @@ export interface GameState {
   UserIDs: string[];
   Users: UserDetails[];
 
-  CurrentRound: number;
-
-  StartTime: firebase.firestore.Timestamp;
-
-  Guesses: Guess[];
-
-  Answers: Answer[];
-
   SelectedStory: StorySummary | null;
+  StartTime: firebase.firestore.Timestamp;
+  CharacterPicks: CharacterPick[];
+  Locked: boolean;
 
+  Clues: Clue[];
+  Guesses: Guess[];
+  Answers: Answer[];
+  CurrentRound: number;
   FinishedAnswers: boolean;
-
   FinishedRounds: FinishedRound[];
   ReadyToStart: string[];
   ReadyForAnswer: string[];
-
-  CharacterPicks: CharacterPick[];
-  Clues: Clue[];
 }
 
 type PopulateInfoRequestState =
