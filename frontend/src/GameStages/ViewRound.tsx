@@ -57,6 +57,9 @@ const useStyles = makeStyles((theme) => ({
     position: "fixed",
     bottom: 0,
   },
+  footerPlaceholder: {
+    opacity: 0,
+  },
   modal: {
     display: "flex",
     alignItems: "center",
@@ -315,6 +318,9 @@ export default () => {
                 </FormControl>
               </Grid>
             )}
+            <Grid item xs={12}>
+              <BottomNavigation className={classes.footerPlaceholder} />
+            </Grid>
           </Grid>
         </div>
       </Container>
