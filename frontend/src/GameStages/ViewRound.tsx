@@ -56,6 +56,7 @@ const useStyles = makeStyles((theme) => ({
     width: "100%",
     position: "fixed",
     bottom: 0,
+    backgroundColor: "#ba8fa4",
   },
   footerPlaceholder: {
     opacity: 0,
