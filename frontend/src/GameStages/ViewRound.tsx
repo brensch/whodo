@@ -39,6 +39,7 @@ import {
   MarkClueSeen,
   RevealClue,
   SetFinishedRound,
+  SetReadRules,
   SetRound,
   SetUnfinishedRound,
   TakeNote,
@@ -47,6 +48,8 @@ import {
 import { CloudProblem } from "../Components";
 import { StateStoreContext } from "../Context";
 import { GamePageContext, ParamTypes } from "../Pages/GamePage";
+import GavelIcon from "@material-ui/icons/Gavel";
+import PeopleIcon from "@material-ui/icons/People";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -154,7 +157,7 @@ export default () => {
               <Paper variant="outlined" className={classes.infoBoxes}>
                 <Grid container>
                   <Grid item xs={12}>
-                    <Typography variant="h6">tell people:</Typography>
+                    <Typography variant="h6">tell freely:</Typography>
                   </Grid>
                   {playerView.CharacterStory.InfoStates.filter(
                     (info) => info.Public && info.Round === roundToViewName,
@@ -189,7 +192,7 @@ export default () => {
               <Paper variant="outlined" className={classes.infoBoxes}>
                 <Grid container>
                   <Grid item xs={12}>
-                    <Typography variant="h6">keep secret:</Typography>
+                    <Typography variant="h6">only tell when asked:</Typography>
                   </Grid>
                   {playerView.CharacterStory.InfoStates.filter(
                     (info) => !info.Public && info.Round === roundToViewName,
@@ -326,11 +329,26 @@ export default () => {
         </div>
       </Container>
       <BottomNavigation className={classes.footer}>
+        <ShowRules />
+        <CharactersModal />
         <CluesModal />
         <NotesModal />
         <TimelineModal />
       </BottomNavigation>
     </React.Fragment>
+  );
+};
+
+const ShowRules = () => {
+  let { playerView } = useContext(GamePageContext);
+
+  return (
+    <BottomNavigationAction
+      label="rules"
+      showLabel
+      icon={<GavelIcon />}
+      onClick={() => SetReadRules(playerView.ID, false)}
+    />
   );
 };
 
@@ -506,6 +524,110 @@ const CluesModal = () => {
   );
 };
 
+const CharactersModal = () => {
+  const classes = useStyles();
+  let { gameState, playerView } = useContext(GamePageContext);
+
+  const [cluesModal, setCluesModal] = useState<boolean>(false);
+
+  return (
+    <React.Fragment>
+      <Modal
+        open={cluesModal}
+        onClose={() => setCluesModal(false)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={cluesModal}>
+          <div className={classes.modalPaper}>
+            <AppBar position="static" color="inherit">
+              <Toolbar>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  characters
+                </Typography>
+                <IconButton
+                  aria-label="close"
+                  onClick={() => setCluesModal(false)}
+                  className={classes.modalClose}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={12}>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  you:
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  {playerView.CharacterStory?.Character.Name}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body1" className={classes.modalTitle}>
+                  {playerView.CharacterStory?.Character.Blurb}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="h6" className={classes.modalTitle}>
+                  others:
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Divider className={classes.timelineDivider} />
+                <TableContainer component={Paper}>
+                  <Table size="small" aria-label="timeline-table">
+                    <TableBody>
+                      {gameState.CharacterPicks.map((pick) => {
+                        const pickUser = gameState.Users.find(
+                          (user) => user.ID === pick.UserID,
+                        );
+                        const pickCharacter = gameState.SelectedStory?.Characters.find(
+                          (character) => character.Name === pick.CharacterName,
+                        );
+                        return (
+                          <TableRow key={`timeline-${pick.CharacterName}`}>
+                            <TableCell component="th" scope="row">
+                              {pickUser?.Name}
+                            </TableCell>
+                            <TableCell align="left">
+                              {pick.CharacterName}
+                            </TableCell>
+                            <TableCell align="right">
+                              {pickCharacter?.Blurb}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Grid>
+            </Grid>
+          </div>
+        </Fade>
+      </Modal>
+      <BottomNavigationAction
+        label="characters"
+        showLabel
+        icon={<PeopleIcon />}
+        onClick={() => setCluesModal(true)}
+      />
+    </React.Fragment>
+  );
+};
+
 const TimelineModal = () => {
   const classes = useStyles();
   let { playerView } = useContext(GamePageContext);
@@ -552,7 +674,7 @@ const TimelineModal = () => {
                   <Table size="small" aria-label="timeline-table">
                     <TableBody>
                       {playerView.CharacterStory?.TimelineEvents.sort((a, b) =>
-                        a.Time < b.Time ? 1 : -1,
+                        a.Time < b.Time ? -1 : 1,
                       ).map((event) => (
                         <TableRow key={`timeline-${event.Time}`}>
                           <TableCell component="th" scope="row">

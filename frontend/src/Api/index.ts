@@ -260,9 +260,9 @@ export const SetReadyToStart = (gameID: string, userID: string) => {
     });
 };
 
-export const SetReadRules = (playerViewID: string) => {
+export const SetReadRules = (playerViewID: string, read: boolean) => {
   return db.collection(PLAYERVIEW_COLLECTION).doc(playerViewID).update({
-    ReadRules: true,
+    ReadRules: read,
   });
 };
 

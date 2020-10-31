@@ -61,8 +61,9 @@ export default () => {
                 primary="talk"
                 secondary={
                   <React.Fragment>
-                    start conversations using your public info, but only reveal
-                    your private info when asked about it by another character.
+                    start conversations using the info labelled 'tell freely'.
+                    info labelled 'only tell when asked', you should only tell
+                    when asked....
                   </React.Fragment>
                 }
               />
@@ -73,8 +74,9 @@ export default () => {
                 primary="don't lie"
                 secondary={
                   <React.Fragment>
-                    it gets weird if you lie about your secrets. gotta come
-                    clean when asked.
+                    just like real life, this won't work if you lie about your
+                    secrets, or don't respond with all the info you know when
+                    questioned about something.
                   </React.Fragment>
                 }
               />
@@ -85,9 +87,12 @@ export default () => {
                 primary="complete rounds"
                 secondary={
                   <React.Fragment>
-                    once you've revealed all your information for a round,
-                    there's a button down the buttom to show you're ready for
-                    the next round.{" "}
+                    once you're happy you've gotten through all the info you
+                    need to tell freely, there's a button down the buttom to
+                    show you're ready for the next round. some rounds you may
+                    not reveal all your secrets, but remember them in case you
+                    get asked in later rounds. you can see previous round info
+                    using the list at the bottom of the page.
                   </React.Fragment>
                 }
               />
@@ -98,9 +103,8 @@ export default () => {
                 primary="guess the killer"
                 secondary={
                   <React.Fragment>
-                    once all rounds are finished, make a guess about who did it
-                    and why. once everyone has guessed, the true story is
-                    revealed.
+                    once all rounds are finished, guess whodo, how, and why.
+                    once everyone has guessed, the true story is revealed.
                   </React.Fragment>
                 }
               />
@@ -112,7 +116,7 @@ export default () => {
                 secondary={
                   <React.Fragment>
                     the winner is whoever has the most fun (or all people who
-                    guessed the killer correctly){" "}
+                    guessed the killer correctly)
                   </React.Fragment>
                 }
               />
@@ -124,9 +128,9 @@ export default () => {
             variant="contained"
             color="primary"
             className={classes.buttonFullWidth}
-            onClick={() => SetReadRules(playerView.ID)}
+            onClick={() => SetReadRules(playerView.ID, true)}
           >
-            <Typography align="center">let's go</Typography>
+            <Typography align="center">got it</Typography>
           </Button>
         </Grid>
       </Grid>
