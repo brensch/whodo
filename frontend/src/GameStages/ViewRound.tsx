@@ -51,6 +51,7 @@ import { GamePageContext, ParamTypes } from "../Pages/GamePage";
 import GavelIcon from "@material-ui/icons/Gavel";
 import PeopleIcon from "@material-ui/icons/People";
 import { InfoState } from "../Schema/Story";
+import Switch from "@material-ui/core/Switch";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -103,7 +104,7 @@ export default () => {
   const { userDetails, userDetailsInitialising } = useContext(
     StateStoreContext,
   );
-  const [showDone, setShowDone] = useState<Boolean>(false);
+  const [showDone, setShowDone] = useState<boolean>(false);
   // const [previousRound, setPreviousRound] = useState<number | null>(null);
 
   if (
@@ -329,6 +330,20 @@ export default () => {
                 </Button>
               )}
             </Grid>
+            <Grid item xs={12}>
+              <Grid container spacing={2} justify="center" alignItems="center">
+                <Grid item xs={2}>
+                  <Switch
+                    color="primary"
+                    checked={showDone}
+                    onChange={(e) => setShowDone(e.target.checked)}
+                  />
+                </Grid>
+                <Grid item xs={10}>
+                  <Typography align="left"> show completed info</Typography>
+                </Grid>
+              </Grid>
+            </Grid>
             {/* {previousRound !== null && (
               <Grid item xs={12}>
                 <Button
@@ -376,9 +391,9 @@ export default () => {
       <BottomNavigation className={classes.footer}>
         <ShowRules />
         <CharactersModal />
-        <CluesModal />
         <NotesModal />
         <TimelineModal />
+        <CluesModal />
       </BottomNavigation>
     </React.Fragment>
   );
