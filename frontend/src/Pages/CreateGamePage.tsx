@@ -1,3 +1,4 @@
+import { Typography } from "@material-ui/core";
 import Button from "@material-ui/core/Button";
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
@@ -102,6 +103,12 @@ const CreateGamePage = () => {
           >
             create game
           </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="subtitle2" align="center">
+            schedule for some point in the future to allow everyone to get
+            costumes and prepare mentally
+          </Typography>
         </Grid>
       </Grid>
     </Container>

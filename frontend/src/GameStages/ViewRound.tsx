@@ -673,16 +673,16 @@ const TimelineModal = () => {
                 <TableContainer component={Paper}>
                   <Table size="small" aria-label="timeline-table">
                     <TableBody>
-                      {playerView.CharacterStory?.TimelineEvents.sort((a, b) =>
-                        a.Time < b.Time ? -1 : 1,
-                      ).map((event) => (
-                        <TableRow key={`timeline-${event.Time}`}>
-                          <TableCell component="th" scope="row">
-                            {event.Time}
-                          </TableCell>
-                          <TableCell align="right">{event.Event}</TableCell>
-                        </TableRow>
-                      ))}
+                      {playerView.CharacterStory?.TimelineEvents.map(
+                        (event) => (
+                          <TableRow key={`timeline-${event.Time}`}>
+                            <TableCell component="th" scope="row">
+                              {event.Time}
+                            </TableCell>
+                            <TableCell align="right">{event.Event}</TableCell>
+                          </TableRow>
+                        ),
+                      )}
                     </TableBody>
                   </Table>
                 </TableContainer>
