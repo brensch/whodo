@@ -326,57 +326,19 @@ export default () => {
               )}
             </Grid>
             <Grid item xs={12}>
-              <Grid container spacing={2} justify="center" alignItems="center">
-                <Grid item xs={2}>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item>
                   <Switch
                     color="primary"
                     checked={showDone}
                     onChange={(e) => setShowDone(e.target.checked)}
                   />
                 </Grid>
-                <Grid item xs={10}>
+                <Grid item onClick={() => setShowDone(!showDone)}>
                   <Typography align="left"> show completed info</Typography>
                 </Grid>
               </Grid>
             </Grid>
-            {/* {previousRound !== null && (
-              <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  className={classes.buttonFullWidth}
-                  onClick={() => setPreviousRound(null)}
-                >
-                  <Typography align="left"> go to current round</Typography>
-                </Button>
-              </Grid>
-            )} */}
-            {/* {gameState.CurrentRound > 0 && (
-              <Grid item xs={12}>
-                <FormControl
-                  variant="outlined"
-                  className={classes.buttonFullWidth}
-                >
-                  <InputLabel id="previous-round-label">
-                    check previous round clues
-                  </InputLabel>
-                  <Select
-                    labelId="previous-round-label"
-                    id="previous-round-select"
-                    value={previousRound}
-                    className={classes.buttonFullWidth}
-                    onChange={(e) => setPreviousRound(e.target.value as number)}
-                    label="check previous round info"
-                  >
-                    {gameState.SelectedStory.Rounds.filter(
-                      (round, i) => i < gameState.CurrentRound,
-                    ).map((round, i) => (
-                      <MenuItem value={i}>{round.Name}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            )} */}
             <Grid item xs={12}>
               <BottomNavigation className={classes.footerPlaceholder} />
             </Grid>
@@ -582,7 +544,7 @@ const CluesModal = () => {
 const CharactersModal = () => {
   const classes = useStyles();
   let { gameState, playerView } = useContext(GamePageContext);
-
+  const { userDetails } = useContext(StateStoreContext);
   const [cluesModal, setCluesModal] = useState<boolean>(false);
 
   return (
@@ -621,12 +583,7 @@ const CharactersModal = () => {
             >
               <Grid item xs={12}>
                 <Typography variant="h6" className={classes.modalTitle}>
-                  you:
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography variant="h6" className={classes.modalTitle}>
-                  {playerView.CharacterStory?.Character.Name}
+                  you: {playerView.CharacterStory?.Character.Name}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -644,7 +601,9 @@ const CharactersModal = () => {
                 <TableContainer component={Paper}>
                   <Table size="small" aria-label="timeline-table">
                     <TableBody>
-                      {gameState.CharacterPicks.map((pick) => {
+                      {gameState.CharacterPicks.filter(
+                        (pick) => pick.UserID !== userDetails?.ID,
+                      ).map((pick) => {
                         const pickUser = gameState.Users.find(
                           (user) => user.ID === pick.UserID,
                         );
