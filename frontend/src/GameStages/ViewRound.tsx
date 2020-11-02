@@ -50,6 +50,7 @@ import { StateStoreContext } from "../Context";
 import { GamePageContext, ParamTypes } from "../Pages/GamePage";
 import GavelIcon from "@material-ui/icons/Gavel";
 import PeopleIcon from "@material-ui/icons/People";
+import { InfoState } from "../Schema/Story";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -102,7 +103,8 @@ export default () => {
   const { userDetails, userDetailsInitialising } = useContext(
     StateStoreContext,
   );
-  const [previousRound, setPreviousRound] = useState<number | null>(null);
+  const [showDone, setShowDone] = useState<Boolean>(false);
+  // const [previousRound, setPreviousRound] = useState<number | null>(null);
 
   if (
     userDetails === null ||
@@ -117,11 +119,26 @@ export default () => {
     return <CloudProblem />;
   }
 
-  let roundToView =
-    previousRound === null ? gameState.CurrentRound : previousRound;
+  const publicInfo: InfoState[] = [];
+  const privateInfo: InfoState[] = [];
+
+  // iterate through info to find the public and private info, including filtering on hide if done
+  playerView.CharacterStory.InfoStates.forEach((info) => {
+    const roundNumber = gameState.SelectedStory!.Rounds.findIndex(
+      (round) => round.Name === info.Round,
+    );
+    if (roundNumber > gameState.CurrentRound || (info.Done && !showDone)) {
+      return;
+    }
+
+    info.Public ? publicInfo.push(info) : privateInfo.push(info);
+  });
+
+  // let roundToView =
+  //   previousRound === null ? gameState.CurrentRound : previousRound;
 
   // info objects are mapped to string (easier in spreadsheet)
-  let roundToViewName = gameState.SelectedStory.Rounds[roundToView].Name;
+  // let roundToViewName = gameState.SelectedStory.Rounds[roundToView].Name;
 
   let finishedWithThisRound =
     gameState.FinishedRounds.find(
@@ -144,60 +161,23 @@ export default () => {
           >
             <Grid item xs={12}>
               <Typography variant="h4">
-                {gameState.SelectedStory.Rounds[roundToView].Name}
+                {gameState.SelectedStory.Rounds[gameState.CurrentRound].Name}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography>
-                {gameState.SelectedStory.Rounds[roundToView].Intro}
+                {gameState.SelectedStory.Rounds[gameState.CurrentRound].Intro}
               </Typography>
             </Grid>
             <CluesToReveal />
-            <Grid item xs={12}>
-              <Paper variant="outlined" className={classes.infoBoxes}>
-                <Grid container>
-                  <Grid item xs={12}>
-                    <Typography variant="h6">tell freely:</Typography>
-                  </Grid>
-                  {playerView.CharacterStory.InfoStates.filter(
-                    (info) => info.Public && info.Round === roundToViewName,
-                  ).map((info) => (
-                    <React.Fragment>
-                      <Grid
-                        item
-                        xs={1}
-                        onClick={() =>
-                          ToggleInfoDone(
-                            playerView.ID,
-                            playerView.CharacterStory!.InfoStates,
-                            info.Sequence,
-                          )
-                        }
-                      >
-                        {info.Done ? (
-                          <CheckBoxIcon />
-                        ) : (
-                          <CheckBoxOutlineBlankIcon />
-                        )}
-                      </Grid>
-                      <Grid item xs={11}>
-                        <Typography align="left">{info.Content}</Typography>
-                      </Grid>
-                    </React.Fragment>
-                  ))}
-                </Grid>
-              </Paper>
-            </Grid>
-            <Grid item xs={12}>
-              <Paper variant="outlined" className={classes.infoBoxes}>
-                <Grid container>
-                  <Grid item xs={12}>
-                    <Typography variant="h6">only tell when asked:</Typography>
-                  </Grid>
-                  {playerView.CharacterStory.InfoStates.filter(
-                    (info) => !info.Public && info.Round === roundToViewName,
-                  ).map((info, i) => {
-                    return (
+            {publicInfo.length > 0 && (
+              <Grid item xs={12}>
+                <Paper variant="outlined" className={classes.infoBoxes}>
+                  <Grid container>
+                    <Grid item xs={12}>
+                      <Typography variant="h6">tell freely:</Typography>
+                    </Grid>
+                    {publicInfo.map((info) => (
                       <React.Fragment>
                         <Grid
                           item
@@ -216,75 +196,140 @@ export default () => {
                             <CheckBoxOutlineBlankIcon />
                           )}
                         </Grid>
-                        <Grid item xs={11}>
-                          <Typography align="left">{info.Content}</Typography>
+                        <Grid
+                          item
+                          xs={11}
+                          onClick={() =>
+                            ToggleInfoDone(
+                              playerView.ID,
+                              playerView.CharacterStory!.InfoStates,
+                              info.Sequence,
+                            )
+                          }
+                        >
+                          <Typography
+                            align="left"
+                            color={info.Done ? "primary" : "textPrimary"}
+                          >
+                            {info.Content}
+                          </Typography>
                         </Grid>
                       </React.Fragment>
-                    );
-                  })}
-                </Grid>
-              </Paper>
-            </Grid>
-            {previousRound === null && (
+                    ))}
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
+            {privateInfo.length > 0 && (
               <Grid item xs={12}>
-                <Button
-                  variant="contained"
-                  color={!finishedWithThisRound ? "primary" : "secondary"}
-                  className={classes.buttonFullWidth}
-                  onClick={() => {
-                    if (!finishedWithThisRound) {
-                      SetFinishedRound(
-                        id,
-                        gameState.CurrentRound,
-                        userDetails.ID,
+                <Paper variant="outlined" className={classes.infoBoxes}>
+                  <Grid container>
+                    <Grid item xs={12}>
+                      <Typography variant="h6">
+                        only tell when asked:
+                      </Typography>
+                    </Grid>
+                    {privateInfo.map((info, i) => {
+                      if (info.Done) {
+                        return null;
+                      }
+                      return (
+                        <React.Fragment>
+                          <Grid
+                            item
+                            xs={1}
+                            onClick={() =>
+                              ToggleInfoDone(
+                                playerView.ID,
+                                playerView.CharacterStory!.InfoStates,
+                                info.Sequence,
+                              )
+                            }
+                          >
+                            {info.Done ? (
+                              <CheckBoxIcon />
+                            ) : (
+                              <CheckBoxOutlineBlankIcon />
+                            )}
+                          </Grid>
+                          <Grid
+                            item
+                            xs={11}
+                            onClick={() =>
+                              ToggleInfoDone(
+                                playerView.ID,
+                                playerView.CharacterStory!.InfoStates,
+                                info.Sequence,
+                              )
+                            }
+                          >
+                            <Typography
+                              align="left"
+                              color={info.Done ? "primary" : "textPrimary"}
+                            >
+                              {info.Content}
+                            </Typography>
+                          </Grid>
+                        </React.Fragment>
                       );
-                      return;
-                    }
-
-                    SetUnfinishedRound(
+                    })}
+                  </Grid>
+                </Paper>
+              </Grid>
+            )}
+            <Grid item xs={12}>
+              <Button
+                variant="contained"
+                color={!finishedWithThisRound ? "primary" : "secondary"}
+                className={classes.buttonFullWidth}
+                onClick={() => {
+                  if (!finishedWithThisRound) {
+                    SetFinishedRound(
                       id,
                       gameState.CurrentRound,
                       userDetails.ID,
                     );
-                  }}
+                    return;
+                  }
+
+                  SetUnfinishedRound(
+                    id,
+                    gameState.CurrentRound,
+                    userDetails.ID,
+                  );
+                }}
+              >
+                <Typography align="center">
+                  {!finishedWithThisRound
+                    ? "finished this round?"
+                    : "finished. wait for others."}
+                </Typography>
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              {gameState.FinishedRounds.filter(
+                (finished) => finished.Round === gameState.CurrentRound,
+              ).length === gameState.UserIDs.length ? (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  className={classes.buttonFullWidth}
+                  onClick={() => SetRound(id, gameState.CurrentRound + 1)}
                 >
-                  <Typography align="center">
-                    {!finishedWithThisRound
-                      ? "finished this round?"
-                      : "finished. wait for others."}
-                  </Typography>
+                  <Typography align="left"> next round</Typography>
                 </Button>
-              </Grid>
-            )}
-            {previousRound === null && (
-              <Grid item xs={12}>
-                {gameState.FinishedRounds.filter(
-                  (finished) => finished.Round === gameState.CurrentRound,
-                ).length === gameState.UserIDs.length ? (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    className={classes.buttonFullWidth}
-                    onClick={() => SetRound(id, gameState.CurrentRound + 1)}
-                  >
-                    <Typography align="left"> next round</Typography>
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    disabled
-                    className={classes.buttonFullWidth}
-                  >
-                    <Typography align="left">
-                      {" "}
-                      not everyone ready yet
-                    </Typography>
-                  </Button>
-                )}
-              </Grid>
-            )}
-            {previousRound !== null && (
+              ) : (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled
+                  className={classes.buttonFullWidth}
+                >
+                  <Typography align="left"> not everyone ready yet</Typography>
+                </Button>
+              )}
+            </Grid>
+            {/* {previousRound !== null && (
               <Grid item xs={12}>
                 <Button
                   variant="contained"
@@ -295,8 +340,8 @@ export default () => {
                   <Typography align="left"> go to current round</Typography>
                 </Button>
               </Grid>
-            )}
-            {gameState.CurrentRound > 0 && (
+            )} */}
+            {/* {gameState.CurrentRound > 0 && (
               <Grid item xs={12}>
                 <FormControl
                   variant="outlined"
@@ -321,7 +366,7 @@ export default () => {
                   </Select>
                 </FormControl>
               </Grid>
-            )}
+            )} */}
             <Grid item xs={12}>
               <BottomNavigation className={classes.footerPlaceholder} />
             </Grid>
