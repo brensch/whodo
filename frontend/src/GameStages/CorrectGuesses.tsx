@@ -5,7 +5,9 @@ import Paper from "@material-ui/core/Paper";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import React, { useContext } from "react";
+import CopyToClipboard from "react-copy-to-clipboard";
 import { useHistory } from "react-router-dom";
+import { StateStoreContext } from "../Context";
 import { GamePageContext } from "../Pages/GamePage";
 import { CharacterPick } from "../Schema/Game";
 import { UserDetails } from "../Schema/User";
@@ -33,6 +35,7 @@ const useStyles = makeStyles(() => ({
 export default () => {
   const classes = useStyles();
   let { gameState } = useContext(GamePageContext);
+  let { setSnackState } = useContext(StateStoreContext);
 
   let history = useHistory();
 
@@ -114,14 +117,24 @@ export default () => {
           </Button>
         </Grid>
         <Grid item xs={12}>
-          <Button
-            variant="contained"
-            color="primary"
-            className={classes.buttonFullWidth}
-            onClick={() => history.push("/create")}
+          <CopyToClipboard
+            text={`I just played whodo and i think you would like it, because it is excellent: ${window.location.origin}/splash`}
           >
-            share
-          </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.buttonFullWidth}
+              onClick={() =>
+                setSnackState({
+                  severity: "info",
+                  message:
+                    "copied share info to clipboard, go paste it somewhere.",
+                })
+              }
+            >
+              share
+            </Button>
+          </CopyToClipboard>
         </Grid>
         <Grid item xs={12}>
           <Button
