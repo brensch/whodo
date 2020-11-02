@@ -50,6 +50,7 @@ export interface CharacterPick {
 export interface Guess {
   UserID: string;
   Killer: string;
+  How: string;
   Why: string;
 }
 

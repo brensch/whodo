@@ -31,6 +31,7 @@ export default () => {
   const { userDetails } = useContext(StateStoreContext);
 
   const [why, setWhy] = useState<string>("");
+  const [how, setHow] = useState<string>("");
   const [killer, setKiller] = useState<string>("");
 
   return (
@@ -69,6 +70,20 @@ export default () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
+              value={how}
+              id="how"
+              label="how"
+              variant="outlined"
+              className={classes.fullWidth}
+              onChange={(e) => {
+                setHow(e.currentTarget.value);
+              }}
+              multiline
+              rows={5}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
               value={why}
               id="why"
               label="why"
@@ -88,7 +103,7 @@ export default () => {
               disabled={killer === "" || why === ""}
               className={classes.fullWidth}
               onClick={() => {
-                SubmitGuess(id, userDetails!.ID, killer, why);
+                SubmitGuess(id, userDetails!.ID, killer, how, why);
               }}
             >
               J'Accuse…!

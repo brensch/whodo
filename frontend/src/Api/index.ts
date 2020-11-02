@@ -352,11 +352,13 @@ export const SubmitGuess = (
   gameID: string,
   userID: string,
   killer: string,
+  how: string,
   why: string,
 ) => {
   const guess: Guess = {
     UserID: userID,
     Killer: killer,
+    How: how,
     Why: why,
   };
   return db
