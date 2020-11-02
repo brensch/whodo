@@ -23,10 +23,18 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
-export const watchStories = functions.firestore
-  .document(`${STORY_COLLECTION}/{docID}`)
+export const watchStories = functions
+  .region("australia-southeast1")
+  .firestore.document(`${STORY_COLLECTION}/{docID}`)
   .onWrite((change, context) => {
     const storyAfter = change.after.data() as Story;
+
+    functions.logger.info(
+      "received update to story",
+      change.after.id,
+      storyAfter.SheetID,
+    );
+
     return ReadStoryFromSheet(storyAfter.SheetID)
       .then((res) => {
         if (res instanceof Error) {
@@ -164,20 +172,40 @@ const JoinCharactersWithUsers = async (gameID: string) => {
   return batch.commit();
 };
 
-export const watchPopulateInfoRequest = functions.firestore
-  .document(`${POPULATE_INFO_REQUESTS}/{docID}`)
-  .onUpdate((change, context) => {
+export const watchPopulateInfoRequest = functions
+  .region("australia-southeast1")
+  .firestore.document(`${POPULATE_INFO_REQUESTS}/{docID}`)
+  .onWrite((change, context) => {
     const requestAfter = change.after.data() as PopulateInfoRequest;
 
+    functions.logger.info(
+      "received populate info request",
+      change.after.id,
+      requestAfter,
+    );
+
     if (requestAfter.State === "havePicked") {
-      JoinCharactersWithUsers(change.after.id).catch(console.log);
+      functions.logger.info(
+        "info request is in state 'havePicked",
+        change.after.id,
+        requestAfter,
+      );
+
+      return JoinCharactersWithUsers(change.after.id).catch((err) =>
+        functions.logger.error("failed to join characters with users", err),
+      );
     }
 
-    return;
+    return functions.logger.info(
+      "info request does not need action",
+      change.after.id,
+      requestAfter,
+    );
   });
 
-export const watchRevealAnswerRequests = functions.firestore
-  .document(`${REVEAL_ANSWER_REQUESTS}/{docID}`)
+export const watchRevealAnswerRequests = functions
+  .region("australia-southeast1")
+  .firestore.document(`${REVEAL_ANSWER_REQUESTS}/{docID}`)
   .onWrite(async (change, context) => {
     const requestAfter = change.after.data() as RevealAnswerRequest;
 
