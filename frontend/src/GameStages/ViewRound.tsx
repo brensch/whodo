@@ -774,7 +774,7 @@ const NotesModal = () => {
                   >
                     {gameState.CharacterPicks.map((pick) => {
                       const userName = gameState.Users.find(
-                        (user) => (user.ID = pick.UserID),
+                        (user) => user.ID === pick.UserID,
                       );
                       return (
                         <MenuItem value={pick.CharacterName}>
