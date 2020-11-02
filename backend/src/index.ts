@@ -186,7 +186,7 @@ export const watchPopulateInfoRequest = functions
 
     if (requestAfter.State === "havePicked") {
       functions.logger.info(
-        "info request is in state 'havePicked",
+        "info request is in state 'havePicked', distributing character stories",
         change.after.id,
         requestAfter,
       );
