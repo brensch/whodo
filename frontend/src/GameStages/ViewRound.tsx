@@ -230,50 +230,45 @@ export default () => {
                         only tell when asked:
                       </Typography>
                     </Grid>
-                    {privateInfo.map((info, i) => {
-                      if (info.Done) {
-                        return null;
-                      }
-                      return (
-                        <React.Fragment>
-                          <Grid
-                            item
-                            xs={1}
-                            onClick={() =>
-                              ToggleInfoDone(
-                                playerView.ID,
-                                playerView.CharacterStory!.InfoStates,
-                                info.Sequence,
-                              )
-                            }
+                    {privateInfo.map((info, i) => (
+                      <React.Fragment>
+                        <Grid
+                          item
+                          xs={1}
+                          onClick={() =>
+                            ToggleInfoDone(
+                              playerView.ID,
+                              playerView.CharacterStory!.InfoStates,
+                              info.Sequence,
+                            )
+                          }
+                        >
+                          {info.Done ? (
+                            <CheckBoxIcon />
+                          ) : (
+                            <CheckBoxOutlineBlankIcon />
+                          )}
+                        </Grid>
+                        <Grid
+                          item
+                          xs={11}
+                          onClick={() =>
+                            ToggleInfoDone(
+                              playerView.ID,
+                              playerView.CharacterStory!.InfoStates,
+                              info.Sequence,
+                            )
+                          }
+                        >
+                          <Typography
+                            align="left"
+                            color={info.Done ? "primary" : "textPrimary"}
                           >
-                            {info.Done ? (
-                              <CheckBoxIcon />
-                            ) : (
-                              <CheckBoxOutlineBlankIcon />
-                            )}
-                          </Grid>
-                          <Grid
-                            item
-                            xs={11}
-                            onClick={() =>
-                              ToggleInfoDone(
-                                playerView.ID,
-                                playerView.CharacterStory!.InfoStates,
-                                info.Sequence,
-                              )
-                            }
-                          >
-                            <Typography
-                              align="left"
-                              color={info.Done ? "primary" : "textPrimary"}
-                            >
-                              {info.Content}
-                            </Typography>
-                          </Grid>
-                        </React.Fragment>
-                      );
-                    })}
+                            {info.Content}
+                          </Typography>
+                        </Grid>
+                      </React.Fragment>
+                    ))}
                   </Grid>
                 </Paper>
               </Grid>
