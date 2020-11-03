@@ -172,7 +172,7 @@ export const readCharacters = async (
 
   const r = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetID,
-    range: "characters!A2:D",
+    range: "characters!A2:E",
   });
 
   const rows = r.data.values;
@@ -180,8 +180,9 @@ export const readCharacters = async (
     return rows.map((row) => ({
       Name: row[0],
       Blurb: row[1],
-      Costume: row[2],
-      Accessories: row[3],
+      Age: row[2],
+      Costume: row[3],
+      Accessories: row[4],
     }));
   }
 

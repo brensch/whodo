@@ -44,6 +44,7 @@ export interface Answer {
 export interface Character {
   Name: string;
   Blurb: string;
+  Age: number;
   Costume: string;
   Accessories: string;
 }
