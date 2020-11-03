@@ -61,9 +61,9 @@ export default () => {
                 primary="talk"
                 secondary={
                   <React.Fragment>
-                    start conversations using the info labelled 'tell freely'.
-                    info labelled 'only tell when asked', you should only tell
-                    when asked....
+                    tell freely the information labelled 'tell freely'. info
+                    labelled 'only tell when asked', you should only tell when
+                    asked
                   </React.Fragment>
                 }
               />
@@ -87,12 +87,8 @@ export default () => {
                 primary="complete rounds"
                 secondary={
                   <React.Fragment>
-                    once you're happy you've gotten through all the info you
-                    need to tell freely, there's a button down the buttom to
-                    show you're ready for the next round. some rounds you may
-                    not reveal all your secrets, but remember them in case you
-                    get asked in later rounds. you can see previous round info
-                    using the list at the bottom of the page.
+                    once you've run out of info to 'tell freely', hit the button
+                    down the bottom to indicate you're ready for the next round.
                   </React.Fragment>
                 }
               />
@@ -115,8 +111,8 @@ export default () => {
                 primary="have fun/win"
                 secondary={
                   <React.Fragment>
-                    the winner is whoever has the most fun (or all people who
-                    guessed the killer correctly)
+                    the winner is whoever has the most fun. bonus points if you
+                    guess right as well.
                   </React.Fragment>
                 }
               />

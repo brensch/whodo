@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Redirect, useParams } from "react-router-dom";
+import { Redirect, useParams, Prompt } from "react-router-dom";
 import {
   ConnectGameState,
   ConnectPlayerView,
@@ -164,6 +164,10 @@ const GamePage = () => {
   return (
     <GamePageContext.Provider value={{ gameState, playerView }}>
       <React.Fragment>
+        <Prompt
+          when={gameStage !== "CorrectGuesses"}
+          message="you're about to leave this excellent game right when things are getting exciting. you can find it again under 'my games'"
+        />
         {(() => {
           switch (gameStage) {
             case "PickStory":
