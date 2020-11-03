@@ -6,11 +6,11 @@ import TextField from "@material-ui/core/TextField";
 import Typography from "@material-ui/core/Typography";
 import { FormikErrors, FormikHelpers, useFormik } from "formik";
 import React, { createContext, useContext, useState } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { Redirect, useHistory, useLocation } from "react-router-dom";
 import { CreateUserDetails } from "../Api";
-import { Loading } from "../Components";
-import { StateStoreContext } from "../Context";
+import { Authorising, Loading } from "../Components";
 import { auth, firebase, useAuth } from "../Firebase";
+import { StateStoreContext } from "../Context";
 
 const useStyles = makeStyles(() => ({
   button: {
@@ -40,10 +40,22 @@ const AuthPage = () => {
   const [showSignUp, setShowSignUp] = useState(false);
   let startingLocation = useLocation<LocationState>();
   let history = useHistory();
+  const { userDetails, userDetailsInitialising } = useContext(
+    StateStoreContext,
+  );
 
   const doRedirect = () => {
     history.push(startingLocation.state.from);
   };
+  console.log(userDetails);
+
+  if (userDetailsInitialising) {
+    return <Authorising />;
+  }
+
+  if (!!userDetails) {
+    return <Redirect to={"/"} />;
+  }
 
   return (
     <div>
