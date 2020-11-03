@@ -135,12 +135,6 @@ export default () => {
     info.Public ? publicInfo.push(info) : privateInfo.push(info);
   });
 
-  // let roundToView =
-  //   previousRound === null ? gameState.CurrentRound : previousRound;
-
-  // info objects are mapped to string (easier in spreadsheet)
-  // let roundToViewName = gameState.SelectedStory.Rounds[roundToView].Name;
-
   let finishedWithThisRound =
     gameState.FinishedRounds.find(
       (finishedRound) =>
@@ -583,7 +577,9 @@ const CharactersModal = () => {
             >
               <Grid item xs={12}>
                 <Typography variant="h6" className={classes.modalTitle}>
-                  you: {playerView.CharacterStory?.Character.Name}
+                  you: {playerView.CharacterStory?.Character.Name} (
+                  {playerView.CharacterStory?.Character.Blurb}) -{" "}
+                  {playerView.CharacterStory?.Character.Age}
                 </Typography>
               </Grid>
               <Grid item xs={12}>

@@ -38,6 +38,7 @@ export const watchStories = functions
     return ReadStoryFromSheet(storyAfter.SheetID)
       .then((res) => {
         if (res instanceof Error) {
+          console.log("error reading story from sheet", res);
           throw Error;
         }
 
@@ -57,12 +58,13 @@ export const watchStories = functions
 
         return batch.commit();
       })
-      .catch((err) =>
-        db
+      .catch((err) => {
+        console.log(err);
+        return db
           .collection(STORY_COLLECTION)
           .doc(change.after.id)
-          .update({ SyncError: err.toString() }),
-      );
+          .update({ SyncError: err.toString() });
+      });
   });
 
 const JoinCharactersWithUsers = async (gameID: string) => {

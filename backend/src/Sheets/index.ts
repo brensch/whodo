@@ -64,8 +64,6 @@ export const ReadStoryFromSheet = async (
     return Answers;
   }
 
-  // populate metadata counts
-
   return {
     ID: null,
     Metadata: StoryMetadata,
@@ -112,7 +110,7 @@ export const readRounds = async (sheetID: string): Promise<Round[] | Error> => {
     }));
   }
 
-  return Error("no data found");
+  return Error("no rounds found");
 };
 
 export const readClues = async (sheetID: string): Promise<Clue[] | Error> => {
@@ -136,7 +134,7 @@ export const readClues = async (sheetID: string): Promise<Clue[] | Error> => {
     }));
   }
 
-  return Error("no data found");
+  return [];
 };
 
 export const readAnswers = async (
@@ -160,7 +158,7 @@ export const readAnswers = async (
     }));
   }
 
-  return Error("no data found");
+  return Error("no answers found");
 };
 
 export const readCharacters = async (
@@ -172,21 +170,22 @@ export const readCharacters = async (
 
   const r = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetID,
-    range: "characters!A2:E",
+    range: "characters!A2:F",
   });
 
   const rows = r.data.values;
   if (rows && rows.length) {
     return rows.map((row) => ({
       Name: row[0],
-      Blurb: row[1],
-      Age: row[2],
-      Costume: row[3],
-      Accessories: row[4],
+      Description: row[1],
+      Blurb: row[2],
+      Age: row[3],
+      Costume: row[4],
+      Accessories: row[5],
     }));
   }
 
-  return Error("no data found");
+  return Error("no characters found");
 };
 
 export const readInfo = async (sheetID: string): Promise<Info[] | Error> => {
@@ -211,7 +210,7 @@ export const readInfo = async (sheetID: string): Promise<Info[] | Error> => {
       }));
   }
 
-  return Error("no data found");
+  return Error("no info found");
 };
 
 export const readStoryMetadata = async (
@@ -227,6 +226,7 @@ export const readStoryMetadata = async (
   });
 
   const rows = r.data.values;
+  console.log("rows", rows);
   if (rows && rows.length) {
     return {
       Name: rows[0][0],
@@ -235,7 +235,7 @@ export const readStoryMetadata = async (
     };
   }
 
-  return Error("no data found");
+  return Error("no story found");
 };
 
 export const readTimelineEvents = async (
@@ -271,5 +271,5 @@ export const readTimelineEvents = async (
     return timelines;
   }
 
-  return Error("no data found");
+  return Error("no timeline found");
 };

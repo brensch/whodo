@@ -84,11 +84,10 @@ export default () => {
         <Fade in={modalCharacter !== null}>
           <div className={classes.modalPaper}>
             <h2 id="story-modal-title">
-              {modalCharacter !== null && modalCharacter.Name}
+              {modalCharacter?.Name} - {modalCharacter?.Description} (
+              {modalCharacter?.Age}
             </h2>
-            <p id="story-modal-description">
-              {modalCharacter !== null && modalCharacter.Blurb}
-            </p>
+            <p id="story-modal-description">{modalCharacter?.Blurb}</p>
           </div>
         </Fade>
       </Modal>
