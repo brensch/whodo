@@ -25,12 +25,6 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-// interface LocationState {
-//   from: {
-//     pathname: string;
-//   };
-// }
-
 const datePickerTheme = createMuiTheme({
   ...baseThemeOptions,
   typography: {
