@@ -105,7 +105,6 @@ export default () => {
     StateStoreContext,
   );
   const [showDone, setShowDone] = useState<boolean>(false);
-  // const [previousRound, setPreviousRound] = useState<number | null>(null);
 
   if (
     userDetails === null ||
@@ -369,49 +368,68 @@ const UnseenClueModal = () => {
   let unseenClues = gameState.Clues.filter(
     (clue) => !playerView.CluesSeen.includes(clue.Name),
   );
+  const [clueView, setClueView] = useState<string | null>(null);
 
   return (
-    <Modal
-      open={unseenClues.length > 0}
-      className={classes.modal}
-      closeAfterTransition
-      BackdropComponent={Backdrop}
-      BackdropProps={{
-        timeout: 500,
-      }}
-    >
-      <Fade in={unseenClues.length > 0}>
-        <div className={classes.modalPaper}>
-          <Grid
-            container
-            className={classes.root}
-            spacing={2}
-            alignItems="flex-start"
-          >
-            <Grid item xs={12}>
-              <Typography variant="h4">new clue!</Typography>
+    <React.Fragment>
+      <Modal
+        open={unseenClues.length > 0}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={unseenClues.length > 0}>
+          <div className={classes.modalPaper}>
+            <Grid
+              container
+              className={classes.root}
+              spacing={2}
+              alignItems="flex-start"
+            >
+              <Grid item xs={12}>
+                <Typography variant="h4">new clue!</Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <List component="nav" aria-label="clues list">
+                  {unseenClues.map((clue) => (
+                    <ListItem button onClick={() => setClueView(clue.URL)}>
+                      <ListItemText
+                        primary={clue.Name}
+                        secondary="tap to view"
+                      />
+                      <ListItemSecondaryAction
+                        onClick={() => MarkClueSeen(playerView.ID, clue)}
+                      >
+                        done
+                      </ListItemSecondaryAction>
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <List component="nav" aria-label="clues list">
-                {unseenClues.map((clue) => (
-                  <ListItem
-                    button
-                    onClick={() => window.open(clue.URL, "_blank")}
-                  >
-                    <ListItemText primary={clue.Name} secondary="tap to view" />
-                    <ListItemSecondaryAction
-                      onClick={() => MarkClueSeen(playerView.ID, clue)}
-                    >
-                      done
-                    </ListItemSecondaryAction>
-                  </ListItem>
-                ))}
-              </List>
-            </Grid>
-          </Grid>
-        </div>
-      </Fade>
-    </Modal>
+          </div>
+        </Fade>
+      </Modal>
+      <Modal
+        open={clueView !== null}
+        onClose={() => setClueView(null)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={clueView !== null}>
+          <div className={classes.modalPaper}>
+            {!!clueView && <img src={clueView} />}
+          </div>
+        </Fade>
+      </Modal>
+    </React.Fragment>
   );
 };
 
@@ -469,6 +487,7 @@ const CluesModal = () => {
   let { gameState } = useContext(GamePageContext);
 
   const [cluesModal, setCluesModal] = useState<boolean>(false);
+  const [clueView, setClueView] = useState<string | null>(null);
 
   return (
     <React.Fragment>
@@ -507,10 +526,7 @@ const CluesModal = () => {
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
                   {gameState.Clues.map((clue) => (
-                    <ListItem
-                      button
-                      onClick={() => window.open(clue.URL, "_blank")}
-                    >
+                    <ListItem button onClick={() => setClueView(clue.URL)}>
                       <ListItemText primary={clue.Name} />
                     </ListItem>
                   ))}
@@ -522,6 +538,22 @@ const CluesModal = () => {
                 </List>
               </Grid>
             </Grid>
+          </div>
+        </Fade>
+      </Modal>
+      <Modal
+        open={clueView !== null}
+        onClose={() => setClueView(null)}
+        className={classes.modal}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{
+          timeout: 500,
+        }}
+      >
+        <Fade in={clueView !== null}>
+          <div className={classes.modalPaper}>
+            {!!clueView && <img src={clueView} />}
           </div>
         </Fade>
       </Modal>
