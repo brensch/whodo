@@ -1,61 +1,61 @@
+import * as firebase from "firebase/app";
+import { v4 as uuidv4 } from "uuid";
+import { db } from "../Firebase";
 import {
   CharacterPick,
+  FinishedRound,
   GameState,
   GAME_COLLECTION,
+  Guess,
+  Note,
   PlayerView,
   PLAYERVIEW_COLLECTION,
-  POPULATE_INFO_REQUESTS,
   PopulateInfoRequest,
-  FinishedRound,
-  Note,
-  Guess,
-  REVEAL_ANSWER_REQUESTS,
+  POPULATE_INFO_REQUESTS,
   RevealAnswerRequest,
+  REVEAL_ANSWER_REQUESTS,
 } from "../Schema/Game";
+import { Clue, InfoState, StorySummary } from "../Schema/Story";
 import {
   UserDetails,
   UserGames,
   USER_DETAILS_COLLECTION,
   USER_GAMES_COLLECTION,
 } from "../Schema/User";
-import { db } from "../Firebase";
-import * as firebase from "firebase/app";
-import { StorySummary, InfoState, Clue } from "../Schema/Story";
-import { v4 as uuidv4 } from "uuid";
 
 export const ConnectGameState = (
   id: string,
-  set: React.Dispatch<React.SetStateAction<GameState | null>>,
-) => {
-  try {
-    db.collection(GAME_COLLECTION)
-      .doc(id)
-      .onSnapshot((doc) => {
-        // lose type safety here in case of incorrect DB data
-        // TODO: add type checks at runtime
-        set((doc.data() as unknown) as GameState);
-      });
-  } catch (err) {
-    throw err;
-  }
-};
+  set: React.Dispatch<React.SetStateAction<GameState | null | undefined>>,
+) =>
+  db
+    .collection(GAME_COLLECTION)
+    .doc(id)
+    .onSnapshot((doc) => {
+      // lose type safety here in case of incorrect DB data
+      // TODO: add type checks at runtime
+      if (!doc.exists) {
+        return set(undefined);
+      }
+      set((doc.data() as unknown) as GameState);
+    });
 
 export const ConnectPopulateInfoRequest = (
   id: string,
-  set: React.Dispatch<React.SetStateAction<PopulateInfoRequest | null>>,
-) => {
-  try {
-    db.collection(POPULATE_INFO_REQUESTS)
-      .doc(id)
-      .onSnapshot((doc) => {
-        // lose type safety here in case of incorrect DB data
-        // TODO: add type checks at runtime
-        set((doc.data() as unknown) as PopulateInfoRequest);
-      });
-  } catch (err) {
-    throw err;
-  }
-};
+  set: React.Dispatch<
+    React.SetStateAction<PopulateInfoRequest | null | undefined>
+  >,
+) =>
+  db
+    .collection(POPULATE_INFO_REQUESTS)
+    .doc(id)
+    .onSnapshot((doc) => {
+      // lose type safety here in case of incorrect DB data
+      // TODO: add type checks at runtime
+      if (!doc.exists) {
+        return set(undefined);
+      }
+      set((doc.data() as unknown) as PopulateInfoRequest);
+    });
 
 export const CreateGame = (
   name: string,

@@ -54,11 +54,12 @@ const GamePage = () => {
   let { id } = useParams<ParamTypes>();
 
   const [gameStage, setGameStage] = useState<GameStage>("loading");
-  const [gameState, setGameState] = useState<GameState | null>(null);
-  const [
-    populateInfoRequest,
-    setPopulateInfoRequest,
-  ] = useState<PopulateInfoRequest | null>(null);
+  const [gameState, setGameState] = useState<GameState | null | undefined>(
+    null,
+  );
+  const [populateInfoRequest, setPopulateInfoRequest] = useState<
+    PopulateInfoRequest | null | undefined
+  >(null);
   const [playerView, setPlayerView] = useState<PlayerView | null>(null);
 
   let { userDetails, setSnackState, setHeaderText } = useContext(
@@ -90,9 +91,10 @@ const GamePage = () => {
   useEffect(() => {
     if (
       gameState === null ||
+      gameState === undefined ||
       playerView === null ||
       populateInfoRequest === null ||
-      gameState === undefined
+      populateInfoRequest === undefined
     ) {
       return;
     }

@@ -56,13 +56,13 @@ interface GameItemProps {
 const GameItem = ({ id }: GameItemProps) => {
   let history = useHistory();
 
-  const [game, setGame] = useState<GameState | null>(null);
+  const [game, setGame] = useState<GameState | null | undefined>(null);
 
   useEffect(() => {
     ConnectGameState(id, setGame);
   }, [id]);
 
-  if (game === null) {
+  if (game === null || game === undefined) {
     return null;
   }
 

@@ -31,7 +31,9 @@ const JoinGamePage = () => {
   const classes = useStyles();
   let history = useHistory();
   let { id } = useParams<ParamTypes>();
-  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [gameState, setGameState] = useState<GameState | null | undefined>(
+    null,
+  );
   let { userDetails, setSnackState, setHeaderText } = useContext(
     StateStoreContext,
   );
