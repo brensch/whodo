@@ -19,6 +19,7 @@ import Modal from "@material-ui/core/Modal";
 import Paper from "@material-ui/core/Paper";
 import Select from "@material-ui/core/Select";
 import { makeStyles } from "@material-ui/core/styles";
+import Switch from "@material-ui/core/Switch";
 import Table from "@material-ui/core/Table";
 import TableBody from "@material-ui/core/TableBody";
 import TableCell from "@material-ui/core/TableCell";
@@ -31,9 +32,12 @@ import AccessTimeIcon from "@material-ui/icons/AccessTime";
 import CheckBoxIcon from "@material-ui/icons/CheckBox";
 import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
 import CloseIcon from "@material-ui/icons/Close";
+import GavelIcon from "@material-ui/icons/Gavel";
 import NotesIcon from "@material-ui/icons/Notes";
+import PeopleIcon from "@material-ui/icons/People";
 import SearchIcon from "@material-ui/icons/Search";
 import React, { useContext, useState } from "react";
+import Lightbox from "react-image-lightbox";
 import { useParams } from "react-router-dom";
 import {
   MarkClueSeen,
@@ -48,10 +52,7 @@ import {
 import { CloudProblem } from "../Components";
 import { StateStoreContext } from "../Context";
 import { GamePageContext, ParamTypes } from "../Pages/GamePage";
-import GavelIcon from "@material-ui/icons/Gavel";
-import PeopleIcon from "@material-ui/icons/People";
-import { InfoState } from "../Schema/Story";
-import Switch from "@material-ui/core/Switch";
+import { Clue, InfoState } from "../Schema/Story";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -487,7 +488,7 @@ const CluesModal = () => {
   let { gameState } = useContext(GamePageContext);
 
   const [cluesModal, setCluesModal] = useState<boolean>(false);
-  const [clueView, setClueView] = useState<string | null>(null);
+  const [clueView, setClueView] = useState<Clue | null>(null);
 
   return (
     <React.Fragment>
@@ -526,7 +527,7 @@ const CluesModal = () => {
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
                   {gameState.Clues.map((clue) => (
-                    <ListItem button onClick={() => setClueView(clue.URL)}>
+                    <ListItem button onClick={() => setClueView(clue)}>
                       <ListItemText primary={clue.Name} />
                     </ListItem>
                   ))}
@@ -541,6 +542,13 @@ const CluesModal = () => {
           </div>
         </Fade>
       </Modal>
+      {clueView !== null && (
+        <Lightbox
+          large={clueView.URL}
+          alt={clueView.Name}
+          onCloseRequest={() => setClueView(null)}
+        />
+      )}
       <Modal
         open={clueView !== null}
         onClose={() => setClueView(null)}
