@@ -167,7 +167,7 @@ const GamePage = () => {
     <GamePageContext.Provider value={{ gameState, playerView }}>
       <React.Fragment>
         <Prompt
-          when={gameStage !== "CorrectGuesses"}
+          when={gameStage !== "CorrectGuesses" && gameStage !== "PickStory"}
           message="you're about to leave this excellent game right when things are getting exciting. you can find it again under 'my games'"
         />
         {(() => {
