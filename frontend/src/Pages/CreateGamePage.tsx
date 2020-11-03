@@ -25,11 +25,11 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-interface LocationState {
-  from: {
-    pathname: string;
-  };
-}
+// interface LocationState {
+//   from: {
+//     pathname: string;
+//   };
+// }
 
 const datePickerTheme = createMuiTheme({
   ...baseThemeOptions,
@@ -72,7 +72,7 @@ const CreateGamePage = () => {
           <TextField
             value={name}
             id="game-name"
-            label="name your game"
+            label="name your crew"
             variant="outlined"
             className={classes.button}
             onChange={(e) => {

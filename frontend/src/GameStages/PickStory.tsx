@@ -107,7 +107,6 @@ export default () => {
               <Typography align="center">{user.Name}</Typography>
             ))}
           </Grid>
-
           <Grid item xs={12}>
             <CopyToClipboard text={`${window.location.origin}/join/${id}`}>
               <Button
