@@ -38,6 +38,8 @@ import PeopleIcon from "@material-ui/icons/People";
 import SearchIcon from "@material-ui/icons/Search";
 import React, { useContext, useState } from "react";
 import Lightbox from "react-image-lightbox";
+import "react-image-lightbox/style.css";
+
 import { useParams } from "react-router-dom";
 import {
   MarkClueSeen,
@@ -369,7 +371,7 @@ const UnseenClueModal = () => {
   let unseenClues = gameState.Clues.filter(
     (clue) => !playerView.CluesSeen.includes(clue.Name),
   );
-  const [clueView, setClueView] = useState<string | null>(null);
+  const [clueView, setClueView] = useState<Clue | null>(null);
 
   return (
     <React.Fragment>
@@ -396,16 +398,18 @@ const UnseenClueModal = () => {
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
                   {unseenClues.map((clue) => (
-                    <ListItem button onClick={() => setClueView(clue.URL)}>
+                    <ListItem
+                      button
+                      onClick={() => {
+                        MarkClueSeen(playerView.ID, clue).then(() =>
+                          setClueView(clue),
+                        );
+                      }}
+                    >
                       <ListItemText
                         primary={clue.Name}
                         secondary="tap to view"
                       />
-                      <ListItemSecondaryAction
-                        onClick={() => MarkClueSeen(playerView.ID, clue)}
-                      >
-                        done
-                      </ListItemSecondaryAction>
                     </ListItem>
                   ))}
                 </List>
@@ -414,22 +418,13 @@ const UnseenClueModal = () => {
           </div>
         </Fade>
       </Modal>
-      <Modal
-        open={clueView !== null}
-        onClose={() => setClueView(null)}
-        className={classes.modal}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={clueView !== null}>
-          <div className={classes.modalPaper}>
-            {!!clueView && <img src={clueView} />}
-          </div>
-        </Fade>
-      </Modal>
+      {clueView !== null && (
+        <Lightbox
+          imageTitle={clueView.Name}
+          mainSrc={clueView.URL}
+          onCloseRequest={() => setClueView(null)}
+        />
+      )}
     </React.Fragment>
   );
 };
@@ -527,7 +522,13 @@ const CluesModal = () => {
               <Grid item xs={12}>
                 <List component="nav" aria-label="clues list">
                   {gameState.Clues.map((clue) => (
-                    <ListItem button onClick={() => setClueView(clue)}>
+                    <ListItem
+                      button
+                      onClick={() => {
+                        setCluesModal(false);
+                        return setClueView(clue);
+                      }}
+                    >
                       <ListItemText primary={clue.Name} />
                     </ListItem>
                   ))}
@@ -544,27 +545,12 @@ const CluesModal = () => {
       </Modal>
       {clueView !== null && (
         <Lightbox
-          large={clueView.URL}
-          alt={clueView.Name}
+          imageTitle={clueView.Name}
+          mainSrc={clueView.URL}
           onCloseRequest={() => setClueView(null)}
         />
       )}
-      <Modal
-        open={clueView !== null}
-        onClose={() => setClueView(null)}
-        className={classes.modal}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{
-          timeout: 500,
-        }}
-      >
-        <Fade in={clueView !== null}>
-          <div className={classes.modalPaper}>
-            {!!clueView && <img src={clueView} />}
-          </div>
-        </Fade>
-      </Modal>
+
       <BottomNavigationAction
         label="clues"
         showLabel

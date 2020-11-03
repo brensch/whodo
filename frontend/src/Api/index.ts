@@ -405,11 +405,12 @@ export const RequestNextAnswer = (
     AnswerNumbers: firebase.firestore.FieldValue.arrayUnion(number),
   });
 
-  batch.commit();
+  return batch.commit();
 };
 
 export const RevealClue = (gameID: string, clue: Clue) => {
-  db.collection(GAME_COLLECTION)
+  return db
+    .collection(GAME_COLLECTION)
     .doc(gameID)
     .update({
       Clues: firebase.firestore.FieldValue.arrayUnion(clue),
@@ -417,7 +418,8 @@ export const RevealClue = (gameID: string, clue: Clue) => {
 };
 
 export const MarkClueSeen = (playerViewID: string, clue: Clue) => {
-  db.collection(PLAYERVIEW_COLLECTION)
+  return db
+    .collection(PLAYERVIEW_COLLECTION)
     .doc(playerViewID)
     .update({
       CluesSeen: firebase.firestore.FieldValue.arrayUnion(clue.Name),
