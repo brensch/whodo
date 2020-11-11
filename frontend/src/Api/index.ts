@@ -23,6 +23,21 @@ import {
   USER_GAMES_COLLECTION,
 } from "../Schema/User";
 
+const Slugify = (string: string) => {
+  const a = 'àáâäæãåāăąçćčđďèéêëēėęěğǵḧîïíīįìłḿñńǹňôöòóœøōõőṕŕřßśšşșťțûüùúūǘůűųẃẍÿýžźż·/_,:;'
+  const b = 'aaaaaaaaaacccddeeeeeeeegghiiiiiilmnnnnoooooooooprrsssssttuuuuuuuuuwxyyzzz------'
+  const p = new RegExp(a.split('').join('|'), 'g')
+
+  return string.toString().toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(p, c => b.charAt(a.indexOf(c))) // Replace special characters
+    .replace(/&/g, '-and-') // Replace & with 'and'
+    .replace(/[^\w-]+/g, '') // Remove all non-word characters
+    .replace(/--+/g, '-') // Replace multiple - with single -
+    .replace(/^-+/, '') // Trim - from start of text
+    .replace(/-+$/, '') // Trim - from end of text
+}
+
 export const ConnectGameState = (
   id: string,
   set: React.Dispatch<React.SetStateAction<GameState | null | undefined>>,
@@ -57,7 +72,7 @@ export const ConnectPopulateInfoRequest = (
       set((doc.data() as unknown) as PopulateInfoRequest);
     });
 
-export const CreateGame = (
+export const CreateGame = async (
   name: string,
   selectedDate: Date,
   userDetails: UserDetails,
@@ -84,18 +99,26 @@ export const CreateGame = (
   var batch = db.batch();
 
   // update game
-  const gameID = uuidv4();
-  const gameDoc = db.collection(GAME_COLLECTION).doc(gameID);
+  const gameSlug = Slugify(name)
+  // const gameID = uuidv4();
+  const gameDoc = db.collection(GAME_COLLECTION).doc(gameSlug);
+
+  // check if the game exists first, abort if it does
+  const game = await gameDoc.get()
+  if (game.exists) {
+    throw(Error("that name is taken"))
+  }
+
   batch.set(gameDoc, newGameState);
 
   // add game to user's list
   const userDoc = db.collection(USER_GAMES_COLLECTION).doc(userDetails.ID);
   batch.update(userDoc, {
-    Games: firebase.firestore.FieldValue.arrayUnion(gameID),
+    Games: firebase.firestore.FieldValue.arrayUnion(gameSlug),
   });
 
   // create populateinforequest
-  const popInfoDoc = db.collection(POPULATE_INFO_REQUESTS).doc(gameID);
+  const popInfoDoc = db.collection(POPULATE_INFO_REQUESTS).doc(gameSlug);
   const newPopInfo: PopulateInfoRequest = { State: "picking" };
   batch.set(popInfoDoc, newPopInfo);
 
@@ -105,7 +128,7 @@ export const CreateGame = (
   const newPlayerView: PlayerView = {
     ID: playerViewID,
     UserID: userDetails.ID,
-    GameID: gameID,
+    GameID: gameSlug,
     CharacterStory: null,
     Notes: [],
     CluesSeen: [],
@@ -114,7 +137,7 @@ export const CreateGame = (
   };
   batch.set(playerViewDoc, newPlayerView);
 
-  return batch.commit().then(() => gameID);
+  return batch.commit().then(() => gameSlug);
 };
 
 export const RequestInfoPopulation = (gameID: string) => {

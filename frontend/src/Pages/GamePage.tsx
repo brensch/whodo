@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Redirect, useParams, Prompt } from "react-router-dom";
+import { Redirect, useParams } from "react-router-dom";
 import {
   ConnectGameState,
   ConnectPlayerView,
   ConnectPopulateInfoRequest,
   RequestInfoPopulation,
-  RequestNextAnswer,
+  RequestNextAnswer
 } from "../Api";
 import { Loading } from "../Components";
 import { StateStoreContext } from "../Context";
@@ -19,7 +19,7 @@ import {
   Rules,
   ViewRound,
   WaitForGuesses,
-  WaitingForGoTime,
+  WaitingForGoTime
 } from "../GameStages";
 import { GameState, PlayerView, PopulateInfoRequest } from "../Schema/Game";
 
@@ -166,10 +166,6 @@ const GamePage = () => {
   return (
     <GamePageContext.Provider value={{ gameState, playerView }}>
       <React.Fragment>
-        <Prompt
-          when={gameStage !== "CorrectGuesses" && gameStage !== "PickStory"}
-          message="you're about to leave this excellent game right when things are getting exciting. you can find it again under 'my games'"
-        />
         {(() => {
           switch (gameStage) {
             case "PickStory":

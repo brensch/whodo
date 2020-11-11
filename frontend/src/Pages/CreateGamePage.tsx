@@ -41,14 +41,20 @@ const CreateGamePage = () => {
 
   let history = useHistory();
   const { userDetails, setHeaderText } = useContext(StateStoreContext);
+  let { setSnackState } = useContext(StateStoreContext);
 
   useEffect(() => setHeaderText("new game"), [setHeaderText]);
 
   const createGame = () => {
     if (!!userDetails) {
-      CreateGame(name, selectedDate, userDetails).then((gameID) =>
-        history.push(`/game/${gameID}`),
-      );
+      CreateGame(name, selectedDate, userDetails)
+        .then((gameID) => history.push(`/game/${gameID}`))
+        .catch(() =>
+          setSnackState({
+            severity: "error",
+            message: "sorry, someone's already got that name.",
+          })
+        );
     }
   };
 
@@ -66,7 +72,7 @@ const CreateGamePage = () => {
           <TextField
             value={name}
             id="game-name"
-            label="name your crew"
+            label="name your game"
             variant="outlined"
             className={classes.button}
             onChange={(e) => {
