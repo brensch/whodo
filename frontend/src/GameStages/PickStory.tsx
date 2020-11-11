@@ -4,15 +4,12 @@ import Container from "@material-ui/core/Container";
 import Divider from "@material-ui/core/Divider";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
-import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import Modal from "@material-ui/core/Modal";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import InfoIcon from "@material-ui/icons/Info";
 import React, { useContext, useEffect, useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { useParams } from "react-router-dom";
@@ -41,6 +38,10 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1, 1, 3),
     maxHeight: "80vh",
     overflow: "auto",
+  },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
   },
 }));
 
@@ -86,6 +87,32 @@ export default () => {
             <p id="story-modal-description">
               {modalStory !== null && modalStory.Metadata.Blurb}
             </p>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.buttonFullWidth}
+              onClick={() => {
+                if (modalStory === null) {
+                  return;
+                }
+
+                if (gameState.UserIDs.length !== modalStory.Characters.length) {
+                  setSnackState({
+                    severity: "info",
+                    message: "haven't invited enough people to play this game",
+                  });
+                  return;
+                }
+                SetGameStory(id, modalStory).catch((err) =>
+                  setSnackState({
+                    severity: "error",
+                    message: err.toString(),
+                  }),
+                );
+              }}
+            >
+              <Typography align="center">choose this story</Typography>
+            </Button>
           </div>
         </Fade>
       </Modal>
@@ -135,24 +162,7 @@ export default () => {
                     disabled={
                       gameState.UserIDs.length !== story.Characters.length
                     }
-                    onClick={() => {
-                      if (
-                        gameState.UserIDs.length !== story.Characters.length
-                      ) {
-                        setSnackState({
-                          severity: "info",
-                          message:
-                            "haven't invited enough people to play this game",
-                        });
-                        return;
-                      }
-                      SetGameStory(id, story).catch((err) =>
-                        setSnackState({
-                          severity: "error",
-                          message: err.toString(),
-                        }),
-                      );
-                    }}
+                    onClick={() => setModalStory(story)}
                   >
                     <ListItemText
                       primary={story.Metadata.Name}
@@ -162,14 +172,6 @@ export default () => {
                           : ""
                       } ${story.Characters.length} players`}
                     />
-                    <ListItemSecondaryAction>
-                      <IconButton
-                        edge="end"
-                        onClick={() => setModalStory(story)}
-                      >
-                        <InfoIcon />
-                      </IconButton>
-                    </ListItemSecondaryAction>
                   </ListItem>
                 </React.Fragment>
               ))}

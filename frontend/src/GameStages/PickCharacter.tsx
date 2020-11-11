@@ -4,15 +4,12 @@ import Container from "@material-ui/core/Container";
 import Divider from "@material-ui/core/Divider";
 import Fade from "@material-ui/core/Fade";
 import Grid from "@material-ui/core/Grid";
-import IconButton from "@material-ui/core/IconButton";
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
 import ListItemText from "@material-ui/core/ListItemText";
 import Modal from "@material-ui/core/Modal";
 import { makeStyles } from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
-import InfoIcon from "@material-ui/icons/Info";
 import React, { useContext, useState } from "react";
 import { useParams } from "react-router-dom";
 import { PickCharacter, SetGameStory } from "../Api";
@@ -45,6 +42,10 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing(1, 1, 3),
     maxHeight: "80vh",
     overflow: "auto",
+  },
+  buttonFullWidth: {
+    width: "100%",
+    textTransform: "none",
   },
 }));
 
@@ -83,11 +84,44 @@ export default () => {
       >
         <Fade in={modalCharacter !== null}>
           <div className={classes.modalPaper}>
-            <h2 id="story-modal-title">
-              {modalCharacter?.Name} - {modalCharacter?.Description} (
-              {modalCharacter?.Age}
-            </h2>
-            <p id="story-modal-description">{modalCharacter?.Blurb}</p>
+            <Typography variant="h4" gutterBottom align={"center"}>
+              {modalCharacter?.Name}
+            </Typography>
+            <Typography variant="body1" gutterBottom align={"center"}>
+              {modalCharacter?.Description}
+            </Typography>
+            <Typography variant="body2" gutterBottom align={"center"}>
+              age: {modalCharacter?.Age}
+            </Typography>
+            <Typography variant="body2" gutterBottom align={"center"}>
+              {modalCharacter?.Blurb}
+            </Typography>
+            <Typography variant="body2" gutterBottom align={"center"}>
+              costume: {modalCharacter?.Costume}
+            </Typography>
+            <Typography variant="body2" gutterBottom align={"center"}>
+              accessories: {modalCharacter?.Accessories}
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              className={classes.buttonFullWidth}
+              onClick={() => {
+                if (modalCharacter === null || modalCharacter.Name === null) {
+                  return;
+                }
+                PickCharacter(id, userDetails.ID, modalCharacter.Name)
+                  .then(() => setModalCharacter(null))
+                  .catch((err) =>
+                    setSnackState({
+                      severity: "error",
+                      message: err.toString(),
+                    }),
+                  );
+              }}
+            >
+              <Typography align="center">sounds like me</Typography>
+            </Button>
           </div>
         </Fade>
       </Modal>
@@ -121,15 +155,7 @@ export default () => {
                         participantHasPicked ||
                         pickMatchingThisCharacter !== undefined
                       }
-                      onClick={() =>
-                        PickCharacter(id, userDetails.ID, character.Name).catch(
-                          (err) =>
-                            setSnackState({
-                              severity: "error",
-                              message: err.toString(),
-                            }),
-                        )
-                      }
+                      onClick={() => setModalCharacter(character)}
                     >
                       <ListItemText
                         primary={`${character.Name} ${
@@ -144,14 +170,6 @@ export default () => {
                             : ""
                         }`}
                       />
-                      <ListItemSecondaryAction>
-                        <IconButton
-                          edge="end"
-                          onClick={() => setModalCharacter(character)}
-                        >
-                          <InfoIcon />
-                        </IconButton>
-                      </ListItemSecondaryAction>
                     </ListItem>
                   </React.Fragment>
                 );
