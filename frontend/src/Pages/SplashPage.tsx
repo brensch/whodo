@@ -31,12 +31,12 @@ const SplashPage = () => {
         className={classes.centeredObject}
       >
         <Grid item xs={12}>
-          <Typography variant="h4">welcome to whodo</Typography>
+          <Typography variant="h4">welcome to who why how</Typography>
         </Grid>
         <Grid item xs={12}>
           <Typography variant="body1" align="center">
             a totally excellent online murder mystery experience. can you figure
-            out who do?
+            out who why how?
           </Typography>
         </Grid>
         <Grid item xs={12}>

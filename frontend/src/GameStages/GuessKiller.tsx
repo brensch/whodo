@@ -40,20 +40,20 @@ export default () => {
         <Grid container spacing={3} alignItems="stretch" direction="column">
           <Grid item xs={12}>
             <Typography variant="h6" align="center">
-              ok, enough fun. time to guess whodo it and why.
+              ok, enough fun. time to guess who, how, why.
             </Typography>
           </Grid>
 
           <Grid item xs={12}>
             <FormControl variant="outlined" className={classes.fullWidth}>
-              <InputLabel id="killer-label">whodo</InputLabel>
+              <InputLabel id="killer-label">who</InputLabel>
               <Select
                 labelId="killer-label"
                 id="killer-select"
                 value={killer}
                 className={classes.fullWidth}
                 onChange={(e) => setKiller(e.target.value as string)}
-                label="whodo"
+                label="who"
               >
                 {gameState.CharacterPicks.map((pick) => {
                   const userName = gameState.Users.find(

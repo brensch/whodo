@@ -39,7 +39,7 @@ export default () => {
             variant="h6"
             className={classes.title}
           >
-            whodo
+            whowhyhow
           </Typography>
           <Typography
             variant="subtitle1"

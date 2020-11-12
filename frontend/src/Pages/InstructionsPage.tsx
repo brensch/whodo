@@ -39,8 +39,8 @@ const Instructions = () => {
         </Grid>
         <Grid item xs={12}>
           <Typography align="center">
-            whodo brings the power of the internet to murder mysteries so we can
-            all have something to do while locked in our bedrooms.
+            whowhyhow brings the power of the internet to murder mysteries so we
+            can all have something to do while locked in our bedrooms.
           </Typography>
         </Grid>
 

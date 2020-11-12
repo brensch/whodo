@@ -89,6 +89,8 @@ export default () => {
                   <React.Fragment>
                     once you've run out of info to 'tell freely', hit the button
                     down the bottom to indicate you're ready for the next round.
+                    you will often finish rounds and still have secrets yet to
+                    tell.
                   </React.Fragment>
                 }
               />
@@ -99,8 +101,8 @@ export default () => {
                 primary="guess the killer"
                 secondary={
                   <React.Fragment>
-                    once all rounds are finished, guess whodo, how, and why.
-                    once everyone has guessed, the true story is revealed.
+                    once all rounds are finished, guess who, why, how. once
+                    everyone has guessed, the true story is revealed.
                   </React.Fragment>
                 }
               />

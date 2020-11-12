@@ -70,6 +70,11 @@ export default () => {
           </Typography>
         </Grid>
         <Grid item xs={12}>
+          <Typography variant="h5" align="center">
+            {playerView.CharacterStory.Character.Description}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
           <Typography align="center">
             {playerView.CharacterStory.Character.Blurb}
           </Typography>
@@ -102,6 +107,12 @@ export default () => {
         <Grid item xs={12}>
           <Typography variant="h4" align="center">
             {formatDistance(gameState.StartTime.toDate(), now)}
+          </Typography>
+        </Grid>
+        <Grid item xs={12}>
+          <Typography variant="h4" align="center">
+            {gameState.StartTime.toDate().toLocaleDateString()},{" "}
+            {gameState.StartTime.toDate().toLocaleTimeString()}
           </Typography>
         </Grid>
         {!gameState.ReadyToStart.includes(userDetails.ID) && (

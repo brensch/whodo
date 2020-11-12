@@ -118,7 +118,7 @@ export default () => {
         </Grid>
         <Grid item xs={12}>
           <CopyToClipboard
-            text={`I just played whodo and i think you would like it, because it is excellent: ${window.location.origin}/splash`}
+            text={`I just played whowhyhow and i think you would like it, because it is excellent: ${window.location.origin}/splash`}
           >
             <Button
               variant="contained"
@@ -142,7 +142,7 @@ export default () => {
             color="primary"
             className={classes.buttonFullWidth}
             onClick={() =>
-              window.open("https://www.buymeacoffee.com/whodo", "_blank")
+              window.open("https://www.buymeacoffee.com/whowhyhow", "_blank")
             }
           >
             buy me a coffee

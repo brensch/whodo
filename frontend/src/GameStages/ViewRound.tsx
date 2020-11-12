@@ -600,15 +600,23 @@ const CharactersModal = () => {
               alignItems="flex-start"
             >
               <Grid item xs={12}>
-                <Typography variant="h6" className={classes.modalTitle}>
-                  you: {playerView.CharacterStory?.Character.Name} (
-                  {playerView.CharacterStory?.Character.Blurb}) -{" "}
-                  {playerView.CharacterStory?.Character.Age}
+                <Typography variant="body1" className={classes.modalTitle}>
+                  you: {playerView.CharacterStory?.Character.Name}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="body1" className={classes.modalTitle}>
-                  {playerView.CharacterStory?.Character.Blurb}
+                  role: {playerView.CharacterStory?.Character.Description}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body1" className={classes.modalTitle}>
+                  age: {playerView.CharacterStory?.Character.Age}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography variant="body1" className={classes.modalTitle}>
+                  back story: {playerView.CharacterStory?.Character.Blurb}
                 </Typography>
               </Grid>
               <Grid item xs={12}>
@@ -639,7 +647,7 @@ const CharactersModal = () => {
                               {pick.CharacterName}
                             </TableCell>
                             <TableCell align="right">
-                              {pickCharacter?.Blurb}
+                              {pickCharacter?.Description}
                             </TableCell>
                           </TableRow>
                         );

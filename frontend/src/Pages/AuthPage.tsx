@@ -248,7 +248,7 @@ const SignUp = () => {
           className={classes.optionsButtons}
         >
           <Grid item xs={12}>
-            <Typography>whodo is fun i promise</Typography>
+            <Typography>whohowwhy is fun i promise</Typography>
           </Grid>
           <Grid item xs={12}>
             <TextField
