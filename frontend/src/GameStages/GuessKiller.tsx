@@ -40,7 +40,7 @@ export default () => {
         <Grid container spacing={3} alignItems="stretch" direction="column">
           <Grid item xs={12}>
             <Typography variant="h6" align="center">
-              ok, enough fun. time to guess who, how, why.
+              ok, enough fun. time to guess whowhyhow.
             </Typography>
           </Grid>
 
@@ -70,20 +70,6 @@ export default () => {
           </Grid>
           <Grid item xs={12}>
             <TextField
-              value={how}
-              id="how"
-              label="how"
-              variant="outlined"
-              className={classes.fullWidth}
-              onChange={(e) => {
-                setHow(e.currentTarget.value);
-              }}
-              multiline
-              rows={5}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <TextField
               value={why}
               id="why"
               label="why"
@@ -91,6 +77,20 @@ export default () => {
               className={classes.fullWidth}
               onChange={(e) => {
                 setWhy(e.currentTarget.value);
+              }}
+              multiline
+              rows={5}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              value={how}
+              id="how"
+              label="how"
+              variant="outlined"
+              className={classes.fullWidth}
+              onChange={(e) => {
+                setHow(e.currentTarget.value);
               }}
               multiline
               rows={5}

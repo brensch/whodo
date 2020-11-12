@@ -89,17 +89,23 @@ export default () => {
                 <Grid container className={classes.clues}>
                   <Grid item xs={12}>
                     <Typography variant="h5">
-                      {guesserPick?.CharacterName} ({guesserUser?.Name}) -{" "}
-                      {killer === guess.Killer ? "right!" : "wrong"}
+                      {guesserPick?.CharacterName} ({guesserUser?.Name})
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="h6">
-                      guessed: {guess.Killer} ({killerUser?.Name})
+                    <Typography variant="body1">
+                      <b>who:</b> {guess.Killer} ({killerUser?.Name})
                     </Typography>
                   </Grid>
                   <Grid item xs={12}>
-                    <Typography variant="h6">because: {guess.Why}</Typography>
+                    <Typography variant="body1">
+                      <b>why:</b> {guess.Why}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="body1">
+                      <b>how:</b> {guess.How}
+                    </Typography>
                   </Grid>
                 </Grid>
               </Paper>
